@@ -1,5 +1,34 @@
 import { HTTPRequest } from './HTTPRequest.ts';
 import HTTPError from './HTTPError.ts';
+import ILogger from './ILogger.ts';
+
+/**
+ * Control APIs available to interceptors for manipulating the request during execution.
+ */
+export interface RequestControls {
+  /**
+   * Abort the current request
+   */
+  abort(): void;
+  
+  /**
+   * Replace the request URL
+   */
+  replaceURL(newURL: string): void;
+  
+  /**
+   * Update request headers (merges with existing headers)
+   */
+  updateHeaders(headers: Record<string, string>): void;
+  
+}
+
+/**
+ * Control APIs available to response interceptors.
+ */
+export interface ResponseControls {
+  getLogger(): ILogger;
+}
 
 export type LogLevel = 'none' | 'trace' | 'debug' | 'info' | 'warn' | 'error';
 
@@ -12,9 +41,9 @@ export type InterceptorCommands = {
     replaceURL: (url:string) => void
 }
 
-export type RequestInterceptor = (request:HTTPRequest, commands:InterceptorCommands) => Promise<any | undefined>;
+export type RequestInterceptor = (config: RequestConfig, controls: RequestControls) => Promise<any | undefined>;
 
-export type RequestDefaults = (request : HTTPRequest) => void;
+export type RequestDefaults = (request : HTTPRequest, config: RequestConfig) => void;
 /**
  * @internal
  */
@@ -28,9 +57,9 @@ export type ExpectedResponseFormat =
 export type QueryParameterValue =
    ScalarType | Array<ScalarType>;
 
-export type DynamicHeaderValue = ((request:HTTPRequest)=>string|undefined);
+export type DynamicHeaderValue = ((config: RequestConfig)=>string|undefined);
 
-export type ResponseBodyTransformer = (body: any, request: HTTPRequest) => any;
+export type ResponseBodyTransformer = (body: any, config: RequestConfig) => any;
 
 export type HeaderValue = string|DynamicHeaderValue;
 
@@ -38,7 +67,7 @@ export type ResponseHandler =
     (response:Response, requestObj:HTTPRequest) => Promise<any>;
 
 export type ResponseInterceptor = 
-    (response:Response, requestObj:HTTPRequest) => Promise<any>;
+    (response:Response, config: RequestConfig, controls: ResponseControls) => Promise<any>;
 export type ErrorInterceptor =
     (error:HTTPError) => boolean | Promise<boolean>
 /**
@@ -60,7 +89,7 @@ export type RequestConfig = {
     expectedResponseFormat: ExpectedResponseFormat
     acceptedMIMETypes: string[]
     corsMode: RequestMode
-    urlParams : Record<string, ScalarType | ((HTTPRequest) => ScalarType)>
+    urlParams : Record<string, ScalarType | ((ConfiguredRequest) => ScalarType)>
     requestInterceptors: RequestInterceptor[]
     responseInterceptors: ResponseInterceptor[]
     errorInterceptors: ErrorInterceptor[]

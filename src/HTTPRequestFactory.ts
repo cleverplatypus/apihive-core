@@ -9,10 +9,18 @@ import {
   LogLevel,
   ResponseBodyTransformer,
   RequestInterceptor,
+  ResponseInterceptor,
   InterceptorCommands,
   RequestDefaults,
   ErrorInterceptor,
+  RequestConfig,
 } from "./types.ts";
+import {
+  Adapter,
+  AdapterOptions,
+  AdapterEntry,
+  AdapterPriority,
+} from "./adapter-types.ts";
 
 function getEndpointURL(endpoint: Endpoint, api: APIConfig) {
   if (/^(https?:)?\/\//.test(endpoint.target)) {
@@ -31,16 +39,37 @@ function getEndpointURL(endpoint: Endpoint, api: APIConfig) {
  * A factory for creating {@link HTTPRequest} instances.
  * It can be configured with defaults, logging options as well as
  * conditional settings using {@link when} in a method-chain fashion.
+ * 
+ * Adapters can be added to the factory to provide additional functionality.
+ * Use cases are request caching, logging, transformation, auto-api generation etc.
  */
 export class HTTPRequestFactory {
   private requestDefaults: RequestDefaults[] = [];
   private apiConfigs: { [key: string]: APIConfig } = {};
   private logger: ILogger = new ConsoleLogger();
   private logLevel: LogLevel = "error";
+  /**
+   * @internal 
+   * Keeps a mapping of defaults for interceptors to allow removing them
+   */
   private interceptorsToRequestDefaults: Map<
     RequestInterceptor,
     RequestDefaults
   > = new Map();
+  private adapters: Map<string, AdapterEntry> = new Map();
+  private adapterRequestInterceptors: Array<{
+    interceptor: RequestInterceptor;
+    priority: number;
+  }> = [];
+  private adapterResponseInterceptors: Array<{
+    interceptor: ResponseInterceptor;
+    priority: number;
+  }> = [];
+  private adapterErrorInterceptors: Array<{
+    interceptor: ErrorInterceptor;
+    priority: number;
+  }> = [];
+  private adapterInterceptorApplier: RequestDefaults | null = null;
   /**
    * Resets any conditions in the method chain set by {@link when}
    * @returns {HTTPRequestFactory} the factory instance
@@ -63,7 +92,7 @@ export class HTTPRequestFactory {
    *  .always()
    *  .withHeader('X-PoweredBy', 'Me')
    */
-  when(condition: (request: HTTPRequest) => boolean) {
+  when(condition: (config: RequestConfig) => boolean) {
     const proxy = new Proxy(this, {
       get: (target, prop) => {
         if (prop === "always") {
@@ -71,28 +100,29 @@ export class HTTPRequestFactory {
         }
 
         if (prop === "when") {
-          return (condition: (request: HTTPRequest) => boolean) =>
+          return (condition: (config: RequestConfig) => boolean) =>
             target.when(condition);
         }
 
-        if (typeof target[prop] !== "function") {
-          return target[prop];
-        }
-
-        return (...args) => {
-          const config = (request: HTTPRequest) => {
-            if (condition(request)) {
-              request[prop](...args);
-            }
+        if (typeof target[prop] === "function" && /^with/.test(prop.toString())) {
+          return (...args) => {
+            const fn = (request: HTTPRequest, config: RequestConfig) => {
+              if (condition(config)) {
+                request[prop](...args);
+              }
+            };
+            target.requestDefaults.push(fn);
+            return this;
           };
-          target.requestDefaults.push(config);
-          return this;
-        };
+        }
+        
+        return target[prop];
       },
     });
 
     return proxy;
   }
+
   deleteRequestInterceptor(interceptor: RequestInterceptor) {
     const requestDefaults = this.interceptorsToRequestDefaults.get(interceptor);
     this.requestDefaults.splice(
@@ -148,7 +178,7 @@ export class HTTPRequestFactory {
    * @param {string | ((request: HTTPRequest) => string)} value - The value of the header.
    * @returns {HTTPRequestFactory} the factory instance
    */
-  withHeader(key: string, value: string | ((request: HTTPRequest) => string)) {
+  withHeader(key: string, value: string | ((config: RequestConfig) => string)) {
     this.requestDefaults.push((request: HTTPRequest) =>
       request.withHeader(key, value)
     );
@@ -193,10 +223,10 @@ export class HTTPRequestFactory {
    * @return {HTTPRequest} - The updated request instance.
    */
   withRequestInterceptors(...interceptors: RequestInterceptor[]) {
-    for(const interceptor of interceptors) {
-      const defaultFn = function(request: HTTPRequest) {
+    for (const interceptor of interceptors) {
+      const defaultFn = function (request: HTTPRequest) {
         request.withRequestInterceptors(interceptor);
-      }
+      };
       this.requestDefaults.push(defaultFn);
       this.interceptorsToRequestDefaults.set(interceptor, defaultFn);
     }
@@ -209,12 +239,13 @@ export class HTTPRequestFactory {
    * @param {ResponseBodyTransformer} transformer - The function that will be used to transform the response body.
    * @returns {HTTPRequestFactory} the factory instance
    */
-  withResponseBodyTransformers(
-    ...transformers: ResponseBodyTransformer[]
-  ) {
-    this.requestDefaults.push(... transformers.map(transformer => (request: HTTPRequest) =>
-      request.withResponseBodyTransformers(transformer)
-    ));
+  withResponseBodyTransformers(...transformers: ResponseBodyTransformer[]) {
+    this.requestDefaults.push(
+      ...transformers.map(
+        (transformer) => (request: HTTPRequest) =>
+          request.withResponseBodyTransformers(transformer)
+      )
+    );
     return this;
   }
 
@@ -240,6 +271,229 @@ export class HTTPRequestFactory {
       request.withErrorInterceptors(...interceptors);
     });
     return this;
+  }
+
+  /**
+   * Attaches an adapter to this factory instance.
+   * Adapters extend the factory's functionality through interceptors and hooks.
+   *
+   * @param adapter - The adapter to attach
+   * @param options - Optional configuration for the adapter
+   * @returns The factory instance for method chaining
+   */
+  async withAdapter(
+    adapter: Adapter,
+    options?: AdapterOptions
+  ): Promise<HTTPRequestFactory> {
+    if (this.adapters.has(adapter.name)) {
+      throw new Error(`Adapter '${adapter.name}' is already attached`);
+    }
+
+    // Merge priorities with defaults
+    const defaultPriority: AdapterPriority = {
+      requestInterceptor: 500,
+      responseInterceptor: 500,
+      errorInterceptor: 500,
+    };
+    const finalPriority = {
+      ...defaultPriority,
+      ...adapter.priority,
+      ...options?.priority,
+    };
+
+    // Create adapter entry
+    const entry: AdapterEntry = {
+      adapter,
+      priority: finalPriority,
+      attached: false,
+    };
+
+    // Attach the adapter
+    await adapter.onAttach?.(this);
+
+    // Register interceptors with priority
+    this.registerAdapterInterceptors(adapter, finalPriority);
+
+    // Add factory defaults if provided
+    const factoryDefaults = adapter.getFactoryDefaults?.() || [];
+    this.requestDefaults.push(...factoryDefaults);
+
+    // Mark as attached and store
+    entry.attached = true;
+    this.adapters.set(adapter.name, entry);
+
+    this.logger
+      .withLevel(this.logLevel)
+      .debug(`Adapter '${adapter.name}' attached successfully`);
+
+    return this;
+  }
+
+  /**
+   * Detaches an adapter from this factory instance.
+   *
+   * @param adapterName - The name of the adapter to detach
+   * @returns The factory instance for method chaining
+   */
+  async detachAdapter(adapterName: string): Promise<HTTPRequestFactory> {
+    const entry = this.adapters.get(adapterName);
+    if (!entry) {
+      throw new Error(`Adapter '${adapterName}' is not attached`);
+    }
+
+    // Remove interceptors registered by this adapter
+    this.unregisterAdapterInterceptors(entry.adapter);
+
+    // Call adapter's detach hook
+    await entry.adapter.onDetach?.(this);
+
+    // Remove from registry
+    this.adapters.delete(adapterName);
+
+    this.logger
+      .withLevel(this.logLevel)
+      .debug(`Adapter '${adapterName}' detached successfully`);
+
+    return this;
+  }
+
+  /**
+   * Gets a list of attached adapter names.
+   *
+   * @returns Array of adapter names
+   */
+  getAttachedAdapters(): string[] {
+    return Array.from(this.adapters.keys());
+  }
+
+  /**
+   * Checks if an adapter is attached.
+   *
+   * @param adapterName - The name of the adapter to check
+   * @returns True if the adapter is attached
+   */
+  hasAdapter(adapterName: string): boolean {
+    return this.adapters.has(adapterName);
+  }
+
+  /**
+   * Registers interceptors from an adapter with proper priority ordering.
+   * @internal
+   */
+  private registerAdapterInterceptors(
+    adapter: Adapter,
+    priority: AdapterPriority
+  ): void {
+    // Register request interceptors
+    const requestInterceptors = adapter.getRequestInterceptors?.() || [];
+    for (const interceptor of requestInterceptors) {
+      this.adapterRequestInterceptors.push({
+        interceptor,
+        priority: priority.requestInterceptor!,
+      });
+    }
+    this.adapterRequestInterceptors.sort((a, b) => a.priority - b.priority);
+
+    // Register response interceptors
+    const responseInterceptors = adapter.getResponseInterceptors?.() || [];
+    for (const interceptor of responseInterceptors) {
+      this.adapterResponseInterceptors.push({
+        interceptor,
+        priority: priority.responseInterceptor!,
+      });
+    }
+    this.adapterResponseInterceptors.sort((a, b) => a.priority - b.priority);
+
+    // Register error interceptors
+    const errorInterceptors = adapter.getErrorInterceptors?.() || [];
+    for (const interceptor of errorInterceptors) {
+      this.adapterErrorInterceptors.push({
+        interceptor,
+        priority: priority.errorInterceptor!,
+      });
+    }
+    this.adapterErrorInterceptors.sort((a, b) => a.priority - b.priority);
+
+    // Update the central adapter interceptor applier
+    this.updateAdapterInterceptorApplier();
+  }
+
+  /**
+   * Unregisters interceptors from a detached adapter.
+   * @internal
+   */
+  private unregisterAdapterInterceptors(adapter: Adapter): void {
+    const requestInterceptors = adapter.getRequestInterceptors?.() || [];
+    const responseInterceptors = adapter.getResponseInterceptors?.() || [];
+    const errorInterceptors = adapter.getErrorInterceptors?.() || [];
+
+    // Remove from adapter interceptor arrays
+    this.adapterRequestInterceptors = this.adapterRequestInterceptors.filter(
+      (entry) => !requestInterceptors.includes(entry.interceptor)
+    );
+    this.adapterResponseInterceptors = this.adapterResponseInterceptors.filter(
+      (entry) => !responseInterceptors.includes(entry.interceptor)
+    );
+    this.adapterErrorInterceptors = this.adapterErrorInterceptors.filter(
+      (entry) => !errorInterceptors.includes(entry.interceptor)
+    );
+
+    // Update the central applier
+    this.updateAdapterInterceptorApplier();
+  }
+
+  /**
+   * Updates the central adapter interceptor applier function.
+   * This ensures all adapters' interceptors are applied to new requests in proper priority order.
+   * @internal
+   */
+  private updateAdapterInterceptorApplier(): void {
+    // Remove existing applier if it exists
+    if (this.adapterInterceptorApplier) {
+      const index = this.requestDefaults.indexOf(
+        this.adapterInterceptorApplier
+      );
+      if (index !== -1) {
+        this.requestDefaults.splice(index, 1);
+      }
+    }
+
+    // Create new applier that applies all current adapter interceptors
+    this.adapterInterceptorApplier = (request: HTTPRequest) => {
+      // Apply request interceptors in priority order
+      const sortedRequestInterceptors = this.adapterRequestInterceptors
+        .sort((a, b) => a.priority - b.priority)
+        .map((entry) => entry.interceptor);
+
+      // Apply response interceptors in priority order
+      const sortedResponseInterceptors = this.adapterResponseInterceptors
+        .sort((a, b) => a.priority - b.priority)
+        .map((entry) => entry.interceptor);
+
+      // Apply error interceptors in priority order
+      const sortedErrorInterceptors = this.adapterErrorInterceptors
+        .sort((a, b) => a.priority - b.priority)
+        .map((entry) => entry.interceptor);
+
+      if (sortedRequestInterceptors.length > 0) {
+        request.withRequestInterceptors(...sortedRequestInterceptors);
+      }
+      if (sortedResponseInterceptors.length > 0) {
+        request.withResponseInterceptors(...sortedResponseInterceptors);
+      }
+      if (sortedErrorInterceptors.length > 0) {
+        request.withErrorInterceptors(...sortedErrorInterceptors);
+      }
+    };
+
+    // Add the new applier to requestDefaults
+    if (
+      this.adapterRequestInterceptors.length > 0 ||
+      this.adapterResponseInterceptors.length > 0 ||
+      this.adapterErrorInterceptors.length > 0
+    ) {
+      this.requestDefaults.push(this.adapterInterceptorApplier);
+    }
   }
 
   /**
@@ -334,9 +588,8 @@ export class HTTPRequestFactory {
       enumerable: true,
     });
 
-    
     try {
-       Object.assign(meta, api.meta || {}, endpoint.meta || {});
+      Object.assign(meta, api.meta || {}, endpoint.meta || {});
     } catch (e) {
       this.logger.error(
         "Unable to merge meta. You're probably trying to assign the reserved `api` property name to meta",
@@ -348,13 +601,15 @@ export class HTTPRequestFactory {
       .withHeaders(api.headers || {})
       .withQueryParams(api.queryParams || {});
     if (api.responseBodyTransformers) {
-      const transformers = Array.isArray(api.responseBodyTransformers) ? 
-        api.responseBodyTransformers : [api.responseBodyTransformers];
+      const transformers = Array.isArray(api.responseBodyTransformers)
+        ? api.responseBodyTransformers
+        : [api.responseBodyTransformers];
       request.withResponseBodyTransformers(...transformers);
     }
     if (api.requestInterceptors) {
-      const interceptors = Array.isArray(api.requestInterceptors) ? 
-        api.requestInterceptors : [api.requestInterceptors];
+      const interceptors = Array.isArray(api.requestInterceptors)
+        ? api.requestInterceptors
+        : [api.requestInterceptors];
       request.withRequestInterceptors(...interceptors);
     }
     if (api.errorInterceptors) {

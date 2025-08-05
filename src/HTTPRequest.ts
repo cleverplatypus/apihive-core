@@ -9,8 +9,11 @@ import {
   LogLevel,
   QueryParameterValue,
   RequestConfig,
+  RequestControls,
+  RequestDefaults,
   RequestInterceptor,
   ResponseBodyTransformer,
+  ResponseControls,
   ResponseInterceptor,
 } from "./types.ts";
 import { HTTPRequestFactory } from "./HTTPRequestFactory.ts";
@@ -18,7 +21,7 @@ import { HTTPRequestFactory } from "./HTTPRequestFactory.ts";
 type RequestConstructorArgs = {
   url: string;
   method: HTTPMethod;
-  defaultConfigBuilders: Function[];
+  defaultConfigBuilders: RequestDefaults[];
   factory: HTTPRequestFactory;
 };
 /**
@@ -26,7 +29,7 @@ type RequestConstructorArgs = {
  * Use {@link HTTPRequestFactory} createXXXRequest() instead
  */
 export class HTTPRequest {
-  private configBuilders: Function[];
+  private configBuilders: RequestDefaults[];
   private wasUsed: boolean = false;
   private logger: ILogger = new ConsoleLogger();
   private config: RequestConfig;
@@ -168,7 +171,7 @@ export class HTTPRequest {
     const logger = this.getLogger();
 
     this.configBuilders.forEach((config) => {
-      config(this);
+      config(this, this.getReadOnlyConfig());
     });
 
     this.fetchBody = {
@@ -190,22 +193,17 @@ export class HTTPRequest {
 
     this.wasUsed = true;
 
+    // Create controls for interceptors
+    const requestControls = this.createRequestControls();
+    
     for (const interceptor of this.config.requestInterceptors || []) {
-      let interceptorResponse = await interceptor(this, {
-        replaceURL: (newURL: string) => {
-          this.config.url = newURL;
-          this.setupURL();
-        },
-        deleteInterceptor: () => {
-          this.factory.deleteRequestInterceptor(interceptor);
-        },
-      });
+      let interceptorResponse = await interceptor(this.getReadOnlyConfig(), requestControls);
       if (interceptorResponse === undefined) {
         continue;
       }
       if (this.config.responseBodyTransformers) {
         for (const transformer of this.config.responseBodyTransformers)
-          interceptorResponse = await transformer(interceptorResponse, this);
+          interceptorResponse = await transformer(interceptorResponse, this.getReadOnlyConfig());
       }
       return interceptorResponse;
     }
@@ -221,8 +219,9 @@ export class HTTPRequest {
       logger.trace("HttpRequestFactory : Fetch response", response);
 
       if (this.config.responseInterceptors.length) {
+        const responseControls = this.createResponseControls();
         for (const interceptor of this.config.responseInterceptors) {
-          const interceptorResponse = await interceptor(response, this);
+          const interceptorResponse = await interceptor(response, this.getReadOnlyConfig(), responseControls);
           if (interceptorResponse !== undefined) {
             return interceptorResponse;
           }
@@ -235,7 +234,7 @@ export class HTTPRequest {
         let body = await this.readResponse(response);
         if (this.config.responseBodyTransformers) {
           for (const transformer of this.config.responseBodyTransformers)
-            body = transformer(body, this);
+            body = transformer(body, this.getReadOnlyConfig());
         }
         return body;
       } else {
@@ -253,26 +252,168 @@ export class HTTPRequest {
       }
     } catch (error) {
       if (error.name === "AbortError") {
-        return Promise.reject(new HTTPError(-1, "Request aborted"));
+        const abortError = new HTTPError(-1, "Request aborted");
+        // Call error interceptors for abort errors
+        for (const interceptor of this.config.errorInterceptors || []) {
+          if (await interceptor(abortError)) {
+            break;
+          }
+        }
+        return Promise.reject(abortError);
       }
+      
       logger.error("HttpRequestFactory : Fetch error", {
         type: "fetch-error",
         endpoint: this.config.url,
         details: error,
       });
-      return Promise.reject(error);
+      
+      // Convert network error to HTTPError and call error interceptors
+      const httpError = new HTTPError(-1, error.message || "Network error", error);
+      for (const interceptor of this.config.errorInterceptors || []) {
+        if (await interceptor(httpError)) {
+          break;
+        }
+      }
+      
+      return Promise.reject(httpError);
     } finally {
-      clearTimeout(this.timeoutID);
+        clearTimeout(this.timeoutID);
+      }
     }
+
+  /**
+   * Retrieves a read-only copy of configuration with lazy evaluation.
+   * Function-based values (body, headers) are only evaluated when accessed.
+   *
+   * @return {RequestConfig} A read-only configuration object with lazy evaluation.
+   */
+  private getReadOnlyConfig(): RequestConfig {
+    const config = { ...this.config };
+    
+    // Create a proxy that lazily evaluates function-based properties
+    return new Proxy(config, {
+      get: (target, prop: string | symbol) => {
+        const value = target[prop as keyof RequestConfig];
+        
+        // Handle body property - evaluate function if needed
+        if (prop === 'body' && typeof value === 'function') {
+          try {
+            return (value as Function)();
+          } catch (error) {
+            return null;
+          }
+        }
+        
+        // Handle headers property - create lazy header proxy
+        if (prop === 'headers' && typeof value === 'object' && value !== null) {
+          return new Proxy(value as Record<string, any>, {
+            get: (headerTarget, headerProp: string | symbol) => {
+              const headerValue = headerTarget[headerProp as string];
+              
+              // Evaluate function-based header when accessed
+              if (typeof headerValue === 'function') {
+                try {
+                  return (headerValue as Function)(target);
+                } catch (error) {
+                  return undefined;
+                }
+              }
+              
+              return headerValue;
+            },
+            
+            // Make headers enumerable and read-only
+            ownKeys: (headerTarget) => Object.keys(headerTarget),
+            getOwnPropertyDescriptor: (headerTarget, headerProp) => {
+              if (headerProp in headerTarget) {
+                const headerValue = headerTarget[headerProp as string];
+                const evaluatedValue = typeof headerValue === 'function' 
+                  ? (() => { try { return headerValue(target); } catch { return undefined; } })()
+                  : headerValue;
+                return {
+                  enumerable: true,
+                  configurable: false,
+                  writable: false,
+                  value: evaluatedValue
+                };
+              }
+              return undefined;
+            },
+            
+            // Prevent modifications
+            set: () => false,
+            deleteProperty: () => false
+          });
+        }
+        
+        // Return other properties as-is
+        return value;
+      },
+      
+      // Make config enumerable and read-only
+      ownKeys: (target) => Object.keys(target),
+      getOwnPropertyDescriptor: (target, prop) => {
+        if (prop in target) {
+          const value = target[prop as keyof RequestConfig];
+          let evaluatedValue = value;
+          
+          // Evaluate if needed (same logic as the get handler)
+          if (prop === 'body' && typeof value === 'function') {
+            try {
+              evaluatedValue = (value as Function)();
+            } catch {
+              evaluatedValue = null;
+            }
+          }
+          
+          return {
+            enumerable: true,
+            configurable: false,
+            writable: false,
+            value: evaluatedValue
+          };
+        }
+        return undefined;
+      },
+      
+      // Prevent modifications
+      set: () => false,
+      deleteProperty: () => false
+    }) as RequestConfig;
   }
 
   /**
-   * Retrieves a read-only copy of configuration.
-   *
-   * @return {type} The frozen configuration object.
+   * Creates request controls for interceptors to manipulate the request during execution.
+   * @internal
    */
-  getConfig() {
-    return JSON.parse(JSON.stringify(this.config));
+  private createRequestControls(): RequestControls {
+    return {
+      abort: () => {
+        if (this.timeoutID) {
+          clearTimeout(this.timeoutID);
+        }
+        // Note: AbortController abort would be called here if we had access to it
+      },
+      replaceURL: (newURL: string) => {
+        this.config.url = newURL;
+        this.setupURL();
+      },
+      updateHeaders: (headers: Record<string, string>) => {
+        Object.assign(this.config.headers, headers);
+        this.setupHeaders();
+      }
+    };
+  }
+
+  /**
+   * Creates response controls for response interceptors.
+   * @internal
+   */
+  private createResponseControls(): ResponseControls {
+    return {
+      getLogger: () => this.getLogger()
+    };
   }
 
   /**
@@ -605,15 +746,6 @@ export class HTTPRequest {
   }
 
   /**
-   * Get the meta data that was set on the request.
-   *
-   * @return {Object} The meta data of the object.
-   */
-  get meta() {
-    return this.config.meta;
-  }
-
-  /**
    * Generates a hash of the request configuration.
    * The hash is deterministic and includes method, URL, relevant headers, 
    * query parameters, and body content to ensure consistent identification.
@@ -670,7 +802,7 @@ export class HTTPRequest {
       const headerValue = this.config.headers[headerKey] || this.config.headers[headerKey.toLowerCase()];
       if (headerValue !== undefined) {
         keyComponents.relevantHeaders[headerKey.toLowerCase()] = 
-          typeof headerValue === 'function' ? headerValue(this) : headerValue;
+          typeof headerValue === 'function' ? headerValue(this.getReadOnlyConfig()) : headerValue;
       }
     }
 

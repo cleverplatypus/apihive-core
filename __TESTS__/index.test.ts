@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import HTTPError from "../src/HTTPError.ts";
 import { HTTPRequest } from "../src/HTTPRequest.ts";
-import { HTTPRequestFactory } from "../src/index.ts";
+import { HTTPRequestFactory, RequestConfig } from "../src/index.ts";
 
 const factory = new HTTPRequestFactory().withLogLevel("debug");
 
@@ -36,8 +36,8 @@ factory
     },
   })
   .withLogLevel("error")
-  .when((request) => {
-    return request.meta?.api?.endpointName === "bearer";
+  .when((config) => {
+    return config.meta?.api?.endpointName === "bearer";
   })
   .withHeaders({
     Authorization: () => `Bearer the-access-token`,
@@ -288,6 +288,8 @@ describe("HTTP Tests", () => {
   });
 
   it("test_request_interceptor_with_when", async () => {
+    let interceptedOnce = false;
+
     const factory = new HTTPRequestFactory()
       .withLogLevel("debug")
       .withAPIConfig({
@@ -295,15 +297,15 @@ describe("HTTP Tests", () => {
         endpoints: {
           getUser: {
             meta: {
-              proxyOnce: true,
+              proxyOnce: () => !interceptedOnce
             },
             target: "https://jsonplaceholder.typicode.com/users/1",
           },
         },
       })
-      .when((request) => request.meta.proxyOnce)
-      .withRequestInterceptors(async (_, { deleteInterceptor }) => {
-        deleteInterceptor();
+      .when((config) => config.meta.proxyOnce())
+      .withRequestInterceptors(async () => {
+        interceptedOnce = true;
         return {
           _localResponse: true,
           id: 1,
@@ -335,8 +337,8 @@ it("test_request_interceptor_from_api_config", async () => {
   const factory = new HTTPRequestFactory().withLogLevel("debug").withAPIConfig({
     name: "default",
     requestInterceptors: [
-      (request: HTTPRequest) => {
-        const entity = request.meta.api.endpoint.target
+      (config: RequestConfig) => {
+        const entity = config.meta.api.endpoint.target
           .replace(/^\//, "")
           .replace(/\/\d+/, "");
         if (entity && fixtures[entity]) {
@@ -475,7 +477,7 @@ describe("HTTPRequest.getHash() Tests", () => {
     expect(request1.getHash()).not.toBe(request2.getHash());
   });
 
-  it("should_ignore_non-relevant_headers_in_hash", () => {
+  it("should_ignore_non_relevant_headers_in_hash", () => {
     const request1 = testFactory.createGETRequest("https://example.com/api")
       .withHeader("authorization", "Bearer token1");
     const request2 = testFactory.createGETRequest("https://example.com/api")

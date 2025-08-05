@@ -9,12 +9,16 @@
     "type": "git"
   },
   "scripts": {
-    "generate-docs": "npx typedoc --entryPoints src/index.ts src/HTTPRequest.ts ",
-    "test": "vitest"
+    "generate-api-docs": "npx typedoc --entryPoints src/index.ts src/HTTPRequest.ts --out docs_old",
+    "test": "vitest",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
     "@types/node": "^20.4.2",
     "typescript": "^5.1.6",
+    "vitepress": "^1.6.3",
     "vitest": "^3.2.4"
   },
   "dependencies": {
