@@ -1,12 +1,11 @@
 {
-  "name": "http-request-factory",
-  "version": "0.1.3",
+  "name": "@apihive/core",
+  "version": "1.0.0",
   "main": "src/index.ts",
   "license": "MIT",
   "type": "module",
-  "types": "lib/index.d.ts",
   "repository": {
-    "url": "https://github.com/cleverplatypus/http-request-factory",
+    "url": "https://github.com/cleverplatypus/apihive-core",
     "type": "git"
   },
   "scripts": {

@@ -1,9 +1,9 @@
 # HTTP Request Factory
 
-![GitHub release](https://img.shields.io/github/v/release/cleverplatypus/http-request-factory?filter=*&label=Version)
-&nbsp;&nbsp;![](https://github.com/cleverplatypus/http-request-factory/actions/workflows/test.yml/badge.svg)
+![GitHub release](https://img.shields.io/github/v/release/cleverplatypus/apihive-core?filter=*&label=Version)
+&nbsp;&nbsp;![](https://github.com/cleverplatypus/apihive-core/actions/workflows/test.yml/badge.svg)
 
-> Check the [API Docs here](https://cleverplatypus.github.io/http-request-factory/)
+> Check the [API Docs here](https://cleverplatypus.github.io/apihive-core/)
 
 A wrapper for the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) to simplify handling of HTTP requests.
 
@@ -24,22 +24,23 @@ The library uses
 
 ## Installation
 ```sh
-yarn add http-request-factory
+yarn add @apihive/core
 
 # or
 
-npm i http-request-factory
+yarn add apihive #short hand
+
 ```
 
 ## Basic Usage
 ```ts
 // node / bundlers
-import { HTTPRequestFactory } from 'http-request-factory';
+import { HTTPRequestFactory } from '@apihive/core';
 ```
 
 ```ts
 // deno
-import {HTTPRequestFactory} from 'https://esm.sh/http-request-factory';
+import {HTTPRequestFactory} from 'https://esm.sh/apihive';
 ```
 
 ```ts
@@ -63,7 +64,7 @@ It's possible to define a group of endpoints that live at the same base URL by c
 
 ```ts
 //api-config.ts
-import {APIConfig} from 'http-request-factory';
+import {APIConfig} from '@apihive/core';
 
 const apis : APIConfig[] = [{
         name : 'aws',
@@ -102,7 +103,7 @@ When a passed value in configuration methods is a function, its value will be re
 
 ```ts
 //request-factory.ts
-import { HTTPRequestFactory } from 'http-request-factory';
+import { HTTPRequestFactory } from '@apihive/core';
 import apis from './api-config.ts'
 //...
 
