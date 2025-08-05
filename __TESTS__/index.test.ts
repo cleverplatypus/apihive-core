@@ -1,7 +1,7 @@
+import { describe, expect, it } from "vitest";
 import HTTPError from "../src/HTTPError.ts";
 import { HTTPRequest } from "../src/HTTPRequest.ts";
 import { HTTPRequestFactory } from "../src/index.ts";
-import { describe, expect, it } from "vitest";
 
 const factory = new HTTPRequestFactory().withLogLevel("debug");
 
@@ -366,4 +366,178 @@ it("test_request_interceptor_from_api_config", async () => {
 
   result = await factory.createAPIRequest("getToDo").execute();
   expect(result.type).toBeUndefined();
+});
+
+describe("HTTPRequest.getHash() Tests", () => {
+  const testFactory = new HTTPRequestFactory().withLogLevel("error");
+
+  it("should_generate_consistent_hashes_for_identical_requests", () => {
+    const request1 = testFactory.createGETRequest("https://example.com/api");
+    const request2 = testFactory.createGETRequest("https://example.com/api");
+    
+    expect(request1.getHash()).toBe(request2.getHash());
+  });
+
+  it("should_generate_different_hashes_for_different_URLs", () => {
+    const request1 = testFactory.createGETRequest("https://example.com/api/users");
+    const request2 = testFactory.createGETRequest("https://example.com/api/posts");
+    
+    expect(request1.getHash()).not.toBe(request2.getHash());
+  });
+
+  it("should_generate_different_hashes_for_different_HTTP_methods", () => {
+    const getRequest = testFactory.createGETRequest("https://example.com/api");
+    const postRequest = testFactory.createPOSTRequest("https://example.com/api");
+    
+    expect(getRequest.getHash()).not.toBe(postRequest.getHash());
+  });
+
+  it("should_include_JSON_body_content_in_hash", () => {
+    const request1 = testFactory.createPOSTRequest("https://example.com/api")
+      .withJSONBody({ name: "test", id: 1 });
+    const request2 = testFactory.createPOSTRequest("https://example.com/api")
+      .withJSONBody({ name: "test", id: 2 });
+    
+    expect(request1.getHash()).not.toBe(request2.getHash());
+  });
+
+  it("should_generate_same_hash_for_identical_JSON_bodies_regardless_of_property_order", () => {
+    const request1 = testFactory.createPOSTRequest("https://example.com/api")
+      .withJSONBody({ name: "test", id: 1 });
+    const request2 = testFactory.createPOSTRequest("https://example.com/api")
+      .withJSONBody({ id: 1, name: "test" });
+    
+    expect(request1.getHash()).toBe(request2.getHash());
+  });
+
+  it("should_include_form-encoded_body_content_in_hash", () => {
+    const request1 = testFactory.createPOSTRequest("https://example.com/api")
+      .withFormEncodedBody("name=test&id=1");
+    const request2 = testFactory.createPOSTRequest("https://example.com/api")
+      .withFormEncodedBody("name=test&id=2");
+    
+    expect(request1.getHash()).not.toBe(request2.getHash());
+  });
+
+  it("should_handle_FormData_bodies_consistently", () => {
+    const request1 = testFactory.createPOSTRequest("https://example.com/api")
+      .withFormDataBody((formData) => {
+        formData.append("name", "test");
+        formData.append("id", "1");
+      });
+    const request2 = testFactory.createPOSTRequest("https://example.com/api")
+      .withFormDataBody((formData) => {
+        formData.append("id", "1");
+        formData.append("name", "test");
+      });
+    
+    // Should be the same due to sorted entries in getHash
+    expect(request1.getHash()).toBe(request2.getHash());
+  });
+
+  it("should_generate_different_hashes_for_different_FormData_content", () => {
+    const request1 = testFactory.createPOSTRequest("https://example.com/api")
+      .withFormDataBody((formData) => {
+        formData.append("name", "test1");
+      });
+    const request2 = testFactory.createPOSTRequest("https://example.com/api")
+      .withFormDataBody((formData) => {
+        formData.append("name", "test2");
+      });
+    
+    expect(request1.getHash()).not.toBe(request2.getHash());
+  });
+
+  it("should_include_query_parameters_in_hash", () => {
+    const request1 = testFactory.createGETRequest("https://example.com/api")
+      .withQueryParam("page", "1");
+    const request2 = testFactory.createGETRequest("https://example.com/api")
+      .withQueryParam("page", "2");
+    
+    expect(request1.getHash()).not.toBe(request2.getHash());
+  });
+
+  it("should_include_URL_parameters_in_hash", () => {
+    const request1 = testFactory.createGETRequest("https://example.com/api/users/{{id}}")
+      .withURLParam("id", "123");
+    const request2 = testFactory.createGETRequest("https://example.com/api/users/{{id}}")
+      .withURLParam("id", "456");
+    
+    expect(request1.getHash()).not.toBe(request2.getHash());
+  });
+
+  it("should_include_relevant_headers_in_hash", () => {
+    const request1 = testFactory.createPOSTRequest("https://example.com/api")
+      .withHeader("content-type", "application/json");
+    const request2 = testFactory.createPOSTRequest("https://example.com/api")
+      .withHeader("content-type", "application/xml");
+    
+    expect(request1.getHash()).not.toBe(request2.getHash());
+  });
+
+  it("should_ignore_non-relevant_headers_in_hash", () => {
+    const request1 = testFactory.createGETRequest("https://example.com/api")
+      .withHeader("authorization", "Bearer token1");
+    const request2 = testFactory.createGETRequest("https://example.com/api")
+      .withHeader("authorization", "Bearer token2");
+    
+    // Authorization header is not in the relevant headers list
+    expect(request1.getHash()).toBe(request2.getHash());
+  });
+
+  it("should_cache_hash_value_for_performance", () => {
+    const request = testFactory.createPOSTRequest("https://example.com/api")
+      .withJSONBody({ test: "data" });
+    
+    const hash1 = request.getHash();
+    const hash2 = request.getHash();
+    
+    expect(hash1).toBe(hash2);
+    expect(typeof hash1).toBe("string");
+    expect(hash1.length).toBeGreaterThan(0);
+  });
+
+  it("should_generate_deterministic_hashes", () => {
+    const createRequest = () => testFactory.createPOSTRequest("https://example.com/api")
+      .withJSONBody({ name: "test", values: [1, 2, 3] })
+      .withQueryParam("filter", "active")
+      .withHeader("accept", "application/json");
+    
+    const request1 = createRequest();
+    const request2 = createRequest();
+    
+    expect(request1.getHash()).toBe(request2.getHash());
+  });
+
+  it("should_handle_requests_without_body", () => {
+    const request1 = testFactory.createGETRequest("https://example.com/api");
+    const request2 = testFactory.createGETRequest("https://example.com/api");
+    
+    expect(request1.getHash()).toBe(request2.getHash());
+    expect(typeof request1.getHash()).toBe("string");
+  });
+
+  it("should_handle_empty_JSON_body", () => {
+    const request1 = testFactory.createPOSTRequest("https://example.com/api")
+      .withJSONBody({});
+    const request2 = testFactory.createPOSTRequest("https://example.com/api")
+      .withJSONBody({});
+    
+    expect(request1.getHash()).toBe(request2.getHash());
+  });
+
+  it("should_handle_complex_nested_JSON_bodies", () => {
+    const complexData = {
+      user: { id: 1, name: "test" },
+      preferences: { theme: "dark", notifications: true },
+      metadata: { tags: ["tag1", "tag2"], created: "2023-01-01" }
+    };
+    
+    const request1 = testFactory.createPOSTRequest("https://example.com/api")
+      .withJSONBody(complexData);
+    const request2 = testFactory.createPOSTRequest("https://example.com/api")
+      .withJSONBody(JSON.parse(JSON.stringify(complexData)));
+    
+    expect(request1.getHash()).toBe(request2.getHash());
+  });
 });
