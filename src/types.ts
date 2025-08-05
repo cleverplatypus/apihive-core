@@ -95,7 +95,7 @@ export type NamedEndpoint = {
 /**
  * Configuration for an API to be added with {@link HTTPRequestFactory.withAPIConfig}
  */
-export type APIConfig = {
+export type APIConfig<M = Record<string, any>> = {
     /**
      * The base to be used as base URL for this API. If omitted, the value provided in each endpoint's `target` will be used.
      */
@@ -109,7 +109,7 @@ export type APIConfig = {
     /**
      * Any metadata that should be attached to the API for later reference
      */
-    meta? : Record<string, any>,
+    meta? : M,
     /**
      * Any headers that should be applied to each request. 
      * Notice that if a header value is  {@link DynamicHeaderValue}, 
