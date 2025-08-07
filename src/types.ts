@@ -122,9 +122,111 @@ export type NamedEndpoint = {
 
 
 /**
- * Configuration for an API to be added with {@link HTTPRequestFactory.withAPIConfig}
+ * Parameter object structure for endpoint functions.
+ * 
+ * This type provides IntelliSense suggestions for standard endpoint parameters
+ * while remaining flexible enough to allow specific parameter shapes.
+ * 
+ * @example Standard usage:
+ * (params: { pathParams: { id: string }; bodyParams?: { name: string } }) => Promise<User>
  */
-export type APIConfig<M = Record<string, any>> = {
+export type EndpointParams = {
+    pathParams?: Record<string, any>;
+    bodyParams?: Record<string, any>;
+    queryParams?: Record<string, any>;
+    [key: string]: any; // Allows additional properties for flexibility
+};
+
+/**
+ * Template type for endpoint parameters that provides IntelliSense.
+ * Use intersection with this type to get autocomplete for standard parameter properties.
+ * 
+ * @example
+ * type CreateUserParams = EndpointParamsTemplate & {
+ *   pathParams: { orgId: string };
+ *   bodyParams: { name: string; email: string };
+ *   queryParams?: { notify: boolean };
+ * }
+ */
+export type EndpointParamsTemplate = {
+    pathParams?: any;
+    bodyParams?: any;
+    queryParams?: any;
+};
+
+/**
+ * Base type for API configurations where endpoints are defined as functions
+ * with single-object parameters. This enables type-safe code generation.
+ * 
+ * @example
+ * type GitHubAPI = BaseAPIInterface & {
+ *   endpoints: {
+ *     getUser: (params: { pathParams: { username: string } }) => Promise<User>;
+ *     createRepo: (params: {
+ *       pathParams: { owner: string };
+ *       bodyParams: { name: string; description?: string };
+ *     }) => Promise<Repository>;
+ *   };
+ *   meta?: { requiresAuth: boolean };
+ * }
+ */
+export type BaseAPIInterface = {
+    endpoints?: Record<string, (params: any) => Promise<any>>;
+    meta?: Record<string, any>;
+};
+
+/**
+ * Default API configuration type (no constraints)
+ */
+export type DefaultAPIConfig = BaseAPIInterface & {
+    meta?: Record<string, any>;
+    endpoints?: Record<string, (params: EndpointParams) => Promise<any>>;
+};
+
+/**
+ * Configuration for an API to be added with {@link HTTPRequestFactory.withAPIConfig}
+ * 
+ * @template TApiConfig - Configuration interface that constrains meta and endpoints.
+ *                       Must extend BaseAPIInterface for function-based endpoint definitions.
+ * 
+ * @example
+ * // Function-based API definition for type-safe code generation
+ * interface GitHubAPI {
+ *   endpoints: {
+ *     getUser: (params: { pathParams: { username: string } }) => Promise<User>;
+ *     createRepo: (params: {
+ *       pathParams: { owner: string };
+ *       bodyParams: { name: string; description?: string };
+ *     }) => Promise<Repository>;
+ *   };
+ *   meta?: { requiresAuth: boolean };
+ * }
+ * const config: APIConfig<GitHubAPI> = {
+ *   name: 'github',
+ *   endpoints: {
+ *     getUser: { target: '/users/{username}' },
+ *     createRepo: { target: '/repos', method: 'POST' }
+ *   }
+ * };
+ * 
+ * @example  
+ * // Adapter-driven API (no endpoints allowed)
+ * interface OpenAPIConfig {
+ *   meta: { openAPI: { spec: string } };
+ *   endpoints?: never;
+ * }
+ * const config: APIConfig<OpenAPIConfig> = { ... }; // endpoints property forbidden
+ * 
+ * @example
+ * // Unconstrained API (default)
+ * const config: APIConfig = {
+ *   name: 'myapi',
+ *   endpoints: {
+ *     anyEndpoint: { target: '/any/path' } // Any endpoint name allowed
+ *   }
+ * };
+ */
+export type APIConfig<TApiConfig extends BaseAPIInterface = DefaultAPIConfig> = {
     /**
      * The base to be used as base URL for this API. If omitted, the value provided in each endpoint's `target` will be used.
      */
@@ -136,9 +238,10 @@ export type APIConfig<M = Record<string, any>> = {
      */
     name : string | 'default'
     /**
-     * Any metadata that should be attached to the API for later reference
+     * Any metadata that should be attached to the API for later reference.
+     * The structure is constrained by the TApiConfig generic parameter.
      */
-    meta? : M,
+    meta? : TApiConfig extends { meta: infer TMeta } ? TMeta : any,
     /**
      * Any headers that should be applied to each request. 
      * Notice that if a header value is  {@link DynamicHeaderValue}, 
@@ -153,12 +256,22 @@ export type APIConfig<M = Record<string, any>> = {
     responseBodyTransformers? : ResponseBodyTransformer | ResponseBodyTransformer[],
     requestInterceptors? : RequestInterceptor | Array<RequestInterceptor>,
     errorInterceptors? : ErrorInterceptor | Array<ErrorInterceptor>,
-    queryParams? : Record<string, QueryParameterValue>,
-
+    
     /**
-     * A map of {@link Endpoint} for the API
+     * A map of {@link Endpoint} for the API.
+     * Can be constrained or forbidden by the TApiConfig generic parameter.
+     * 
+     * @example
+     * // For adapter-driven APIs, endpoints can be forbidden:
+     * // endpoints?: never (prevents manual endpoint configuration)
+     * 
+     * @example
+     * // For function-based APIs, only specific endpoint names are allowed:
+     * // endpoints: { getUser: Endpoint; getUserRepos: Endpoint } (constrains keys)
      */
-    endpoints : {
-        [endpointName: string]: Endpoint
-    }
+    endpoints : TApiConfig extends { endpoints?: never } 
+        ? never 
+        : TApiConfig extends { endpoints: Record<infer K, (...args: any[]) => any> } 
+            ? { [P in Extract<K, string>]: Endpoint }
+            : { [endpointName: string]: Endpoint }
 }
