@@ -110,6 +110,8 @@ export type RequestConfig = {
   url: string;
   headers: Record<string, HeaderValue>;
   body: any;
+  jsonMimeTypes: string[];
+  textMimeTypes: string[];
   timeout: number;
   method: HTTPMethod;
   logLevel: LogLevel;

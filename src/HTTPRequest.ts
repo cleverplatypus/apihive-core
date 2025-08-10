@@ -1,5 +1,4 @@
 import { maybeFunction } from "./utils.js";
-import { TEXT_TYPES } from "./constants.js";
 import HTTPError from "./HTTPError.js";
 import {
   type LoggerFacade,
@@ -50,11 +49,10 @@ export class HTTPRequest {
       this.getLogger().info(`No content-type header found for response`);
       return null;
     }
-    if (contentType.startsWith("application/json")) {
-      return await response.json();
-    }
+    if (this.config.jsonMimeTypes.find((type) => 
+      new RegExp(type).test(contentType))) return response.json();
 
-    if (TEXT_TYPES.find((type) => new RegExp(type).test(contentType))) {
+    if (this.config.textMimeTypes.find((type) => new RegExp(type).test(contentType))) {
       return await response.text();
     }
 
@@ -85,6 +83,18 @@ export class HTTPRequest {
       ignoreResponseBody: false,
       uriEncodedBody: false,
       method,
+      // Defaults: match application/json and application/*+json
+      jsonMimeTypes: [
+        "^application/(?:.+\\+)?json$",
+      ],
+      // Defaults: common textual types
+      textMimeTypes: [
+        "^text/.*$",
+        "^application/.*\\+xml$",
+        "^image/.*\\+xml$",
+        "^application/javascript$",
+        "^application/xml$",
+      ],
       credentials: "same-origin",
       logLevel: "error",
       corsMode: "cors",
@@ -706,6 +716,24 @@ export class HTTPRequest {
    */
   withNoCors() {
     this.config.corsMode = "no-cors";
+    return this;
+  }
+
+  withJSONMimeTypes(...mimeTypes: string[]) {
+    // Extend current patterns (avoid replacing defaults)
+    this.config.jsonMimeTypes = [
+      ...this.config.jsonMimeTypes,
+      ...mimeTypes,
+    ];
+    return this;
+  }
+
+  withTextMimeTypes(...mimeTypes: string[]) {
+    // Extend current patterns (avoid replacing defaults)
+    this.config.textMimeTypes = [
+      ...this.config.textMimeTypes,
+      ...mimeTypes,
+    ];
     return this;
   }
 

@@ -273,6 +273,35 @@ export class HTTPRequestFactory {
   }
 
   /**
+   * Adds the provided JSON MIME types regexp patterns to the factory defaults.
+   * Useful when dealing with APIs returning JSON but with proprietary mime type. 
+   *
+   * @param {...string} mimeTypes - An array of MIME types to be added to the request.
+   * @returns {HTTPRequestFactory} the factory instance
+   */
+  withJSONMimeTypes(...mimeTypes: string[]) {
+    this.requestDefaults.push((request) => {
+      request.withJSONMimeTypes(...mimeTypes);
+    });
+    return this;
+  }
+
+  /**
+   * Adds the provided text MIME types regexp patterns to the factory defaults.
+   * The library recognizes text/*, application/.*\+xml, image/.*\+xml, application/javascript
+   * by default as text.
+   *
+   * @param {...string} mimeTypes - An array of MIME types to be added to the request.
+   * @returns {HTTPRequestFactory} the factory instance
+   */
+  withTextMimeTypes(...mimeTypes: string[]) {
+    this.requestDefaults.push((request) => {
+      request.withTextMimeTypes(...mimeTypes);
+    });
+    return this;
+  }
+
+  /**
    * Attaches an adapter to this factory instance.
    * Adapters extend the factory's functionality through interceptors and hooks.
    *

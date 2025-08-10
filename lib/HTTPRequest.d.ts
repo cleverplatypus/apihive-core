@@ -178,6 +178,8 @@ export declare class HTTPRequest {
      * @return {Object} - The current object.
      */
     withNoCors(): this;
+    withJSONMimeTypes(...mimeTypes: string[]): this;
+    withTextMimeTypes(...mimeTypes: string[]): this;
     /**
      * Adds a query parameter to the request.
      *

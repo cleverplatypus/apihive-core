@@ -118,6 +118,23 @@ export declare class HTTPRequestFactory {
     withHeaders(headers: Record<string, HeaderValue>): this;
     withErrorInterceptors(...interceptors: ErrorInterceptor[]): this;
     /**
+     * Adds the provided JSON MIME types regexp patterns to the factory defaults.
+     * Useful when dealing with APIs returning JSON but with proprietary mime type.
+     *
+     * @param {...string} mimeTypes - An array of MIME types to be added to the request.
+     * @returns {HTTPRequestFactory} the factory instance
+     */
+    withJSONMimeTypes(...mimeTypes: string[]): this;
+    /**
+     * Adds the provided text MIME types regexp patterns to the factory defaults.
+     * The library recognizes text/*, application/.*\+xml, image/.*\+xml, application/javascript
+     * by default as text.
+     *
+     * @param {...string} mimeTypes - An array of MIME types to be added to the request.
+     * @returns {HTTPRequestFactory} the factory instance
+     */
+    withTextMimeTypes(...mimeTypes: string[]): this;
+    /**
      * Attaches an adapter to this factory instance.
      * Adapters extend the factory's functionality through interceptors and hooks.
      *
