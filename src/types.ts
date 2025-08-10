@@ -1,6 +1,6 @@
 import { HTTPRequest } from "./HTTPRequest.js";
 import HTTPError from "./HTTPError.js";
-import { LoggerFacade, LogLevel } from "./LoggerFacade.js";
+import { LoggerFacade, LogLevel } from "@apihive/logger-facade";
 
 /**
  * Control APIs available to interceptors for manipulating the request during execution.
@@ -30,7 +30,7 @@ export type URLParams = Record<
 /**
  * Control APIs available to response interceptors.
  */
-export interface ResponseControls {
+export interface ResponseInterceptorControls {
   getLogger(): LoggerFacade;
 }
 
@@ -81,7 +81,7 @@ export type ResponseHandler = (
 export type ResponseInterceptor = (
   response: Response,
   config: RequestConfig,
-  controls: ResponseControls
+  controls: ResponseInterceptorControls
 ) => Promise<any>;
 
 // Registration object for response interceptors that can control
@@ -108,7 +108,7 @@ export type RequestConfig = {
   method: HTTPMethod;
   logLevel: LogLevel;
   meta: Record<string, any>;
-  queryParams: Object;
+  queryParams: Record<string, QueryParameterValue>;
   responseBodyTransformers: ResponseBodyTransformer[];
   ignoreResponseBody: boolean;
   credentials: RequestCredentials;

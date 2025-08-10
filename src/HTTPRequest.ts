@@ -1,7 +1,6 @@
-import ConsoleLogger from "./ConsoleLogger.js";
 import { TEXT_TYPES } from "./constants.js";
 import HTTPError from "./HTTPError.js";
-import type  {LoggerFacade, LogLevel } from "./LoggerFacade.js";
+import {type LoggerFacade, type LogLevel, ConsoleLogger } from "@apihive/logger-facade";
 import type {
   ErrorInterceptor,
   HeaderValue,
@@ -12,7 +11,7 @@ import type {
   RequestConfigBuilder,
   RequestInterceptor,
   ResponseBodyTransformer,
-  ResponseControls as ResponseInterceptorControls,
+  ResponseInterceptorControls,
   ResponseInterceptor,
   ResponseInterceptorWithOptions,
   URLParams,
@@ -143,7 +142,7 @@ export class HTTPRequest {
   private setupQueryParams() {
     if (Object.keys(this.config.queryParams).length) {
       const params = new URLSearchParams();
-      for (let k in this.config.queryParams) {
+      for (let k of this.config.queryParams) {
         params.set(k, this.config.queryParams[k]);
       }
       this.config.url = `${this.config.url}?${params.toString()}`;
@@ -204,10 +203,10 @@ export class HTTPRequest {
     this.wasUsed = true;
 
     // Create controls for interceptors
-    const requestControls = this.createRequestControls();
+    const requestInterceptorControls = this.createRequestInterceptorControls();
     
     for (const interceptor of this.config.requestInterceptors || []) {
-      let interceptorResponse = await interceptor(this.getReadOnlyConfig(), requestControls);
+      let interceptorResponse = await interceptor(this.getReadOnlyConfig(), requestInterceptorControls);
       if (interceptorResponse === undefined) {
         continue;
       }
@@ -403,7 +402,7 @@ export class HTTPRequest {
    * Creates request controls for interceptors to manipulate the request during execution.
    * @internal
    */
-  private createRequestControls(): RequestInterceptorControls {
+  private createRequestInterceptorControls(): RequestInterceptorControls {
     return {
       abort: () => {
         //Makes sure that any existing timeout is cleared not to invoke 
