@@ -14,6 +14,7 @@ import type {
   ResponseBodyTransformer,
   ResponseControls as ResponseInterceptorControls,
   ResponseInterceptor,
+  ResponseInterceptorWithOptions,
   URLParams,
 } from "./types.ts";
 
@@ -45,7 +46,7 @@ export class HTTPRequest {
       this.getLogger().info(`No content-type header found for response`);
       return null;
     }
-    if (/^application\/json/.test(contentType)) {
+    if (contentType.startsWith('application/json')) {
       return await response.json();
     }
 
@@ -214,11 +215,28 @@ export class HTTPRequest {
 
       logger.trace("HttpRequestFactory : Fetch response", response);
 
-      if (this.config.responseInterceptors.length) {
+          if (this.config.responseInterceptors.length) {
         const responseControls = this.createResponseControls();
-        for (const interceptor of this.config.responseInterceptors) {
-          const interceptorResponse = await interceptor(response, this.getReadOnlyConfig(), responseControls);
+        for (const entry of this.config.responseInterceptors) {
+          const { interceptor, skipTransformersOnReturn } =
+            typeof entry === 'function'
+              ? { interceptor: entry as ResponseInterceptor, skipTransformersOnReturn: false }
+              : { interceptor: (entry as ResponseInterceptorWithOptions).interceptor, skipTransformersOnReturn: (entry as ResponseInterceptorWithOptions).skipTransformersOnReturn ?? false };
+
+          let interceptorResponse = await interceptor(
+            response,
+            this.getReadOnlyConfig(),
+            responseControls
+          );
           if (interceptorResponse !== undefined) {
+            if (!skipTransformersOnReturn && this.config.responseBodyTransformers?.length) {
+              for (const transformer of this.config.responseBodyTransformers) {
+                interceptorResponse = await transformer(
+                  interceptorResponse,
+                  this.getReadOnlyConfig()
+                );
+              }
+            }
             return interceptorResponse;
           }
         }
@@ -742,7 +760,7 @@ export class HTTPRequest {
    * @return {HTTPRequest} - The updated request instance.
    */
   withResponseInterceptors(
-    ...interceptors: ResponseInterceptor[]
+    ...interceptors: Array<ResponseInterceptor | ResponseInterceptorWithOptions>
   ): HTTPRequest {
     this.config.responseInterceptors.push(...interceptors);
     return this;

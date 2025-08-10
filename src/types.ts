@@ -83,6 +83,19 @@ export type ResponseInterceptor = (
   config: RequestConfig,
   controls: ResponseControls
 ) => Promise<any>;
+
+// Registration object for response interceptors that can control
+// whether returned values should skip response body transformers.
+export type ResponseInterceptorWithOptions = {
+  interceptor: ResponseInterceptor;
+  /**
+   * If true, any non-undefined value returned by this interceptor
+   * will be returned as-is, without passing through responseBodyTransformers.
+   * Defaults to false (transformers are applied).
+   */
+  skipTransformersOnReturn?: boolean;
+};
+
 export type ErrorInterceptor = (error: HTTPError) => boolean | Promise<boolean>;
 /**
  * Internal representation of a {@link HTTPRequest}'s configuration
@@ -105,7 +118,7 @@ export type RequestConfig = {
   corsMode: RequestMode;
   urlParams: URLParams;
   requestInterceptors: RequestInterceptor[];
-  responseInterceptors: ResponseInterceptor[];
+  responseInterceptors: Array<ResponseInterceptor | ResponseInterceptorWithOptions>;
   errorInterceptors: ErrorInterceptor[];
 };
 
@@ -270,6 +283,14 @@ export type APIConfig<TApiConfig extends BaseAPIInterface = DefaultAPIConfig> =
     responseBodyTransformers?:
       | ResponseBodyTransformer
       | ResponseBodyTransformer[];
+    /**
+     * Optional response interceptors applied to all requests of this API.
+     * Interceptors can be functions or registrations that control transformer behavior.
+     */
+    responseInterceptors?:
+      | ResponseInterceptor
+      | ResponseInterceptorWithOptions
+      | Array<ResponseInterceptor | ResponseInterceptorWithOptions>;
     requestInterceptors?: RequestInterceptor | Array<RequestInterceptor>;
     errorInterceptors?: ErrorInterceptor | Array<ErrorInterceptor>;
 

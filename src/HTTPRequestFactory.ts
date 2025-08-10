@@ -9,6 +9,7 @@ import {
   ResponseBodyTransformer,
   RequestInterceptor,
   ResponseInterceptor,
+  ResponseInterceptorWithOptions,
   RequestConfigBuilder,
   ErrorInterceptor,
   RequestConfig,
@@ -60,7 +61,7 @@ export class HTTPRequestFactory {
     priority: number;
   }> = [];
   private adapterResponseInterceptors: Array<{
-    interceptor: ResponseInterceptor;
+    entry: ResponseInterceptor | ResponseInterceptorWithOptions;
     priority: number;
   }> = [];
   private adapterErrorInterceptors: Array<{
@@ -392,11 +393,11 @@ export class HTTPRequestFactory {
     }
     this.adapterRequestInterceptors.sort((a, b) => a.priority - b.priority);
 
-    // Register response interceptors
+    // Register response interceptors (functions or registrations)
     const responseInterceptors = adapter.getResponseInterceptors?.() || [];
-    for (const interceptor of responseInterceptors) {
+    for (const entry of responseInterceptors) {
       this.adapterResponseInterceptors.push({
-        interceptor,
+        entry,
         priority: priority.responseInterceptor!,
       });
     }
@@ -429,8 +430,19 @@ export class HTTPRequestFactory {
     this.adapterRequestInterceptors = this.adapterRequestInterceptors.filter(
       (entry) => !requestInterceptors.includes(entry.interceptor)
     );
+    // Build a set of function references for comparison
+    const responseFns = new Set(
+      responseInterceptors.map((e) =>
+        typeof e === 'function' ? e as ResponseInterceptor : (e as ResponseInterceptorWithOptions).interceptor
+      )
+    );
     this.adapterResponseInterceptors = this.adapterResponseInterceptors.filter(
-      (entry) => !responseInterceptors.includes(entry.interceptor)
+      (stored) => {
+        const fn = typeof stored.entry === 'function'
+          ? (stored.entry as ResponseInterceptor)
+          : (stored.entry as ResponseInterceptorWithOptions).interceptor;
+        return !responseFns.has(fn);
+      }
     );
     this.adapterErrorInterceptors = this.adapterErrorInterceptors.filter(
       (entry) => !errorInterceptors.includes(entry.interceptor)
@@ -466,7 +478,7 @@ export class HTTPRequestFactory {
       // Apply response interceptors in priority order
       const sortedResponseInterceptors = this.adapterResponseInterceptors
         .sort((a, b) => a.priority - b.priority)
-        .map((entry) => entry.interceptor);
+        .map((entry) => entry.entry);
 
       // Apply error interceptors in priority order
       const sortedErrorInterceptors = this.adapterErrorInterceptors
@@ -613,6 +625,12 @@ export class HTTPRequestFactory {
         ? api.requestInterceptors
         : [api.requestInterceptors];
       request.withRequestInterceptors(...interceptors);
+    }
+    if (api.responseInterceptors) {
+      const interceptors = Array.isArray(api.responseInterceptors)
+        ? api.responseInterceptors
+        : [api.responseInterceptors];
+      request.withResponseInterceptors(...interceptors);
     }
     if (api.errorInterceptors) {
       const errorInterceptors = Array.isArray(api.errorInterceptors)

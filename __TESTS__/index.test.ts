@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import HTTPError from "../src/HTTPError.ts";
-import { HTTPRequest } from "../src/HTTPRequest.ts";
 import { HTTPRequestFactory, RequestConfig } from "../src/index.ts";
 
 const factory = new HTTPRequestFactory().withLogLevel("debug");
@@ -41,6 +40,70 @@ factory
   })
   .withHeaders({
     Authorization: () => `Bearer the-access-token`,
+  });
+
+  it("response_interceptor_applies_transformers_on_return_by_default", async () => {
+    const factory = new HTTPRequestFactory().withAPIConfig({
+      name: "transform-on-return",
+      baseURL: "https://httpbin.org",
+      // Transformer will unwrap objects of the shape { wrapped: any }
+      responseBodyTransformers: (body: any) => {
+        if (body && typeof body === "object" && "wrapped" in body) {
+          return (body as any).wrapped;
+        }
+        // Fallback to httpbin's json echo
+        return body?.json ?? body;
+      },
+      endpoints: {
+        post: { target: "/anything", method: "POST" },
+      },
+    });
+
+    const payload = { a: 1, b: "two" };
+    const result = await factory
+      .createAPIRequest("transform-on-return", "post")
+      .withJSONBody(payload)
+      // Plain function => skipTransformersOnReturn defaults to false; transformers should run
+      .withResponseInterceptors(async (resp) => {
+        const data = await resp.json();
+        return { wrapped: data.json };
+      })
+      .execute();
+
+    expect(result).toEqual(payload);
+  });
+
+  it("api_config_response_interceptors_registration_respects_skip_flag", async () => {
+    const factory = new HTTPRequestFactory().withAPIConfig({
+      name: "api-config-interceptors",
+      baseURL: "https://httpbin.org",
+      responseBodyTransformers: (body: any) => {
+        // This would unwrap if it ran
+        if (body && typeof body === "object" && "wrapped" in body) {
+          return (body as any).wrapped;
+        }
+        return body?.json ?? body;
+      },
+      responseInterceptors: {
+        interceptor: async (resp) => {
+          const data = await resp.json();
+          return { wrapped: data.json };
+        },
+        skipTransformersOnReturn: true,
+      },
+      endpoints: {
+        post: { target: "/anything", method: "POST" },
+      },
+    });
+
+    const payload = { x: 42 };
+    const result = await factory
+      .createAPIRequest("api-config-interceptors", "post")
+      .withJSONBody(payload)
+      .execute();
+
+    expect(result).toHaveProperty("wrapped");
+    expect(result.wrapped).toEqual(payload);
   });
 
 describe("HTTP Tests", () => {
@@ -143,12 +206,12 @@ describe("HTTP Tests", () => {
     const result = await factory
       .createAPIRequest("simple-api", "get-product-by-id")
       .withURLParam("productId", "123")
-      .withResponseInterceptors(async (fetchResponse) => {
+      .withResponseInterceptors({interceptor: async (fetchResponse) => {
         const data = await fetchResponse.json();
         return {
           wrapped: data,
         };
-      })
+      }, skipTransformersOnReturn: true})
       .execute();
     expect(result).toHaveProperty("wrapped");
   });
