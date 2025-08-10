@@ -2,6 +2,12 @@ import { HTTPRequest } from "./HTTPRequest.js";
 import HTTPError from "./HTTPError.js";
 import { LoggerFacade, LogLevel } from "@apihive/logger-facade";
 
+
+
+export type MaybeGetterFunction<T, Args extends any[] = any[]> =
+| T
+| ((...args: Args extends infer U ? U : never) => T);
+
 /**
  * Control APIs available to interceptors for manipulating the request during execution.
  */
@@ -24,7 +30,7 @@ export interface RequestInterceptorControls {
 
 export type URLParams = Record<
   string,
-  LiteralValue | ((config: RequestConfig) => LiteralValue)
+  LiteralValue | MaybeGetterFunction<LiteralValue, [config: RequestConfig]>
 >;
 
 /**
@@ -65,9 +71,9 @@ export type ExpectedResponseFormat =
   | "blob"
   | "arrayBuffer";
 
-export type QueryParameterValue = LiteralValue | Array<LiteralValue>;
+export type QueryParameterValue = MaybeGetterFunction<LiteralValue | Array<LiteralValue>, [config: RequestConfig]>;
 
-export type DynamicHeaderValue = (config: RequestConfig) => string | undefined;
+export type DynamicHeaderValue = MaybeGetterFunction<string | undefined, [config: RequestConfig]>;
 
 export type ResponseBodyTransformer = (body: any, config: RequestConfig) => any;
 

@@ -1,4 +1,4 @@
-import type { LoggerFacade, LogLevel } from "./LoggerFacade.js";
+import { type LoggerFacade, type LogLevel } from "@apihive/logger-facade";
 import type { ErrorInterceptor, HeaderValue, HTTPMethod, QueryParameterValue, RequestConfigBuilder, RequestInterceptor, ResponseBodyTransformer, ResponseInterceptor, ResponseInterceptorWithOptions } from "./types.js";
 type RequestConstructorArgs = {
     url: string;
@@ -28,7 +28,7 @@ export declare class HTTPRequest {
      * If there are no transformers, returns the value untouched.
      */
     private applyResponseTransformers;
-    constructor({ url, method, defaultConfigBuilders, }: RequestConstructorArgs);
+    constructor({ url, method, defaultConfigBuilders }: RequestConstructorArgs);
     /**
      * Gets the URL of the request.
      *
@@ -58,7 +58,7 @@ export declare class HTTPRequest {
      * Creates request controls for interceptors to manipulate the request during execution.
      * @internal
      */
-    private createRequestControls;
+    private createRequestInterceptorControls;
     /**
      * Creates response controls for response interceptors.
      * @internal

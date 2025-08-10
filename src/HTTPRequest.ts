@@ -1,6 +1,11 @@
+import { maybeFunction } from "./utils.js";
 import { TEXT_TYPES } from "./constants.js";
 import HTTPError from "./HTTPError.js";
-import {type LoggerFacade, type LogLevel, ConsoleLogger } from "@apihive/logger-facade";
+import {
+  type LoggerFacade,
+  type LogLevel,
+  ConsoleLogger,
+} from "@apihive/logger-facade";
 import type {
   ErrorInterceptor,
   HeaderValue,
@@ -45,7 +50,7 @@ export class HTTPRequest {
       this.getLogger().info(`No content-type header found for response`);
       return null;
     }
-    if (contentType.startsWith('application/json')) {
+    if (contentType.startsWith("application/json")) {
       return await response.json();
     }
 
@@ -69,11 +74,7 @@ export class HTTPRequest {
     return transformed;
   }
 
-  constructor({
-    url,
-    method,
-    defaultConfigBuilders,
-  }: RequestConstructorArgs) {
+  constructor({ url, method, defaultConfigBuilders }: RequestConstructorArgs) {
     this.configBuilders = defaultConfigBuilders;
     this.wasUsed = false;
     this.config = {
@@ -141,11 +142,27 @@ export class HTTPRequest {
 
   private setupQueryParams() {
     if (Object.keys(this.config.queryParams).length) {
-      const params = new URLSearchParams();
-      for (let k of this.config.queryParams) {
-        params.set(k, this.config.queryParams[k]);
+      const params: Record<string, string | string[]> = {};
+      for (let k of Object.keys(this.config.queryParams)) {
+        const value = maybeFunction<string | Array<string>>(
+          this.config.queryParams[k],
+          this
+        );
+        params[k] = value;
       }
-      this.config.url = `${this.config.url}?${params.toString()}`;
+      if (Object.keys(params).length) {
+        const url = new URL(this.config.url);
+        for (const k of Object.keys(params)) {
+          if (Array.isArray(params[k])) {
+            for (const v of params[k]) {
+              url.searchParams.append(k, v);
+            }
+          } else {
+            url.searchParams.append(k, params[k] as string);
+          }
+        }
+        this.config.url = url.toString();
+      }
     }
   }
 
@@ -204,13 +221,18 @@ export class HTTPRequest {
 
     // Create controls for interceptors
     const requestInterceptorControls = this.createRequestInterceptorControls();
-    
+
     for (const interceptor of this.config.requestInterceptors || []) {
-      let interceptorResponse = await interceptor(this.getReadOnlyConfig(), requestInterceptorControls);
+      let interceptorResponse = await interceptor(
+        this.getReadOnlyConfig(),
+        requestInterceptorControls
+      );
       if (interceptorResponse === undefined) {
         continue;
       }
-      interceptorResponse = await this.applyResponseTransformers(interceptorResponse);
+      interceptorResponse = await this.applyResponseTransformers(
+        interceptorResponse
+      );
       return interceptorResponse;
     }
 
@@ -224,13 +246,22 @@ export class HTTPRequest {
 
       logger.trace("HttpRequestFactory : Fetch response", response);
 
-          if (this.config.responseInterceptors.length) {
+      if (this.config.responseInterceptors.length) {
         const responseControls = this.createResponseControls();
         for (const entry of this.config.responseInterceptors) {
           const { interceptor, skipTransformersOnReturn } =
-            typeof entry === 'function'
-              ? { interceptor: entry as ResponseInterceptor, skipTransformersOnReturn: false }
-              : { interceptor: (entry as ResponseInterceptorWithOptions).interceptor, skipTransformersOnReturn: (entry as ResponseInterceptorWithOptions).skipTransformersOnReturn ?? false };
+            typeof entry === "function"
+              ? {
+                  interceptor: entry as ResponseInterceptor,
+                  skipTransformersOnReturn: false,
+                }
+              : {
+                  interceptor: (entry as ResponseInterceptorWithOptions)
+                    .interceptor,
+                  skipTransformersOnReturn:
+                    (entry as ResponseInterceptorWithOptions)
+                      .skipTransformersOnReturn ?? false,
+                };
 
           let interceptorResponse = await interceptor(
             response,
@@ -239,7 +270,9 @@ export class HTTPRequest {
           );
           if (interceptorResponse !== undefined) {
             if (!skipTransformersOnReturn) {
-              interceptorResponse = await this.applyResponseTransformers(interceptorResponse);
+              interceptorResponse = await this.applyResponseTransformers(
+                interceptorResponse
+              );
             }
             return interceptorResponse;
           }
@@ -276,26 +309,30 @@ export class HTTPRequest {
         }
         return Promise.reject(abortError);
       }
-      
+
       logger.error("HttpRequestFactory : Fetch error", {
         type: "fetch-error",
         endpoint: this.config.url,
         details: error,
       });
-      
+
       // Convert network error to HTTPError and call error interceptors
-      const httpError = new HTTPError(-1, error.message || "Network error", error);
+      const httpError = new HTTPError(
+        -1,
+        error.message || "Network error",
+        error
+      );
       for (const interceptor of this.config.errorInterceptors || []) {
         if (await interceptor(httpError)) {
           break;
         }
       }
-      
+
       return Promise.reject(httpError);
     } finally {
-        clearTimeout(this.timeoutID);
-      }
+      clearTimeout(this.timeoutID);
     }
+  }
 
   /**
    * Retrieves a read-only copy of configuration with lazy evaluation.
@@ -305,96 +342,115 @@ export class HTTPRequest {
    */
   private getReadOnlyConfig(): RequestConfig {
     const config = { ...this.config };
-    
+
     // Create a proxy that lazily evaluates function-based properties
     return new Proxy(config, {
       get: (target, prop: string | symbol) => {
         const value = target[prop as keyof RequestConfig];
-        
+
         // Handle body property - evaluate function if needed
-        if (prop === 'body' && typeof value === 'function') {
-          try {
-            return (value as Function)();
-          } catch (error) {
-            return null;
+        try {
+          if (prop === "body") {
+            return maybeFunction(value);
           }
+        } catch (error) {
+          this.getLogger().warn("HttpRequestFactory : Error evaluating body", {
+            type: "body-error",
+            endpoint: this.config.url,
+            details: error,
+          });
+          return null;
         }
-        
+
         // Handle headers property - create lazy header proxy
-        if (prop === 'headers' && typeof value === 'object' && value !== null) {
+        if (prop === "headers" && typeof value === "object" && value !== null) {
           return new Proxy(value as Record<string, any>, {
             get: (headerTarget, headerProp: string | symbol) => {
               const headerValue = headerTarget[headerProp as string];
-              
+
               // Evaluate function-based header when accessed
-              if (typeof headerValue === 'function') {
                 try {
-                  return (headerValue as Function)(target);
+                  return maybeFunction(headerValue, target)
                 } catch (error) {
+                  this.getLogger().warn("HttpRequestFactory : Error evaluating header", {
+                    type: "header-error",
+                    endpoint: this.config.url,
+                    details: error,
+                  });
                   return undefined;
                 }
-              }
-              
-              return headerValue;
             },
-            
+
             // Make headers enumerable and read-only
             ownKeys: (headerTarget) => Object.keys(headerTarget),
             getOwnPropertyDescriptor: (headerTarget, headerProp) => {
               if (headerProp in headerTarget) {
                 const headerValue = headerTarget[headerProp as string];
-                const evaluatedValue = typeof headerValue === 'function' 
-                  ? (() => { try { return headerValue(target); } catch { return undefined; } })()
-                  : headerValue;
-                return {
-                  enumerable: true,
-                  configurable: false,
-                  writable: false,
-                  value: evaluatedValue
-                };
+                let evaluatedValue;
+                  try {
+                    evaluatedValue = maybeFunction(headerValue, target);
+                  } catch (error) {
+                    this.getLogger().warn("HttpRequestFactory : Error evaluating header", {
+                      type: "header-error",
+                      endpoint: this.config.url,
+                      details: error,
+                    });
+                    return undefined;
+                  }
+                  return {
+                    enumerable: true,
+                    configurable: false,
+                    writable: false,
+                    value: evaluatedValue,
+                  };
               }
               return undefined;
             },
-            
+
             // Prevent modifications
             set: () => false,
-            deleteProperty: () => false
+            deleteProperty: () => false,
           });
         }
-        
+
         // Return other properties as-is
         return value;
       },
-      
+
       // Make config enumerable and read-only
       ownKeys: (target) => Object.keys(target),
       getOwnPropertyDescriptor: (target, prop) => {
         if (prop in target) {
           const value = target[prop as keyof RequestConfig];
           let evaluatedValue = value;
-          
+
           // Evaluate if needed (same logic as the get handler)
-          if (prop === 'body' && typeof value === 'function') {
+          if (prop === "body") {
             try {
-              evaluatedValue = (value as Function)();
-            } catch {
+              evaluatedValue = maybeFunction(value);
+            } catch (error) {
+              this.getLogger().warn("HttpRequestFactory : Error evaluating body", {
+                type: "body-error",
+                endpoint: this.config.url,
+                details: error,
+              });
               evaluatedValue = null;
             }
           }
-          
+
           return {
             enumerable: true,
             configurable: false,
             writable: false,
-            value: evaluatedValue
+            value: evaluatedValue,
           };
         }
         return undefined;
       },
-      
+
       // Prevent modifications
       set: () => false,
-      deleteProperty: () => false
+      deleteProperty: () => false,
     }) as RequestConfig;
   }
 
@@ -405,7 +461,7 @@ export class HTTPRequest {
   private createRequestInterceptorControls(): RequestInterceptorControls {
     return {
       abort: () => {
-        //Makes sure that any existing timeout is cleared not to invoke 
+        //Makes sure that any existing timeout is cleared not to invoke
         //the abort controller later
         if (this.timeoutID) {
           clearTimeout(this.timeoutID);
@@ -413,10 +469,10 @@ export class HTTPRequest {
         this.abortController.abort();
       },
 
-      replaceURL: (newURL: string, newURLParams? : URLParams) => {
+      replaceURL: (newURL: string, newURLParams?: URLParams) => {
         this.config.url = newURL;
-        if(newURLParams){
-            this.config.urlParams = newURLParams;
+        if (newURLParams) {
+          this.config.urlParams = newURLParams;
         }
         this.setupURL();
       },
@@ -424,7 +480,7 @@ export class HTTPRequest {
       updateHeaders: (headers: Record<string, string | null>) => {
         Object.assign(this.config.headers, headers);
         this.setupHeaders();
-      }
+      },
     };
   }
 
@@ -434,7 +490,7 @@ export class HTTPRequest {
    */
   private createResponseControls(): ResponseInterceptorControls {
     return {
-      getLogger: () => this.getLogger()
+      getLogger: () => this.getLogger(),
     };
   }
 
@@ -769,7 +825,7 @@ export class HTTPRequest {
 
   /**
    * Generates a hash of the request configuration.
-   * The hash is deterministic and includes method, URL, relevant headers, 
+   * The hash is deterministic and includes method, URL, relevant headers,
    * query parameters, and body content to ensure consistent identification.
    * This key can be used for request caching purposes.
    *
@@ -787,19 +843,19 @@ export class HTTPRequest {
       urlParams: this.config.urlParams,
       body: null as any,
       // Only include headers that affect response (exclude auth, user-agent, etc.)
-      relevantHeaders: {} as Record<string, any>
+      relevantHeaders: {} as Record<string, any>,
     };
 
     // Include request body if present
     if (this.config.body) {
       try {
         const bodyContent = this.config.body();
-        
+
         // Handle FormData specially for consistent hashing
         if (bodyContent instanceof FormData) {
           const entries = Array.from(bodyContent.entries()).sort();
           keyComponents.body = JSON.stringify(entries);
-        } else if (typeof bodyContent === 'string') {
+        } else if (typeof bodyContent === "string") {
           // Check if it's a JSON string and normalize it for consistent property order
           try {
             const parsedJSON = JSON.parse(bodyContent);
@@ -819,18 +875,27 @@ export class HTTPRequest {
     }
 
     // Include only cache-relevant headers (content-type, accept, etc.)
-    const relevantHeaderKeys = ['content-type', 'accept', 'accept-language', 'accept-encoding'];
+    const relevantHeaderKeys = [
+      "content-type",
+      "accept",
+      "accept-language",
+      "accept-encoding",
+    ];
     for (const headerKey of relevantHeaderKeys) {
-      const headerValue = this.config.headers[headerKey] || this.config.headers[headerKey.toLowerCase()];
+      const headerValue =
+        this.config.headers[headerKey] ||
+        this.config.headers[headerKey.toLowerCase()];
       if (headerValue !== undefined) {
-        keyComponents.relevantHeaders[headerKey.toLowerCase()] = 
-          typeof headerValue === 'function' ? headerValue(this.getReadOnlyConfig()) : headerValue;
+        keyComponents.relevantHeaders[headerKey.toLowerCase()] =
+          typeof headerValue === "function"
+            ? headerValue(this.getReadOnlyConfig())
+            : headerValue;
       }
     }
 
     // Create a stable string representation with deep sorting
     const keyString = this.deterministicStringify(keyComponents);
-    
+
     // Generate a hash of the key string for efficiency and cache it
     this.hash = this.simpleHash(keyString);
     return this.hash;
@@ -848,23 +913,27 @@ export class HTTPRequest {
     if (obj === null || obj === undefined) {
       return JSON.stringify(obj);
     }
-    
-    if (typeof obj !== 'object') {
+
+    if (typeof obj !== "object") {
       return JSON.stringify(obj);
     }
-    
+
     if (Array.isArray(obj)) {
-      return '[' + obj.map(item => this.deterministicStringify(item)).join(',') + ']';
+      return (
+        "[" +
+        obj.map((item) => this.deterministicStringify(item)).join(",") +
+        "]"
+      );
     }
-    
+
     // Sort object keys and recursively stringify values
     const sortedKeys = Object.keys(obj).sort();
-    const pairs = sortedKeys.map(key => {
+    const pairs = sortedKeys.map((key) => {
       const value = this.deterministicStringify(obj[key]);
       return `"${key}":${value}`;
     });
-    
-    return '{' + pairs.join(',') + '}';
+
+    return "{" + pairs.join(",") + "}";
   }
 
   /**
@@ -877,7 +946,7 @@ export class HTTPRequest {
   private simpleHash(str: string): string {
     let hash = 5381;
     for (let i = 0; i < str.length; i++) {
-      hash = ((hash << 5) + hash) + str.charCodeAt(i);
+      hash = (hash << 5) + hash + str.charCodeAt(i);
       hash = hash & hash; // Convert to 32-bit integer
     }
     // Convert to positive hex string

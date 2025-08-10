@@ -1,5 +1,5 @@
 import { HTTPRequest } from "./HTTPRequest.js";
-import { LoggerFacade, LogLevel } from "./LoggerFacade.js";
+import { type LoggerFacade, type LogLevel } from "@apihive/logger-facade";
 import { APIConfig, HeaderValue, HTTPMethod, ResponseBodyTransformer, RequestInterceptor, ErrorInterceptor, RequestConfig } from "./types.js";
 import { Adapter, AdapterOptions } from "./adapter-types.js";
 /**

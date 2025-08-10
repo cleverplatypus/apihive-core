@@ -189,7 +189,7 @@ describe("HTTP Tests", () => {
   });
   it("test_conditional_auth_headers_failure", async () => {
     try {
-      const result = await factory
+      await factory
         .createAPIRequest("simple-api", "bearer")
         .blank() //get rid of auto-headers
         .withURLParam("productId", "123")
@@ -228,7 +228,7 @@ describe("HTTP Tests", () => {
           name: "Product 123",
         },
       })
-      .withResponseInterceptors(async (fetchResponse) => {})
+      .withResponseInterceptors(async () => {})
       .execute();
     expect(result).toHaveProperty("status", "ok");
   });

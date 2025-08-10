@@ -1,8 +1,8 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { HTTPRequestFactory } from "../src/HTTPRequestFactory.ts";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Adapter, AdapterPriority } from "../src/adapter-types.ts";
 import { HTTPRequest } from "../src/HTTPRequest.ts";
-import { RequestInterceptor, ResponseInterceptor, ErrorInterceptor, RequestConfig, ResponseInterceptorControls, RequestInterceptorControls } from "../src/types.ts";
+import { HTTPRequestFactory } from "../src/HTTPRequestFactory.ts";
+import { ErrorInterceptor, RequestConfig, RequestInterceptor, ResponseInterceptor } from "../src/types.ts";
 
 // Mock adapters for testing
 class TestRequestAdapter implements Adapter {
@@ -23,7 +23,7 @@ class TestRequestAdapter implements Adapter {
 
   getRequestInterceptors(): RequestInterceptor[] {
     return [
-      async (config: RequestConfig, controls: RequestInterceptorControls) => {
+      async (config: RequestConfig) => {
         this.interceptedRequests.push({
           method: config.method,
           url: config.url,
@@ -42,7 +42,7 @@ class TestResponseAdapter implements Adapter {
 
   getResponseInterceptors(): ResponseInterceptor[] {
     return [
-      async (response: Response, config: RequestConfig, controls: ResponseInterceptorControls) => {
+      async (response: Response, config: RequestConfig) => {
         this.interceptedResponses.push({
           status: response.status,
           url: config.url
@@ -298,7 +298,7 @@ describe("Adapter System", () => {
 
       try {
         await request.execute();
-      } catch (error) {
+      } catch {
         // Error should have been intercepted
         expect(adapter.interceptedErrors.length).toBeGreaterThan(0);
       }

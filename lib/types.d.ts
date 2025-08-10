@@ -1,6 +1,7 @@
 import { HTTPRequest } from "./HTTPRequest.js";
 import HTTPError from "./HTTPError.js";
-import { LoggerFacade, LogLevel } from "./LoggerFacade.js";
+import { LoggerFacade, LogLevel } from "@apihive/logger-facade";
+export type MaybeGetterFunction<T, Args extends any[] = any[]> = T | ((...args: Args extends infer U ? U : never) => T);
 /**
  * Control APIs available to interceptors for manipulating the request during execution.
  */
@@ -18,11 +19,11 @@ export interface RequestInterceptorControls {
      */
     updateHeaders(headers: Record<string, any>): void;
 }
-export type URLParams = Record<string, LiteralValue | ((config: RequestConfig) => LiteralValue)>;
+export type URLParams = Record<string, LiteralValue | MaybeGetterFunction<LiteralValue, [config: RequestConfig]>>;
 /**
  * Control APIs available to response interceptors.
  */
-export interface ResponseControls {
+export interface ResponseInterceptorControls {
     getLogger(): LoggerFacade;
 }
 export type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "TRACE";
@@ -33,12 +34,12 @@ export type RequestConfigBuilder = (request: HTTPRequest, config: RequestConfig)
  * @internal
  */
 export type ExpectedResponseFormat = "auto" | "json" | "text" | "blob" | "arrayBuffer";
-export type QueryParameterValue = LiteralValue | Array<LiteralValue>;
-export type DynamicHeaderValue = (config: RequestConfig) => string | undefined;
+export type QueryParameterValue = MaybeGetterFunction<LiteralValue | Array<LiteralValue>, [config: RequestConfig]>;
+export type DynamicHeaderValue = MaybeGetterFunction<string | undefined, [config: RequestConfig]>;
 export type ResponseBodyTransformer = (body: any, config: RequestConfig) => any;
 export type HeaderValue = string | DynamicHeaderValue;
 export type ResponseHandler = (response: Response, requestObj: HTTPRequest) => Promise<any>;
-export type ResponseInterceptor = (response: Response, config: RequestConfig, controls: ResponseControls) => Promise<any>;
+export type ResponseInterceptor = (response: Response, config: RequestConfig, controls: ResponseInterceptorControls) => Promise<any>;
 export type ResponseInterceptorWithOptions = {
     interceptor: ResponseInterceptor;
     /**
@@ -60,7 +61,7 @@ export type RequestConfig = {
     method: HTTPMethod;
     logLevel: LogLevel;
     meta: Record<string, any>;
-    queryParams: Object;
+    queryParams: Record<string, QueryParameterValue>;
     responseBodyTransformers: ResponseBodyTransformer[];
     ignoreResponseBody: boolean;
     credentials: RequestCredentials;

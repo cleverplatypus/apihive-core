@@ -1,6 +1,6 @@
-import ConsoleLogger from "./ConsoleLogger.js";
 import { HTTPRequest } from "./HTTPRequest.js";
-import { LoggerFacade, LogLevel } from "./LoggerFacade.js";
+import { type LoggerFacade, type LogLevel, ConsoleLogger } from "@apihive/logger-facade";
+
 import {
   APIConfig,
   HeaderValue,
