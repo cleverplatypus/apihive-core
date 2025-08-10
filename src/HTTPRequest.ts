@@ -57,6 +57,19 @@ export class HTTPRequest {
     return await response.blob();
   };
 
+  /**
+   * Applies configured response body transformers to a value, in order.
+   * If there are no transformers, returns the value untouched.
+   */
+  private async applyResponseTransformers(value: any): Promise<any> {
+    if (!this.config.responseBodyTransformers?.length) return value;
+    let transformed = value;
+    for (const transformer of this.config.responseBodyTransformers) {
+      transformed = await transformer(transformed, this.getReadOnlyConfig());
+    }
+    return transformed;
+  }
+
   constructor({
     url,
     method,
@@ -198,10 +211,7 @@ export class HTTPRequest {
       if (interceptorResponse === undefined) {
         continue;
       }
-      if (this.config.responseBodyTransformers) {
-        for (const transformer of this.config.responseBodyTransformers)
-          interceptorResponse = await transformer(interceptorResponse, this.getReadOnlyConfig());
-      }
+      interceptorResponse = await this.applyResponseTransformers(interceptorResponse);
       return interceptorResponse;
     }
 
@@ -229,13 +239,8 @@ export class HTTPRequest {
             responseControls
           );
           if (interceptorResponse !== undefined) {
-            if (!skipTransformersOnReturn && this.config.responseBodyTransformers?.length) {
-              for (const transformer of this.config.responseBodyTransformers) {
-                interceptorResponse = await transformer(
-                  interceptorResponse,
-                  this.getReadOnlyConfig()
-                );
-              }
+            if (!skipTransformersOnReturn) {
+              interceptorResponse = await this.applyResponseTransformers(interceptorResponse);
             }
             return interceptorResponse;
           }
@@ -246,10 +251,7 @@ export class HTTPRequest {
           return;
         }
         let body = await this.readResponse(response);
-        if (this.config.responseBodyTransformers) {
-          for (const transformer of this.config.responseBodyTransformers)
-            body = transformer(body, this.getReadOnlyConfig());
-        }
+        body = await this.applyResponseTransformers(body);
         return body;
       } else {
         const error = new HTTPError(
