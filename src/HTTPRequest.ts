@@ -1,42 +1,40 @@
 import ConsoleLogger from "./ConsoleLogger.ts";
 import { TEXT_TYPES } from "./constants.ts";
 import HTTPError from "./HTTPError.ts";
-import ILogger from "./ILogger.ts";
-import {
+import type  {LoggerFacade, LogLevel } from "./LoggerFacade.ts";
+import type {
   ErrorInterceptor,
   HeaderValue,
   HTTPMethod,
-  LogLevel,
   QueryParameterValue,
   RequestConfig,
-  RequestControls,
-  RequestDefaults,
+  RequestInterceptorControls,
+  RequestConfigBuilder,
   RequestInterceptor,
   ResponseBodyTransformer,
-  ResponseControls,
+  ResponseControls as ResponseInterceptorControls,
   ResponseInterceptor,
+  URLParams,
 } from "./types.ts";
-import { HTTPRequestFactory } from "./HTTPRequestFactory.ts";
 
 type RequestConstructorArgs = {
   url: string;
   method: HTTPMethod;
-  defaultConfigBuilders: RequestDefaults[];
-  factory: HTTPRequestFactory;
+  defaultConfigBuilders: RequestConfigBuilder[];
 };
 /**
  * HTTP Request. This class shouldn't be instanciated directly.
  * Use {@link HTTPRequestFactory} createXXXRequest() instead
  */
 export class HTTPRequest {
-  private configBuilders: RequestDefaults[];
+  private configBuilders: RequestConfigBuilder[];
   private wasUsed: boolean = false;
-  private logger: ILogger = new ConsoleLogger();
+  private logger: LoggerFacade = new ConsoleLogger();
   private config: RequestConfig;
   private timeoutID?: any;
   private fetchBody: RequestInit | null = null;
-  private factory: HTTPRequestFactory;
   private hash?: string;
+  private abortController = new AbortController();
   /**
    * Returns the fetch response content in its appropriate format
    * @param {Response} response
@@ -62,11 +60,9 @@ export class HTTPRequest {
     url,
     method,
     defaultConfigBuilders,
-    factory,
   }: RequestConstructorArgs) {
     this.configBuilders = defaultConfigBuilders;
     this.wasUsed = false;
-    this.factory = factory;
     this.config = {
       url,
       headers: {},
@@ -100,7 +96,7 @@ export class HTTPRequest {
   }
 
   private getLogger() {
-    return this.logger.withLevel(this.config.logLevel);
+    return this.logger.withMinimumLevel(this.config.logLevel);
   }
 
   private setupHeaders() {
@@ -116,15 +112,13 @@ export class HTTPRequest {
 
   private setupTimeout() {
     if (this.config.timeout) {
-      const controller = new AbortController();
       this.timeoutID = setTimeout(() => {
         this.getLogger().debug(
           "HttpRequestFactory : Fetch timeout",
           `Request timeout after ${this.config.timeout / 1000} seconds`
         );
-        controller.abort();
+        this.abortController.abort();
       }, this.config.timeout);
-      this.fetchBody!.signal = controller.signal;
     }
     this.getLogger().debug(
       "HttpRequestFactory : Fetch invoked",
@@ -180,6 +174,8 @@ export class HTTPRequest {
 
       credentials: this.config.credentials,
     };
+
+    this.fetchBody!.signal = this.abortController.signal;
 
     this.setupHeaders();
 
@@ -387,19 +383,26 @@ export class HTTPRequest {
    * Creates request controls for interceptors to manipulate the request during execution.
    * @internal
    */
-  private createRequestControls(): RequestControls {
+  private createRequestControls(): RequestInterceptorControls {
     return {
       abort: () => {
+        //Makes sure that any existing timeout is cleared not to invoke 
+        //the abort controller later
         if (this.timeoutID) {
           clearTimeout(this.timeoutID);
         }
-        // Note: AbortController abort would be called here if we had access to it
+        this.abortController.abort();
       },
-      replaceURL: (newURL: string) => {
+
+      replaceURL: (newURL: string, newURLParams? : URLParams) => {
         this.config.url = newURL;
+        if(newURLParams){
+            this.config.urlParams = newURLParams;
+        }
         this.setupURL();
       },
-      updateHeaders: (headers: Record<string, string>) => {
+
+      updateHeaders: (headers: Record<string, string | null>) => {
         Object.assign(this.config.headers, headers);
         this.setupHeaders();
       }
@@ -410,7 +413,7 @@ export class HTTPRequest {
    * Creates response controls for response interceptors.
    * @internal
    */
-  private createResponseControls(): ResponseControls {
+  private createResponseControls(): ResponseInterceptorControls {
     return {
       getLogger: () => this.getLogger()
     };
@@ -435,10 +438,10 @@ export class HTTPRequest {
   /**
    * Sets an ILogger compatible logger for the request. Normally the logger will be set by the factory.
    *
-   * @param {ILogger} logger - The logger to be set.
+   * @param {LoggerFacade} logger - The logger to be set.
    * @return {HTTPRequest} - The updated HTTP request instance.
    */
-  withLogger(logger: ILogger) {
+  withLogger(logger: LoggerFacade) {
     this.logger = logger;
     return this;
   }

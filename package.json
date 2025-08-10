@@ -9,19 +9,20 @@
     "type": "git"
   },
   "scripts": {
-    "generate-api-docs": "npx typedoc --entryPoints src/index.ts src/HTTPRequest.ts --out docs_old",
     "test": "vitest",
+    "docs:jsdoc": "typedoc --out docs/api src",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "publish:jsr": "npx jsr publish",
+    "publish:npm": "npx npm publish"
   },
   "devDependencies": {
     "@types/node": "^20.4.2",
+    "typedoc": "^0.28.9",
+    "typedoc-plugin-markdown": "^4.8.0",
     "typescript": "^5.1.6",
     "vitepress": "^1.6.3",
     "vitest": "^3.2.4"
-  },
-  "dependencies": {
-    "@types/deep-freeze-strict": "^1.1.0"
   }
 }

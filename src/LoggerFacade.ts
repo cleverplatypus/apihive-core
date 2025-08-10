@@ -1,10 +1,11 @@
+export type LogLevel = "none" | "trace" | "debug" | "info" | "warn" | "error" | "fatal";
 
 /**
  * @public
  * An interface for logger adapters.
  */
-export default interface ILogger {
-    withLevel(level: string): ILogger;
+export type LoggerFacade = {
+    withMinimumLevel(level: string): LoggerFacade;
     trace(message: string, ...args: any[]): void;
     debug(message: string, ...args: any[]): void;
     info(message: string, ...args: any[]): void;

@@ -1,146 +1,159 @@
-import { HTTPRequest } from './HTTPRequest.ts';
-import HTTPError from './HTTPError.ts';
-import ILogger from './ILogger.ts';
+import { HTTPRequest } from "./HTTPRequest.ts";
+import HTTPError from "./HTTPError.ts";
+import { LoggerFacade, LogLevel } from "./LoggerFacade.ts";
 
 /**
  * Control APIs available to interceptors for manipulating the request during execution.
  */
-export interface RequestControls {
+export interface RequestInterceptorControls {
   /**
    * Abort the current request
    */
   abort(): void;
-  
+
   /**
    * Replace the request URL
    */
-  replaceURL(newURL: string): void;
-  
+  replaceURL(newURL: string, newURLParams?: URLParams): void;
+
   /**
    * Update request headers (merges with existing headers)
    */
-  updateHeaders(headers: Record<string, string>): void;
-  
+  updateHeaders(headers: Record<string, any>): void;
 }
+
+export type URLParams = Record<
+  string,
+  LiteralValue | ((config: RequestConfig) => LiteralValue)
+>;
 
 /**
  * Control APIs available to response interceptors.
  */
 export interface ResponseControls {
-  getLogger(): ILogger;
+  getLogger(): LoggerFacade;
 }
 
-export type LogLevel = 'none' | 'trace' | 'debug' | 'info' | 'warn' | 'error';
 
-export type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'TRACE';
+export type HTTPMethod =
+  | "GET"
+  | "POST"
+  | "PUT"
+  | "DELETE"
+  | "PATCH"
+  | "HEAD"
+  | "TRACE";
 
-export type ScalarType = string | number | boolean;
+export type LiteralValue = string | number | boolean;
 
-export type InterceptorCommands = {
-    deleteInterceptor: () => void
-    replaceURL: (url:string) => void
-}
+export type RequestInterceptor = (
+  config: RequestConfig,
+  controls: RequestInterceptorControls
+) => Promise<any | undefined>;
 
-export type RequestInterceptor = (config: RequestConfig, controls: RequestControls) => Promise<any | undefined>;
-
-export type RequestDefaults = (request : HTTPRequest, config: RequestConfig) => void;
+export type RequestConfigBuilder = (
+  request: HTTPRequest,
+  config: RequestConfig
+) => void;
 /**
  * @internal
  */
-export type ExpectedResponseFormat = 
-    'auto'
-    | 'json'
-    | 'text'
-    | 'blob'
-    | 'arrayBuffer';
-    
-export type QueryParameterValue =
-   ScalarType | Array<ScalarType>;
+export type ExpectedResponseFormat =
+  | "auto"
+  | "json"
+  | "text"
+  | "blob"
+  | "arrayBuffer";
 
-export type DynamicHeaderValue = ((config: RequestConfig)=>string|undefined);
+export type QueryParameterValue = LiteralValue | Array<LiteralValue>;
+
+export type DynamicHeaderValue = (config: RequestConfig) => string | undefined;
 
 export type ResponseBodyTransformer = (body: any, config: RequestConfig) => any;
 
-export type HeaderValue = string|DynamicHeaderValue;
+export type HeaderValue = string | DynamicHeaderValue;
 
-export type ResponseHandler = 
-    (response:Response, requestObj:HTTPRequest) => Promise<any>;
+export type ResponseHandler = (
+  response: Response,
+  requestObj: HTTPRequest
+) => Promise<any>;
 
-export type ResponseInterceptor = 
-    (response:Response, config: RequestConfig, controls: ResponseControls) => Promise<any>;
-export type ErrorInterceptor =
-    (error:HTTPError) => boolean | Promise<boolean>
+export type ResponseInterceptor = (
+  response: Response,
+  config: RequestConfig,
+  controls: ResponseControls
+) => Promise<any>;
+export type ErrorInterceptor = (error: HTTPError) => boolean | Promise<boolean>;
 /**
  * Internal representation of a {@link HTTPRequest}'s configuration
  */
 export type RequestConfig = {
-    url: string
-    headers: Record<string, HeaderValue>
-    body: any
-    timeout: number
-    method: HTTPMethod
-    logLevel: LogLevel
-    meta: Record<string, any>
-    queryParams: Object
-    responseBodyTransformers: ResponseBodyTransformer[]
-    ignoreResponseBody: boolean
-    credentials : RequestCredentials
-    uriEncodedBody : boolean
-    expectedResponseFormat: ExpectedResponseFormat
-    acceptedMIMETypes: string[]
-    corsMode: RequestMode
-    urlParams : Record<string, ScalarType | ((ConfiguredRequest) => ScalarType)>
-    requestInterceptors: RequestInterceptor[]
-    responseInterceptors: ResponseInterceptor[]
-    errorInterceptors: ErrorInterceptor[]
-}
+  url: string;
+  headers: Record<string, HeaderValue>;
+  body: any;
+  timeout: number;
+  method: HTTPMethod;
+  logLevel: LogLevel;
+  meta: Record<string, any>;
+  queryParams: Object;
+  responseBodyTransformers: ResponseBodyTransformer[];
+  ignoreResponseBody: boolean;
+  credentials: RequestCredentials;
+  uriEncodedBody: boolean;
+  expectedResponseFormat: ExpectedResponseFormat;
+  acceptedMIMETypes: string[];
+  corsMode: RequestMode;
+  urlParams: URLParams;
+  requestInterceptors: RequestInterceptor[];
+  responseInterceptors: ResponseInterceptor[];
+  errorInterceptors: ErrorInterceptor[];
+};
 
 /**
  * The definition of an API endpoint to be listed in the {@link APIConfig.endpoints} map
  */
 export type Endpoint = {
-    /**
-     * The path of the endpoint relative to the API {@link APIConfig.baseURL}
-     */
-    target : string
-    /**
-     * The HTTP method of the endpoint. Defaults to `GET`
-     */
-    method? : HTTPMethod
-    /**
-     * Any metadata that should be attached to the endpoint's requests for later reference
-     */
-    meta? : Record<string, any>
-}
+  /**
+   * The path of the endpoint relative to the API {@link APIConfig.baseURL}
+   */
+  target: string;
+  /**
+   * The HTTP method of the endpoint. Defaults to `GET`
+   */
+  method?: HTTPMethod;
+  /**
+   * Any metadata that should be attached to the endpoint's requests for later reference
+   */
+  meta?: Record<string, any>;
+};
 
 /**
  * @internal
  */
 export type NamedEndpoint = {
-    name: string
+  name: string;
 } & Endpoint;
-
 
 /**
  * Parameter object structure for endpoint functions.
- * 
+ *
  * This type provides IntelliSense suggestions for standard endpoint parameters
  * while remaining flexible enough to allow specific parameter shapes.
- * 
+ *
  * @example Standard usage:
  * (params: { pathParams: { id: string }; bodyParams?: { name: string } }) => Promise<User>
  */
 export type EndpointParams = {
-    pathParams?: Record<string, any>;
-    bodyParams?: Record<string, any>;
-    queryParams?: Record<string, any>;
-    [key: string]: any; // Allows additional properties for flexibility
+  pathParams?: Record<string, any>;
+  bodyParams?: Record<string, any>;
+  queryParams?: Record<string, any>;
+  [key: string]: any; // Allows additional properties for flexibility
 };
 
 /**
  * Template type for endpoint parameters that provides IntelliSense.
  * Use intersection with this type to get autocomplete for standard parameter properties.
- * 
+ *
  * @example
  * type CreateUserParams = EndpointParamsTemplate & {
  *   pathParams: { orgId: string };
@@ -149,15 +162,15 @@ export type EndpointParams = {
  * }
  */
 export type EndpointParamsTemplate = {
-    pathParams?: any;
-    bodyParams?: any;
-    queryParams?: any;
+  pathParams?: any;
+  bodyParams?: any;
+  queryParams?: any;
 };
 
 /**
  * Base type for API configurations where endpoints are defined as functions
  * with single-object parameters. This enables type-safe code generation.
- * 
+ *
  * @example
  * type GitHubAPI = BaseAPIInterface & {
  *   endpoints: {
@@ -171,24 +184,24 @@ export type EndpointParamsTemplate = {
  * }
  */
 export type BaseAPIInterface = {
-    endpoints?: Record<string, (params: any) => Promise<any>>;
-    meta?: Record<string, any>;
+  endpoints?: Record<string, (params: any) => Promise<any>>;
+  meta?: Record<string, any>;
 };
 
 /**
  * Default API configuration type (no constraints)
  */
 export type DefaultAPIConfig = BaseAPIInterface & {
-    meta?: Record<string, any>;
-    endpoints?: Record<string, (params: EndpointParams) => Promise<any>>;
+  meta?: Record<string, any>;
+  endpoints?: Record<string, (params: EndpointParams) => Promise<any>>;
 };
 
 /**
  * Configuration for an API to be added with {@link HTTPRequestFactory.withAPIConfig}
- * 
+ *
  * @template TApiConfig - Configuration interface that constrains meta and endpoints.
  *                       Must extend BaseAPIInterface for function-based endpoint definitions.
- * 
+ *
  * @example
  * // Function-based API definition for type-safe code generation
  * interface GitHubAPI {
@@ -208,15 +221,15 @@ export type DefaultAPIConfig = BaseAPIInterface & {
  *     createRepo: { target: '/repos', method: 'POST' }
  *   }
  * };
- * 
- * @example  
+ *
+ * @example
  * // Adapter-driven API (no endpoints allowed)
  * interface OpenAPIConfig {
  *   meta: { openAPI: { spec: string } };
  *   endpoints?: never;
  * }
  * const config: APIConfig<OpenAPIConfig> = { ... }; // endpoints property forbidden
- * 
+ *
  * @example
  * // Unconstrained API (default)
  * const config: APIConfig = {
@@ -226,52 +239,57 @@ export type DefaultAPIConfig = BaseAPIInterface & {
  *   }
  * };
  */
-export type APIConfig<TApiConfig extends BaseAPIInterface = DefaultAPIConfig> = {
+export type APIConfig<TApiConfig extends BaseAPIInterface = DefaultAPIConfig> =
+  {
     /**
      * The base to be used as base URL for this API. If omitted, the value provided in each endpoint's `target` will be used.
      */
-    baseURL? : string | ((endpoint: Endpoint) => string)
+    baseURL?: string | ((endpoint: Endpoint) => string);
     /**
      * The name of the API to be referenced in {@link HTTPRequestFactory.createAPIRequest}
      * If the name is 'default' it will be used as the default API when calling {@link HTTPRequestFactory.createAPIRequest}
      * with one argument (the name of the endpoint).
      */
-    name : string | 'default'
+    name: string | "default";
     /**
      * Any metadata that should be attached to the API for later reference.
      * The structure is constrained by the TApiConfig generic parameter.
      */
-    meta? : TApiConfig extends { meta: infer TMeta } ? TMeta : any,
+    meta?: TApiConfig extends { meta: infer TMeta } ? TMeta : any;
     /**
-     * Any headers that should be applied to each request. 
-     * Notice that if a header value is  {@link DynamicHeaderValue}, 
-     * the function will be called with the current request as argument, 
+     * Any headers that should be applied to each request.
+     * Notice that if a header value is  {@link DynamicHeaderValue},
+     * the function will be called with the current request as argument,
      * so conditional logic can be applied to generate the value.
      */
-    headers? : Record<string, HeaderValue>,
+    headers?: Record<string, HeaderValue>;
     /**
      * An optional {@link ResponseBodyTransformer} function to be applied to all of
      * the API's responses.
      */
-    responseBodyTransformers? : ResponseBodyTransformer | ResponseBodyTransformer[],
-    requestInterceptors? : RequestInterceptor | Array<RequestInterceptor>,
-    errorInterceptors? : ErrorInterceptor | Array<ErrorInterceptor>,
-    
+    responseBodyTransformers?:
+      | ResponseBodyTransformer
+      | ResponseBodyTransformer[];
+    requestInterceptors?: RequestInterceptor | Array<RequestInterceptor>;
+    errorInterceptors?: ErrorInterceptor | Array<ErrorInterceptor>;
+
     /**
      * A map of {@link Endpoint} for the API.
      * Can be constrained or forbidden by the TApiConfig generic parameter.
-     * 
+     *
      * @example
      * // For adapter-driven APIs, endpoints can be forbidden:
      * // endpoints?: never (prevents manual endpoint configuration)
-     * 
+     *
      * @example
      * // For function-based APIs, only specific endpoint names are allowed:
      * // endpoints: { getUser: Endpoint; getUserRepos: Endpoint } (constrains keys)
      */
-    endpoints : TApiConfig extends { endpoints?: never } 
-        ? never 
-        : TApiConfig extends { endpoints: Record<infer K, (...args: any[]) => any> } 
-            ? { [P in Extract<K, string>]: Endpoint }
-            : { [endpointName: string]: Endpoint }
-}
+    endpoints: TApiConfig extends { endpoints?: never }
+      ? never
+      : TApiConfig extends {
+          endpoints: Record<infer K, (...args: any[]) => any>;
+        }
+      ? { [P in Extract<K, string>]: Endpoint }
+      : { [endpointName: string]: Endpoint };
+  };

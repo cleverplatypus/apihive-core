@@ -1,25 +1,26 @@
-import ILogger from './ILogger.ts';
+import { LoggerFacade, LogLevel } from './LoggerFacade.ts';
 
-const levels = ['trace', 'debug', 'info', 'warn', 'error'];
 const levelValues = {
+    none: -1,
     trace: 0,
     debug: 1,
     info: 2,
     warn: 3,
-    error: 4
+    error: 4,
+    fatal: 5
 }
 
-export default class ConsoleLogger implements ILogger   {
-    private level = 'trace';
-    withLevel(level: string): ILogger {
+export default class ConsoleLogger implements LoggerFacade   {
+    private level: LogLevel = 'trace';
+    withMinimumLevel(level: LogLevel): LoggerFacade {
         this.level = level;
         return new Proxy(this, {
-            get: (target, property) => {
-                if(property === 'withLevel') {
-                    return (level) => target.withLevel(level);
+            get: (target, property : LogLevel | 'withMinimumLevel') => {
+                if(property === 'withMinimumLevel') {
+                    return (level : LogLevel) => target.withMinimumLevel(level);
                 }
                 if (levelValues[property] >= levelValues[this.level]) {
-                    return (...args) => target[property](...args);
+                    return (...args : any[]) => target[property](...args);
                 }
                 return () => {};
             }

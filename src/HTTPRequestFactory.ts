@@ -1,17 +1,15 @@
 import ConsoleLogger from "./ConsoleLogger.ts";
 import { HTTPRequest } from "./HTTPRequest.ts";
-import ILogger from "./ILogger.ts";
+import { LoggerFacade, LogLevel } from "./LoggerFacade.ts";
 import {
   APIConfig,
   HeaderValue,
   Endpoint,
   HTTPMethod,
-  LogLevel,
   ResponseBodyTransformer,
   RequestInterceptor,
   ResponseInterceptor,
-  InterceptorCommands,
-  RequestDefaults,
+  RequestConfigBuilder,
   ErrorInterceptor,
   RequestConfig,
 } from "./types.ts";
@@ -44,9 +42,9 @@ function getEndpointURL(endpoint: Endpoint, api: APIConfig) {
  * Use cases are request caching, logging, transformation, auto-api generation etc.
  */
 export class HTTPRequestFactory {
-  private requestDefaults: RequestDefaults[] = [];
+  private requestDefaults: RequestConfigBuilder[] = [];
   private apiConfigs: { [key: string]: APIConfig } = {};
-  private logger: ILogger = new ConsoleLogger();
+  private logger: LoggerFacade = new ConsoleLogger();
   private logLevel: LogLevel = "error";
   /**
    * @internal 
@@ -54,7 +52,7 @@ export class HTTPRequestFactory {
    */
   private interceptorsToRequestDefaults: Map<
     RequestInterceptor,
-    RequestDefaults
+    RequestConfigBuilder
   > = new Map();
   private adapters: Map<string, AdapterEntry> = new Map();
   private adapterRequestInterceptors: Array<{
@@ -69,7 +67,7 @@ export class HTTPRequestFactory {
     interceptor: ErrorInterceptor;
     priority: number;
   }> = [];
-  private adapterInterceptorApplier: RequestDefaults | null = null;
+  private adapterInterceptorApplier: RequestConfigBuilder | null = null;
   /**
    * Resets any conditions in the method chain set by {@link when}
    * @returns {HTTPRequestFactory} the factory instance
@@ -135,10 +133,10 @@ export class HTTPRequestFactory {
    * Sets the logger adapter for the instance for every request created.
    * By default the logger will be set by the factory to the internal `ConsoleLogger` adapter.
    *
-   * @param {ILogger} logger - The logger to set.
+   * @param {LoggerFacade} logger - The logger to set.
    * @returns {HTTPRequestFactory} the factory instance
    */
-  withLogger(logger: ILogger) {
+  withLogger(logger: LoggerFacade) {
     this.logger = logger;
     this.requestDefaults.push((request: HTTPRequest) =>
       request.withLogger(logger)
@@ -323,7 +321,7 @@ export class HTTPRequestFactory {
     this.adapters.set(adapter.name, entry);
 
     this.logger
-      .withLevel(this.logLevel)
+      .withMinimumLevel(this.logLevel)
       .debug(`Adapter '${adapter.name}' attached successfully`);
 
     return this;
@@ -351,7 +349,7 @@ export class HTTPRequestFactory {
     this.adapters.delete(adapterName);
 
     this.logger
-      .withLevel(this.logLevel)
+      .withMinimumLevel(this.logLevel)
       .debug(`Adapter '${adapterName}' detached successfully`);
 
     return this;
@@ -542,8 +540,7 @@ export class HTTPRequestFactory {
     return new HTTPRequest({
       url,
       method,
-      defaultConfigBuilders: this.requestDefaults,
-      factory: this,
+      defaultConfigBuilders: this.requestDefaults
     });
   }
 
@@ -565,7 +562,7 @@ export class HTTPRequestFactory {
     const [apiName, endpointName] =
       args.length === 1 ? ["default", args[0]] : args;
     this.logger
-      .withLevel(this.logLevel)
+      .withMinimumLevel(this.logLevel)
       .trace("Creating API request", apiName, endpointName);
     const api = this.apiConfigs[apiName];
     const endpoint: Endpoint = api?.endpoints[endpointName];
@@ -591,15 +588,20 @@ export class HTTPRequestFactory {
     try {
       Object.assign(meta, api.meta || {}, endpoint.meta || {});
     } catch (e) {
+      const additionalInfo = [];
+      if('api' in (api.meta || {}) || 'api' in (endpoint.meta || {})) {
+        additionalInfo.push("You're trying to assign the reserved `api` property name to meta");
+      }
       this.logger.error(
-        "Unable to merge meta. You're probably trying to assign the reserved `api` property name to meta",
+        "Unable to merge meta",
+        ...additionalInfo,
         e
       );
     }
     const request = this.createRequest(url, endpoint.method)
       .withMeta(meta)
-      .withHeaders(api.headers || {})
-      .withQueryParams(api.queryParams || {});
+      .withHeaders(api.headers || {});
+    
     if (api.responseBodyTransformers) {
       const transformers = Array.isArray(api.responseBodyTransformers)
         ? api.responseBodyTransformers
