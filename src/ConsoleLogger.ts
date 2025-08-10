@@ -1,4 +1,4 @@
-import { LoggerFacade, LogLevel } from './LoggerFacade.ts';
+import { LoggerFacade, LogLevel } from './LoggerFacade.js';
 
 const levelValues = {
     none: -1,

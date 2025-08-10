@@ -1,3 +1,4 @@
-export * from './types.ts';
-export * from './HTTPRequestFactory.ts';
-export { default as ILogger } from './ILogger.ts';
+export * from './types.js';
+export * from './HTTPRequestFactory.js';
+export * from './adapter-types.js';
+export type { LoggerFacade as ILogger } from './LoggerFacade.js';

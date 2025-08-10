@@ -1,7 +1,9 @@
 {
   "name": "@apihive/core",
   "version": "1.0.0",
-  "main": "src/index.ts",
+  "main": "./lib/index.js",
+  "module": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "license": "MIT",
   "type": "module",
   "repository": {
@@ -9,14 +11,18 @@
     "type": "git"
   },
   "scripts": {
+    "build": "tsc -p tsconfig.json",
     "test": "vitest",
     "docs:jsdoc": "typedoc --out docs/api src",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "publish:jsr": "npx jsr publish",
-    "publish:npm": "npx npm publish"
+    "publish:npm": "npm run build && npm publish"
   },
+  "files": [
+    "lib"
+  ],
   "devDependencies": {
     "@types/node": "^20.4.2",
     "typedoc": "^0.28.9",

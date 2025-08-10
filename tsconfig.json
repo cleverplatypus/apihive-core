@@ -1,21 +1,20 @@
 {
-    "type": "module",
-    "files": ["src/index.ts"],
-    "compilerOptions": {
-        "allowImportingTsExtensions": true,
-        "emitDeclarationOnly": true,
-        "declaration": true,
-        "outDir": "./lib",
-        "rootDir": "./src",
-        "target": "ES6",
-        "module": "CommonJS",
-        "moduleResolution": "node",
-        "esModuleInterop": true,
-        "sourceMap": true,
-        "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
-        "experimentalDecorators": true
-    },
-    "exclude": ["node_modules"],
+  "type": "module",
+  "files": ["src/index.ts"],
+  "compilerOptions": {
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "outDir": "./lib",
+    "rootDir": "./src",
+    "target": "ES2018",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true
+  },
+  "exclude": ["node_modules"]
 }
 

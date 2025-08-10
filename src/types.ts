@@ -1,6 +1,6 @@
-import { HTTPRequest } from "./HTTPRequest.ts";
-import HTTPError from "./HTTPError.ts";
-import { LoggerFacade, LogLevel } from "./LoggerFacade.ts";
+import { HTTPRequest } from "./HTTPRequest.js";
+import HTTPError from "./HTTPError.js";
+import { LoggerFacade, LogLevel } from "./LoggerFacade.js";
 
 /**
  * Control APIs available to interceptors for manipulating the request during execution.

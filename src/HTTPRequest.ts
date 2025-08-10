@@ -1,7 +1,7 @@
-import ConsoleLogger from "./ConsoleLogger.ts";
-import { TEXT_TYPES } from "./constants.ts";
-import HTTPError from "./HTTPError.ts";
-import type  {LoggerFacade, LogLevel } from "./LoggerFacade.ts";
+import ConsoleLogger from "./ConsoleLogger.js";
+import { TEXT_TYPES } from "./constants.js";
+import HTTPError from "./HTTPError.js";
+import type  {LoggerFacade, LogLevel } from "./LoggerFacade.js";
 import type {
   ErrorInterceptor,
   HeaderValue,
@@ -16,7 +16,7 @@ import type {
   ResponseInterceptor,
   ResponseInterceptorWithOptions,
   URLParams,
-} from "./types.ts";
+} from "./types.js";
 
 type RequestConstructorArgs = {
   url: string;

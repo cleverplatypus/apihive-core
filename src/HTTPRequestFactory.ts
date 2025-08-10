@@ -1,6 +1,6 @@
-import ConsoleLogger from "./ConsoleLogger.ts";
-import { HTTPRequest } from "./HTTPRequest.ts";
-import { LoggerFacade, LogLevel } from "./LoggerFacade.ts";
+import ConsoleLogger from "./ConsoleLogger.js";
+import { HTTPRequest } from "./HTTPRequest.js";
+import { LoggerFacade, LogLevel } from "./LoggerFacade.js";
 import {
   APIConfig,
   HeaderValue,
@@ -13,13 +13,13 @@ import {
   RequestConfigBuilder,
   ErrorInterceptor,
   RequestConfig,
-} from "./types.ts";
+} from "./types.js";
 import {
   Adapter,
   AdapterOptions,
   AdapterEntry,
   AdapterPriority,
-} from "./adapter-types.ts";
+} from "./adapter-types.js";
 
 function getEndpointURL(endpoint: Endpoint, api: APIConfig) {
   if (/^(https?:)?\/\//.test(endpoint.target)) {

@@ -1,5 +1,5 @@
-import { HTTPRequestFactory } from "./HTTPRequestFactory.ts";
-import { ErrorInterceptor, RequestConfigBuilder, RequestInterceptor, ResponseInterceptor, ResponseInterceptorWithOptions } from "./types.ts";
+import { HTTPRequestFactory } from "./HTTPRequestFactory.js";
+import { ErrorInterceptor, RequestConfigBuilder, RequestInterceptor, ResponseInterceptor, ResponseInterceptorWithOptions } from "./types.js";
 
 /**
  * Priority configuration for adapter interceptors.

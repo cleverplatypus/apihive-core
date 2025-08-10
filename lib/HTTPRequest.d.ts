@@ -1,11 +1,9 @@
-import ILogger from "./ILogger.ts";
-import { ErrorInterceptor, HeaderValue, HTTPMethod, LogLevel, QueryParameterValue, RequestConfig, RequestInterceptor, ResponseBodyTransformer, ResponseInterceptor } from "./types.ts";
-import { HTTPRequestFactory } from "./HTTPRequestFactory.ts";
+import type { LoggerFacade, LogLevel } from "./LoggerFacade.js";
+import type { ErrorInterceptor, HeaderValue, HTTPMethod, QueryParameterValue, RequestConfigBuilder, RequestInterceptor, ResponseBodyTransformer, ResponseInterceptor, ResponseInterceptorWithOptions } from "./types.js";
 type RequestConstructorArgs = {
     url: string;
     method: HTTPMethod;
-    defaultConfigBuilders: Function[];
-    factory: HTTPRequestFactory;
+    defaultConfigBuilders: RequestConfigBuilder[];
 };
 /**
  * HTTP Request. This class shouldn't be instanciated directly.
@@ -18,13 +16,19 @@ export declare class HTTPRequest {
     private config;
     private timeoutID?;
     private fetchBody;
-    private factory;
+    private hash?;
+    private abortController;
     /**
      * Returns the fetch response content in its appropriate format
      * @param {Response} response
      */
     private readResponse;
-    constructor({ url, method, defaultConfigBuilders, factory, }: RequestConstructorArgs);
+    /**
+     * Applies configured response body transformers to a value, in order.
+     * If there are no transformers, returns the value untouched.
+     */
+    private applyResponseTransformers;
+    constructor({ url, method, defaultConfigBuilders, }: RequestConstructorArgs);
     /**
      * Gets the URL of the request.
      *
@@ -44,11 +48,22 @@ export declare class HTTPRequest {
      */
     execute(): Promise<any>;
     /**
-     * Retrieves a read-only copy of configuration.
+     * Retrieves a read-only copy of configuration with lazy evaluation.
+     * Function-based values (body, headers) are only evaluated when accessed.
      *
-     * @return {type} The frozen configuration object.
+     * @return {RequestConfig} A read-only configuration object with lazy evaluation.
      */
-    getConfig(): RequestConfig;
+    private getReadOnlyConfig;
+    /**
+     * Creates request controls for interceptors to manipulate the request during execution.
+     * @internal
+     */
+    private createRequestControls;
+    /**
+     * Creates response controls for response interceptors.
+     * @internal
+     */
+    private createResponseControls;
     /**
      * Configures the request with metadata that can be inspected later.
      *
@@ -60,10 +75,10 @@ export declare class HTTPRequest {
     /**
      * Sets an ILogger compatible logger for the request. Normally the logger will be set by the factory.
      *
-     * @param {ILogger} logger - The logger to be set.
+     * @param {LoggerFacade} logger - The logger to be set.
      * @return {HTTPRequest} - The updated HTTP request instance.
      */
-    withLogger(logger: ILogger): this;
+    withLogger(logger: LoggerFacade): this;
     /**
      * Sets the credentials policy for the HTTP request.
      *
@@ -240,12 +255,32 @@ export declare class HTTPRequest {
      * The callback signature is `function(response:Object, requestObj:HttpRequest)`
      * @return {HTTPRequest} - The updated request instance.
      */
-    withResponseInterceptors(...interceptors: ResponseInterceptor[]): HTTPRequest;
+    withResponseInterceptors(...interceptors: Array<ResponseInterceptor | ResponseInterceptorWithOptions>): HTTPRequest;
     /**
-     * Get the meta data that was set on the request.
+     * Generates a hash of the request configuration.
+     * The hash is deterministic and includes method, URL, relevant headers,
+     * query parameters, and body content to ensure consistent identification.
+     * This key can be used for request caching purposes.
      *
-     * @return {Object} The meta data of the object.
+     * @return {string} A unique hash-based identifier for this request
      */
-    get meta(): Record<string, any>;
+    getHash(): string;
+    /**
+     * Creates a deterministic string representation of an object with sorted keys.
+     * This ensures that objects with the same properties in different orders
+     * will produce identical string representations.
+     *
+     * @param {any} obj - The object to stringify
+     * @return {string} A deterministic JSON string
+     */
+    private deterministicStringify;
+    /**
+     * Simple hash function for generating cache keys.
+     * Uses a variant of the djb2 algorithm for good distribution and speed.
+     *
+     * @param {string} str - The string to hash
+     * @return {string} A hexadecimal hash string
+     */
+    private simpleHash;
 }
 export {};
