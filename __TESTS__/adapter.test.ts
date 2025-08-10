@@ -3,6 +3,7 @@ import { Adapter, AdapterPriority } from "../src/adapter-types.ts";
 import { HTTPRequest } from "../src/HTTPRequest.ts";
 import { HTTPRequestFactory } from "../src/HTTPRequestFactory.ts";
 import { ErrorInterceptor, RequestConfig, RequestInterceptor, ResponseInterceptor } from "../src/types.ts";
+import adaptersFeature from "../src/features/adapters.ts";
 
 // Mock adapters for testing
 class TestRequestAdapter implements Adapter {
@@ -99,7 +100,9 @@ describe("Adapter System", () => {
   let factory: HTTPRequestFactory;
 
   beforeEach(() => {
-    factory = new HTTPRequestFactory().withLogLevel("none"); // Suppress logs during tests
+    factory = new HTTPRequestFactory()
+    .enable(adaptersFeature)
+    .withLogLevel("none"); // Suppress logs during tests
   });
 
   describe("Adapter Attachment and Detachment", () => {

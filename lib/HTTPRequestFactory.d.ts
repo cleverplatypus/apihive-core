@@ -1,7 +1,7 @@
-import { HTTPRequest } from "./HTTPRequest.js";
 import { type LoggerFacade, type LogLevel } from "@apihive/logger-facade";
-import { APIConfig, HeaderValue, HTTPMethod, ResponseBodyTransformer, RequestInterceptor, ErrorInterceptor, RequestConfig } from "./types.js";
+import { HTTPRequest } from "./HTTPRequest.js";
 import { Adapter, AdapterOptions } from "./adapter-types.js";
+import { APIConfig, ErrorInterceptor, Feature, HeaderValue, HTTPMethod, RequestConfig, RequestInterceptor, ResponseBodyTransformer } from "./types.js";
 /**
  * A factory for creating {@link HTTPRequest} instances.
  * It can be configured with defaults, logging options as well as
@@ -20,11 +20,7 @@ export declare class HTTPRequestFactory {
      * Keeps a mapping of defaults for interceptors to allow removing them
      */
     private interceptorsToRequestDefaults;
-    private adapters;
-    private adapterRequestInterceptors;
-    private adapterResponseInterceptors;
-    private adapterErrorInterceptors;
-    private adapterInterceptorApplier;
+    enable(feature: Feature<HTTPRequestFactory>): this;
     /**
      * Resets any conditions in the method chain set by {@link when}
      * @returns {HTTPRequestFactory} the factory instance
@@ -163,22 +159,6 @@ export declare class HTTPRequestFactory {
      * @returns True if the adapter is attached
      */
     hasAdapter(adapterName: string): boolean;
-    /**
-     * Registers interceptors from an adapter with proper priority ordering.
-     * @internal
-     */
-    private registerAdapterInterceptors;
-    /**
-     * Unregisters interceptors from a detached adapter.
-     * @internal
-     */
-    private unregisterAdapterInterceptors;
-    /**
-     * Updates the central adapter interceptor applier function.
-     * This ensures all adapters' interceptors are applied to new requests in proper priority order.
-     * @internal
-     */
-    private updateAdapterInterceptorApplier;
     /**
      * Factory method for creating POST requests
      * @param {String} url

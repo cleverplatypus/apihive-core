@@ -6,6 +6,11 @@
   "types": "./lib/index.d.ts",
   "license": "MIT",
   "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./dist/index.js",
+    "./adapters": "./dist/features/adapters.js"
+  },
   "repository": {
     "url": "https://github.com/cleverplatypus/apihive-core",
     "type": "git"

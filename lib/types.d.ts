@@ -1,6 +1,13 @@
 import { HTTPRequest } from "./HTTPRequest.js";
 import HTTPError from "./HTTPError.js";
 import { LoggerFacade, LogLevel } from "@apihive/logger-facade";
+export interface Feature<T> {
+    apply(target: T, commands: FeatureCommands): void;
+}
+export type FeatureCommands = {
+    addRequestDefaults: (...args: RequestConfigBuilder[]) => void;
+    removeRequestDefaults: (...args: RequestConfigBuilder[]) => void;
+};
 export type MaybeGetterFunction<T, Args extends any[] = any[]> = T | ((...args: Args extends infer U ? U : never) => T);
 /**
  * Control APIs available to interceptors for manipulating the request during execution.
