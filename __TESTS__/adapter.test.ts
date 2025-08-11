@@ -4,6 +4,7 @@ import { HTTPRequest } from "../src/HTTPRequest.ts";
 import { HTTPRequestFactory } from "../src/HTTPRequestFactory.ts";
 import { ErrorInterceptor, RequestConfig, RequestInterceptor, ResponseInterceptor } from "../src/types.ts";
 import adaptersFeature from "../src/features/adapters.ts";
+import requestHashFeature from "../src/features/request-hash.ts";
 
 // Mock adapters for testing
 class TestRequestAdapter implements Adapter {
@@ -101,7 +102,7 @@ describe("Adapter System", () => {
 
   beforeEach(() => {
     factory = new HTTPRequestFactory()
-    .enable(adaptersFeature)
+    .use(adaptersFeature)
     .withLogLevel("none"); // Suppress logs during tests
   });
 
@@ -236,7 +237,7 @@ describe("Adapter System", () => {
   describe("Factory Defaults", () => {
     it("should_apply_factory_defaults_from_adapters", async () => {
       const adapter = new TestFactoryDefaultsAdapter();
-      await factory.withAdapter(adapter);
+      await factory.use(requestHashFeature).withAdapter(adapter);
 
       // Add a config capturing interceptor
       let capturedConfig: RequestConfig | undefined;
@@ -260,7 +261,7 @@ describe("Adapter System", () => {
       await request.execute();
       
       expect(capturedConfig).toBeDefined();
-      expect(capturedConfig!.headers["X-Adapter-Applied"]).toBe("factory-defaults");
+      expect(capturedConfig!.headers["x-adapter-applied"]).toBe("factory-defaults");
       
       fetchSpy.mockRestore();
     });
@@ -349,7 +350,7 @@ describe("Adapter System", () => {
       
       // Verify factory defaults were applied (captured from interceptor)
       expect(capturedConfig).toBeDefined();
-      expect(capturedConfig!.headers["X-Adapter-Applied"]).toBe("factory-defaults");
+      expect(capturedConfig!.headers["x-adapter-applied"]).toBe("factory-defaults");
 
       fetchSpy.mockRestore();
     });

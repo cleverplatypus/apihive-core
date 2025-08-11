@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import HTTPError from "../src/HTTPError.ts";
 import { HTTPRequestFactory, RequestConfig } from "../src/index.ts";
+import requestHashFeature from "../src/features/request-hash.ts";
 
 const factory = new HTTPRequestFactory().withLogLevel("debug");
 
@@ -434,7 +435,10 @@ it("test_request_interceptor_from_api_config", async () => {
 });
 
 describe("HTTPRequest.getHash() Tests", () => {
-  const testFactory = new HTTPRequestFactory().withLogLevel("error");
+  const testFactory = 
+    new HTTPRequestFactory()
+    .use(requestHashFeature)
+    .withLogLevel("error");
 
   it("should_generate_consistent_hashes_for_identical_requests", () => {
     const request1 = testFactory.createGETRequest("https://example.com/api");

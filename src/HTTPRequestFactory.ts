@@ -1,5 +1,5 @@
 import { type LoggerFacade, type LogLevel, ConsoleLogger } from "@apihive/logger-facade";
-import { HTTPRequest } from "./HTTPRequest.js";
+import { HTTPRequest, private_scope } from "./HTTPRequest.js";
 
 import {
   Adapter,
@@ -44,6 +44,7 @@ export class HTTPRequestFactory {
   private apiConfigs: { [key: string]: APIConfig } = {};
   private logger: LoggerFacade = new ConsoleLogger();
   private logLevel: LogLevel = "error";
+  private afterRequestCreatedHooks: ((request: HTTPRequest) => void)[] = [];
   /**
    * @internal 
    * Keeps a mapping of defaults for interceptors to allow removing them
@@ -53,7 +54,7 @@ export class HTTPRequestFactory {
     RequestConfigBuilder
   > = new Map();
 
-  enable(feature: Feature<HTTPRequestFactory>) {
+  use(feature: Feature<HTTPRequestFactory>) {
     feature.apply(this, {
       addRequestDefaults: (...args: RequestConfigBuilder[]) => {
         this.requestDefaults.push(...args);
@@ -62,6 +63,9 @@ export class HTTPRequestFactory {
         this.requestDefaults = this.requestDefaults.filter(
           (defaultFn) => !args.includes(defaultFn)
         );
+      },
+      afterRequestCreated: (hook: (request: HTTPRequest) => void) => {
+        this.afterRequestCreatedHooks.push(hook);
       },
     });
     return this;
@@ -311,7 +315,7 @@ export class HTTPRequestFactory {
     adapter: Adapter,
     options?: AdapterOptions
   ): Promise<HTTPRequestFactory> {
-    throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.enable(adaptersFeature).');
+    throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.use(adaptersFeature).');
   }
 
   /**
@@ -321,7 +325,7 @@ export class HTTPRequestFactory {
    * @returns The factory instance for method chaining
    */
   async detachAdapter(adapterName: string): Promise<HTTPRequestFactory> {
-    throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.enable(adaptersFeature).');
+    throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.use(adaptersFeature).');
   }
 
   /**
@@ -330,7 +334,7 @@ export class HTTPRequestFactory {
    * @returns Array of adapter names
    */
   getAttachedAdapters(): string[] {
-    throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.enable(adaptersFeature).');
+    throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.use(adaptersFeature).');
   }
 
   /**
@@ -340,7 +344,7 @@ export class HTTPRequestFactory {
    * @returns True if the adapter is attached
    */
   hasAdapter(adapterName: string): boolean {
-    throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.enable(adaptersFeature).');
+    throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.use(adaptersFeature).');
   }
 
 
@@ -388,11 +392,13 @@ export class HTTPRequestFactory {
   }
 
   createRequest(url: string, method: HTTPMethod = "GET") {
-    return new HTTPRequest({
+    const request = new HTTPRequest({
       url,
       method,
       defaultConfigBuilders: this.requestDefaults
     });
+    this.afterRequestCreatedHooks.forEach((hook) => hook(request));
+    return request;
   }
 
   /**

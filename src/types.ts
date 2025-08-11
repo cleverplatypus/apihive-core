@@ -9,6 +9,7 @@ export interface Feature<T> {
 export type FeatureCommands = {
   addRequestDefaults: (...args: RequestConfigBuilder[]) => void;
   removeRequestDefaults: (...args: RequestConfigBuilder[]) => void;
+  afterRequestCreated: (hook: (request: HTTPRequest) => void) => void;
 };
 
 export type MaybeGetterFunction<T, Args extends any[] = any[]> =

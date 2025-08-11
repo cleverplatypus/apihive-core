@@ -21,6 +21,7 @@ import type {
   URLParams,
 } from "./types.js";
 
+
 type RequestConstructorArgs = {
   url: string;
   method: HTTPMethod;
@@ -37,7 +38,6 @@ export class HTTPRequest {
   private config: RequestConfig;
   private timeoutID?: any;
   private fetchBody: RequestInit | null = null;
-  private hash?: string;
   private abortController = new AbortController();
   /**
    * Returns the fetch response content in its appropriate format
@@ -72,6 +72,8 @@ export class HTTPRequest {
     return transformed;
   }
 
+  
+
   constructor({ url, method, defaultConfigBuilders }: RequestConstructorArgs) {
     this.configBuilders = defaultConfigBuilders;
     this.wasUsed = false;
@@ -94,6 +96,7 @@ export class HTTPRequest {
         "^image/.*\\+xml$",
         "^application/javascript$",
         "^application/xml$",
+        "application/x-www-form-urlencoded"
       ],
       credentials: "same-origin",
       logLevel: "error",
@@ -126,9 +129,7 @@ export class HTTPRequest {
   private setupHeaders() {
     const headers = this.config.headers;
     for (let n in headers) {
-      if (typeof headers[n] === "function") {
-        headers[n] = (headers[n] as Function)(this);
-      }
+      headers[n] = maybeFunction(headers[n], this);
       headers[n] ?? delete headers[n];
     }
     this.fetchBody!.headers = headers as HeadersInit;
@@ -350,7 +351,7 @@ export class HTTPRequest {
    *
    * @return {RequestConfig} A read-only configuration object with lazy evaluation.
    */
-  private getReadOnlyConfig(): RequestConfig {
+  getReadOnlyConfig(): RequestConfig {
     const config = { ...this.config };
 
     // Create a proxy that lazily evaluates function-based properties
@@ -775,7 +776,10 @@ export class HTTPRequest {
    */
   withHeaders(headers: Record<string, HeaderValue>) {
     if (typeof headers === "object") {
-      Object.assign(this.config.headers, headers);
+      const normalised = Object.fromEntries(
+        Object.entries(headers).map(([key, value]) => [key.toLowerCase(), value])
+      );
+      Object.assign(this.config.headers, normalised);
     }
     return this;
   }
@@ -823,7 +827,7 @@ export class HTTPRequest {
    * @return {HTTPRequest} - The updated request instance.
    */
   withHeader(name: string, value: HeaderValue) {
-    this.config.headers[name] = value;
+    this.config.headers[name.toLowerCase()] = value;
     return this;
   }
 
@@ -860,124 +864,7 @@ export class HTTPRequest {
    * @return {string} A unique hash-based identifier for this request
    */
   getHash(): string {
-    if (this.hash) {
-      return this.hash;
-    }
-    // Create a normalized representation of the request
-    const keyComponents = {
-      method: this.config.method,
-      url: this.config.url,
-      queryParams: this.config.queryParams,
-      urlParams: this.config.urlParams,
-      body: null as any,
-      // Only include headers that affect response (exclude auth, user-agent, etc.)
-      relevantHeaders: {} as Record<string, any>,
-    };
-
-    // Include request body if present
-    if (this.config.body) {
-      try {
-        const bodyContent = this.config.body();
-
-        // Handle FormData specially for consistent hashing
-        if (bodyContent instanceof FormData) {
-          const entries = Array.from(bodyContent.entries()).sort();
-          keyComponents.body = JSON.stringify(entries);
-        } else if (typeof bodyContent === "string") {
-          // Check if it's a JSON string and normalize it for consistent property order
-          try {
-            const parsedJSON = JSON.parse(bodyContent);
-            // If it's valid JSON, use deterministic stringify for consistent ordering
-            keyComponents.body = this.deterministicStringify(parsedJSON);
-          } catch {
-            // Not valid JSON, use as-is
-            keyComponents.body = bodyContent;
-          }
-        } else {
-          keyComponents.body = bodyContent;
-        }
-      } catch (error) {
-        // If body function fails, use the function string as fallback
-        keyComponents.body = this.config.body.toString();
-      }
-    }
-
-    // Include only cache-relevant headers (content-type, accept, etc.)
-    const relevantHeaderKeys = [
-      "content-type",
-      "accept",
-      "accept-language",
-      "accept-encoding",
-    ];
-    for (const headerKey of relevantHeaderKeys) {
-      const headerValue =
-        this.config.headers[headerKey] ||
-        this.config.headers[headerKey.toLowerCase()];
-      if (headerValue !== undefined) {
-        keyComponents.relevantHeaders[headerKey.toLowerCase()] =
-          typeof headerValue === "function"
-            ? headerValue(this.getReadOnlyConfig())
-            : headerValue;
-      }
-    }
-
-    // Create a stable string representation with deep sorting
-    const keyString = this.deterministicStringify(keyComponents);
-
-    // Generate a hash of the key string for efficiency and cache it
-    this.hash = this.simpleHash(keyString);
-    return this.hash;
+    throw new Error("Feature not enabled. Call use(RequestHashFeature) on the factory.");
   }
 
-  /**
-   * Creates a deterministic string representation of an object with sorted keys.
-   * This ensures that objects with the same properties in different orders
-   * will produce identical string representations.
-   *
-   * @param {any} obj - The object to stringify
-   * @return {string} A deterministic JSON string
-   */
-  private deterministicStringify(obj: any): string {
-    if (obj === null || obj === undefined) {
-      return JSON.stringify(obj);
-    }
-
-    if (typeof obj !== "object") {
-      return JSON.stringify(obj);
-    }
-
-    if (Array.isArray(obj)) {
-      return (
-        "[" +
-        obj.map((item) => this.deterministicStringify(item)).join(",") +
-        "]"
-      );
-    }
-
-    // Sort object keys and recursively stringify values
-    const sortedKeys = Object.keys(obj).sort();
-    const pairs = sortedKeys.map((key) => {
-      const value = this.deterministicStringify(obj[key]);
-      return `"${key}":${value}`;
-    });
-
-    return "{" + pairs.join(",") + "}";
-  }
-
-  /**
-   * Simple hash function for generating cache keys.
-   * Uses a variant of the djb2 algorithm for good distribution and speed.
-   *
-   * @param {string} str - The string to hash
-   * @return {string} A hexadecimal hash string
-   */
-  private simpleHash(str: string): string {
-    let hash = 5381;
-    for (let i = 0; i < str.length; i++) {
-      hash = (hash << 5) + hash + str.charCodeAt(i);
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    // Convert to positive hex string
-    return (hash >>> 0).toString(16);
-  }
 }
