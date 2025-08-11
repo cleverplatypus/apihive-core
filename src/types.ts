@@ -2,6 +2,27 @@ import { HTTPRequest } from "./HTTPRequest.js";
 import HTTPError from "./HTTPError.js";
 import { LoggerFacade, LogLevel } from "@apihive/logger-facade";
 
+export type ProgressPhase = 'upload' | 'download';
+export type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+export type BeforeFetchHook = (init: RequestInit, config: RequestConfig) => void | Promise<void>;
+
+export type ProgressInfo = {
+  phase: ProgressPhase;
+  percentProgress: number;       // 0..100
+  loadedBytes: number;           // bytes transferred so far
+  totalBytes?: number;           // if available
+  requestConfig: RequestConfig;  // use getReadOnlyConfig() when invoking
+  fallThrough: () => void;       // call this to pass the info to the next handler
+};
+
+export type ProgressHandler = (info: ProgressInfo) => void;
+
+export type ProgressHandlerConfig = {
+  upload?: ProgressHandler;
+  download?: ProgressHandler;
+  throttleMs?: number;
+};
+
 export interface Feature<T> {
   apply(target: T, commands: FeatureCommands): void;
 }
@@ -10,6 +31,7 @@ export type FeatureCommands = {
   addRequestDefaults: (...args: RequestConfigBuilder[]) => void;
   removeRequestDefaults: (...args: RequestConfigBuilder[]) => void;
   afterRequestCreated: (hook: (request: HTTPRequest) => void) => void;
+  beforeFetch: (hook: BeforeFetchHook) => void;
 };
 
 export type MaybeGetterFunction<T, Args extends any[] = any[]> =
@@ -136,6 +158,9 @@ export type RequestConfig = {
   requestInterceptors: RequestInterceptor[];
   responseInterceptors: Array<ResponseInterceptor | ResponseInterceptorWithOptions>;
   errorInterceptors: ErrorInterceptor[];
+  progressHandlers?: ProgressHandlerConfig[];
+  fetchImpl: FetchLike;
+  beforeFetchHooks?: BeforeFetchHook[];
 };
 
 /**
@@ -329,4 +354,6 @@ export type APIConfig<TApiConfig extends BaseAPIInterface = DefaultAPIConfig> =
         }
       ? { [P in Extract<K, string>]: Endpoint }
       : { [endpointName: string]: Endpoint };
+
+    progressHandlers?: ProgressHandlerConfig[];
   };

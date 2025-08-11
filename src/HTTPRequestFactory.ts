@@ -1,5 +1,5 @@
 import { type LoggerFacade, type LogLevel, ConsoleLogger } from "@apihive/logger-facade";
-import { HTTPRequest, private_scope } from "./HTTPRequest.js";
+import { HTTPRequest } from "./HTTPRequest.js";
 
 import {
   Adapter,
@@ -7,11 +7,13 @@ import {
 } from "./adapter-types.js";
 import {
   APIConfig,
+  BeforeFetchHook,
   Endpoint,
   ErrorInterceptor,
   Feature,
   HeaderValue,
   HTTPMethod,
+  ProgressHandlerConfig,
   RequestConfig,
   RequestConfigBuilder,
   RequestInterceptor,
@@ -66,6 +68,11 @@ export class HTTPRequestFactory {
       },
       afterRequestCreated: (hook: (request: HTTPRequest) => void) => {
         this.afterRequestCreatedHooks.push(hook);
+      },
+      beforeFetch: (hook: BeforeFetchHook) => {
+        this.requestDefaults.push((request: HTTPRequest) =>
+          request.withBeforeFetchHook(hook)
+        );
       },
     });
     return this;
@@ -484,5 +491,12 @@ export class HTTPRequestFactory {
       request.withErrorInterceptors(...errorInterceptors);
     }
     return request;
+  }
+
+  withProgressHandlers(...handlers: ProgressHandlerConfig[]): HTTPRequestFactory {
+    this.requestDefaults.push((request: HTTPRequest) =>
+      request.withProgressHandlers(...handlers)
+    );
+    return this;
   }
 }

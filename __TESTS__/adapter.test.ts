@@ -97,7 +97,7 @@ class TestErrorAdapter implements Adapter {
   }
 }
 
-describe("Adapter System", () => {
+describe("adapter_system", () => {
   let factory: HTTPRequestFactory;
 
   beforeEach(() => {
@@ -106,7 +106,7 @@ describe("Adapter System", () => {
     .withLogLevel("none"); // Suppress logs during tests
   });
 
-  describe("Adapter Attachment and Detachment", () => {
+  describe("adapter_attachment_and_detachment", () => {
     it("should_attach_adapter_successfully", async () => {
       const adapter = new TestRequestAdapter();
       
@@ -155,7 +155,7 @@ describe("Adapter System", () => {
     });
   });
 
-  describe("Request Interceptors", () => {
+  describe("request_interceptors", () => {
     it("should_execute_request_interceptors_with_correct_config_access", async () => {
       const adapter = new TestRequestAdapter();
       await factory.withAdapter(adapter);
@@ -206,7 +206,7 @@ describe("Adapter System", () => {
     });
   });
 
-  describe("Response Interceptors", () => {
+  describe("response_interceptors", () => {
     it("should_execute_response_interceptors_with_correct_config_access", async () => {
       const adapter = new TestResponseAdapter();
       await factory.withAdapter(adapter);
@@ -234,7 +234,7 @@ describe("Adapter System", () => {
     });
   });
 
-  describe("Factory Defaults", () => {
+  describe("factory_defaults", () => {
     it("should_apply_factory_defaults_from_adapters", async () => {
       const adapter = new TestFactoryDefaultsAdapter();
       await factory.use(requestHashFeature).withAdapter(adapter);
@@ -267,7 +267,7 @@ describe("Adapter System", () => {
     });
   });
 
-  describe("Priority System", () => {
+  describe("priority_system", () => {
     it("should_respect_adapter_priority_overrides", async () => {
       const adapter = new TestRequestAdapter();
       
@@ -293,7 +293,7 @@ describe("Adapter System", () => {
     });
   });
 
-  describe("Error Interceptors", () => {
+  describe("error_interceptors", () => {
     it("should_execute_error_interceptors", async () => {
       const adapter = new TestErrorAdapter();
       await factory.withAdapter(adapter);
@@ -309,7 +309,7 @@ describe("Adapter System", () => {
     });
   });
 
-  describe("Complex Scenarios", () => {
+  describe("complex_scenarios", () => {
     it("should_handle_multiple_adapters_with_all_interceptor_types", async () => {
       const requestAdapter = new TestRequestAdapter();
       const responseAdapter = new TestResponseAdapter();
@@ -377,15 +377,15 @@ describe("Adapter System", () => {
     });
   });
 
-  describe("API Request Integration", () => {
+  describe("api_request_integration", () => {
     it("should_work_with_API_requests", async () => {
       // Setup API configuration
       factory.withAPIConfig({
         name: "test-api",
-        baseURL: "https://api.test.com",
+        baseURL: "https://jsonplaceholder.typicode.com",
         endpoints: {
           "get-user": {
-            target: "/user/{{id}}",
+            target: "/users/{{id}}",
             method: "GET"
           }
         }
@@ -395,7 +395,7 @@ describe("Adapter System", () => {
       await factory.withAdapter(adapter);
 
       const request = factory.createAPIRequest("test-api", "get-user")
-        .withURLParam("id", "123");
+        .withURLParam("id", "1");
 
       const executeSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response(JSON.stringify({ user: { id: 123 } }), { 
         status: 200, 
@@ -407,7 +407,7 @@ describe("Adapter System", () => {
 
       expect(adapter.interceptedRequests).toHaveLength(1);
       expect(adapter.interceptedRequests[0].method).toBe("GET");
-      expect(adapter.interceptedRequests[0].url).toBe("https://api.test.com/user/123");
+      expect(adapter.interceptedRequests[0].url).toBe("https://jsonplaceholder.typicode.com/users/1");
 
       executeSpy.mockRestore();
     });

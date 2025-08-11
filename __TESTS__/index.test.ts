@@ -107,7 +107,7 @@ factory
     expect(result.wrapped).toEqual(payload);
   });
 
-describe("HTTP Tests", () => {
+describe("http_tests", () => {
   it("test_post_request", async () => {
     const array = ["words", "to", "return"];
     await expect(
@@ -434,7 +434,7 @@ it("test_request_interceptor_from_api_config", async () => {
   expect(result.type).toBeUndefined();
 });
 
-describe("HTTPRequest.getHash() Tests", () => {
+describe("http_request_get_hash_tests", () => {
   const testFactory = 
     new HTTPRequestFactory()
     .use(requestHashFeature)
