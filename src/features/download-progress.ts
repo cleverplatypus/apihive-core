@@ -1,8 +1,9 @@
+import { HTTPRequestFactory } from "../HTTPRequestFactory";
 import { Feature, RequestConfig } from "../types";
 
 class DownloadProgressFeature implements Feature {
-  readonly name: "download-progress";
-  getDelegates() {
+  readonly name = "download-progress" as const;
+  getDelegates(_factory?: HTTPRequestFactory) {
     return {
       request: {
         handleDownloadProgress: async ({

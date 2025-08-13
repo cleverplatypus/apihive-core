@@ -7,15 +7,8 @@ import { FeatureName } from "./types.js";
  * @returns the value of the target or the result of calling the function with the provided args
  */
 export function maybeFunction<T>(target: any, ...args: any[]): T {
-    if (typeof target === 'function') {
-      return target(...args) as T
-    }
-    return target as T
+  if (typeof target === "function") {
+    return target(...args) as T;
   }
-  
-export function throwMissingFeatureError(
-  featureName : FeatureName,
-  ): void {
-    throw new Error(`Feature "${featureName}" not enabled. Call factory.use(featureObj).`);
-
+  return target as T;
 }

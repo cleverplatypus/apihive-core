@@ -1,6 +1,5 @@
 import { type LoggerFacade, type LogLevel, ConsoleLogger } from "@apihive/logger-facade";
 import { HTTPRequest } from "./HTTPRequest.js";
-
 import {
   Adapter,
   AdapterOptions
@@ -12,6 +11,7 @@ import {
   ErrorInterceptor,
   Feature,
   FeatureFactoryDelegates,
+  FeatureName,
   FeatureRequestDelegates,
   HeaderValue,
   HTTPMethod,
@@ -21,7 +21,6 @@ import {
   RequestInterceptor,
   ResponseBodyTransformer
 } from "./types.js";
-import { throwMissingFeatureError } from "./utils.js";
 
 function getEndpointURL(endpoint: Endpoint, api: APIConfig) {
   if (/^(https?:)?\/\//.test(endpoint.target)) {
@@ -69,6 +68,12 @@ export class HTTPRequestFactory {
   > = new Map();
   private requestDelegates: FeatureRequestDelegates = {} as FeatureRequestDelegates;
   private factoryDelegates: FeatureFactoryDelegates = {} as FeatureFactoryDelegates;
+
+  private requireFeature(featureName: FeatureName) {
+    if(!this.enabledFeatures.has(featureName)) {
+      throw new Error(`Feature "${featureName}" not enabled. Call factory.use(featureObj).`);
+    }
+  }
 
   use(feature: Feature) {
     this.enabledFeatures.set(feature.name, feature);
@@ -346,8 +351,7 @@ export class HTTPRequestFactory {
     adapter: Adapter,
     options?: AdapterOptions
   ): Promise<HTTPRequestFactory> {
-    if(!this.factoryDelegates.withAdapter)
-      throwMissingFeatureError('adapters');
+    this.requireFeature('adapters');
     
     return this.factoryDelegates.withAdapter(adapter, options);
   }
@@ -359,8 +363,7 @@ export class HTTPRequestFactory {
    * @returns The factory instance for method chaining
    */
   async detachAdapter(adapterName: string): Promise<HTTPRequestFactory> {
-    if(!this.factoryDelegates.detachAdapter)
-      throwMissingFeatureError('adapters');
+    this.requireFeature('adapters');
     
     return this.factoryDelegates.detachAdapter(adapterName);
   }
@@ -371,8 +374,7 @@ export class HTTPRequestFactory {
    * @returns Array of adapter names
    */
   getAttachedAdapters(): string[] {
-    if(!this.factoryDelegates.getAttachedAdapters)
-      throwMissingFeatureError('adapters');
+    this.requireFeature('adapters');
     
     return this.factoryDelegates.getAttachedAdapters();
   }
@@ -384,8 +386,7 @@ export class HTTPRequestFactory {
    * @returns True if the adapter is attached
    */
   hasAdapter(adapterName: string): boolean {
-    if(!this.factoryDelegates.hasAdapter)
-      throwMissingFeatureError('adapters');
+    this.requireFeature('adapters');
     
     return this.factoryDelegates.hasAdapter(adapterName);
   }
@@ -441,6 +442,9 @@ export class HTTPRequestFactory {
       method,
       defaultConfigBuilders: this.requestDefaults,
       featureDelegates,
+      factoryMethods : {
+        requireFeature: this.requireFeature.bind(this)
+      }
     });
 
     this.afterRequestCreatedHooks.forEach((hook) => hook(request));
@@ -534,7 +538,8 @@ export class HTTPRequestFactory {
 
   withProgressHandlers(...handlers: ProgressHandlerConfig[]): HTTPRequestFactory {
     if(handlers.some(handler => handler.download) && !this.requestDelegates.handleDownloadProgress)
-      throwMissingFeatureError("download-progress");
+      this.requireFeature('download-progress');
+      
     this.requestDefaults.push((request: HTTPRequest) =>
       request.withProgressHandlers(...handlers)
     );

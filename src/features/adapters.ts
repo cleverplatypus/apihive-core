@@ -37,7 +37,7 @@ type FactoryInstanceInfo = {
 };
 
 class AdaptersFeature implements Feature {
-  readonly name : 'adapters';
+  readonly name = 'adapters' as const;
 
   private factoriesInstanceInfo: WeakMap<
     HTTPRequestFactory,

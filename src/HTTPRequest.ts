@@ -1,36 +1,42 @@
-import { maybeFunction, throwMissingFeatureError } from "./utils.js";
-import HTTPError from "./HTTPError.js";
 import {
   type LoggerFacade,
   type LogLevel,
   ConsoleLogger,
 } from "@apihive/logger-facade";
+import HTTPError from "./HTTPError.js";
 import type {
+  BeforeFetchHook,
   ErrorInterceptor,
+  FeatureName,
+  FeatureRequestDelegates,
   HeaderValue,
   HTTPMethod,
+  ProgressHandlerConfig,
   QueryParameterValue,
   RequestConfig,
-  RequestInterceptorControls,
   RequestConfigBuilder,
   RequestInterceptor,
+  RequestInterceptorControls,
   ResponseBodyTransformer,
-  ResponseInterceptorControls,
   ResponseInterceptor,
+  ResponseInterceptorControls,
   ResponseInterceptorWithOptions,
   URLParams,
-  ProgressHandlerConfig,
-  BeforeFetchHook,
-  FeatureRequestDelegates,
 } from "./types.js";
+import { maybeFunction } from "./utils.js";
 
 import { DEFAULT_JSON_MIME_TYPES, DEFAULT_TEXT_MIME_TYPES } from "./constants.js";
+import { HTTPRequestFactory } from "./HTTPRequestFactory.js";
 
+type FactoryMethods = {
+  requireFeature: (featureName: FeatureName) => void;
+}
 type RequestConstructorArgs = {
   url: string;
   method: HTTPMethod;
   defaultConfigBuilders: RequestConfigBuilder[];
   featureDelegates: FeatureRequestDelegates;
+  factoryMethods: FactoryMethods;
 };
 /**
  * HTTP Request. This class shouldn't be instanciated directly.
@@ -48,7 +54,7 @@ export class HTTPRequest {
   private finalizedURL?: string;
   private beforeFetchHooks: BeforeFetchHook[] = [];
   private featureDelegates: FeatureRequestDelegates;
-
+  private factoryMethods: FactoryMethods;
 
   /**
    * Returns the fetch response content in its appropriate format
@@ -70,8 +76,7 @@ export class HTTPRequest {
     if (
       this.config.progressHandlers?.find((handler) => !!handler.download)
     ) {
-      if(!this.featureDelegates.handleDownloadProgress)
-        throwMissingFeatureError("download-progress");
+      this.factoryMethods.requireFeature("download-progress");
       
       return this.featureDelegates.handleDownloadProgress({
         response,
@@ -98,11 +103,12 @@ export class HTTPRequest {
 
   
 
-  constructor({ url, method, defaultConfigBuilders, featureDelegates }: RequestConstructorArgs) {
+  constructor({ url, method, defaultConfigBuilders, featureDelegates, factoryMethods }: RequestConstructorArgs) {
     this.configBuilders = defaultConfigBuilders;
     this.wasUsed = false;
     this.config = this.createConfigObject(url, method);
     this.featureDelegates = featureDelegates;
+    this.factoryMethods = factoryMethods;
   }
 
   private createConfigObject(url:string, method:HTTPMethod): RequestConfig {
@@ -895,16 +901,15 @@ export class HTTPRequest {
    * @return {string} A unique hash-based identifier for this request
    */
   getHash(): string {
-    if(!this.featureDelegates.getHash)
-      throwMissingFeatureError("request-hash");
-    
+    this.factoryMethods.requireFeature("request-hash");    
     return this.featureDelegates.getHash(this);
   }
 
   withProgressHandlers(...handlers: ProgressHandlerConfig[]): HTTPRequest {
-    if(handlers.some(handler => handler.download) && !this.featureDelegates.handleDownloadProgress)
-      throwMissingFeatureError("download-progress");
-
+    if(handlers.some(handler => handler.download))
+      this.factoryMethods.requireFeature("download-progress");
+    if(handlers.some(handler => handler.upload))
+      this.factoryMethods.requireFeature("upload-progress");
     this.config.progressHandlers = handlers;
     return this;
   }
