@@ -21,6 +21,7 @@ import type {
   URLParams,
   ProgressHandlerConfig,
   BeforeFetchHook,
+  FeatureRequestDelegates,
 } from "./types.js";
 
 import { DEFAULT_JSON_MIME_TYPES, DEFAULT_TEXT_MIME_TYPES } from "./constants.js";
@@ -29,6 +30,7 @@ type RequestConstructorArgs = {
   url: string;
   method: HTTPMethod;
   defaultConfigBuilders: RequestConfigBuilder[];
+  featureDelegates: FeatureRequestDelegates;
 };
 /**
  * HTTP Request. This class shouldn't be instanciated directly.
@@ -45,6 +47,7 @@ export class HTTPRequest {
   private readOnlyConfig: RequestConfig | null = null;
   private finalizedURL?: string;
   private beforeFetchHooks: BeforeFetchHook[] = [];
+  private featureDelegates: FeatureRequestDelegates;
 
 
   private async readResponseWithProgress(response: Response, contentType?: string): Promise<any> {
@@ -195,10 +198,11 @@ export class HTTPRequest {
 
   
 
-  constructor({ url, method, defaultConfigBuilders }: RequestConstructorArgs) {
+  constructor({ url, method, defaultConfigBuilders, featureDelegates }: RequestConstructorArgs) {
     this.configBuilders = defaultConfigBuilders;
     this.wasUsed = false;
     this.config = this.createConfigObject(url, method);
+    this.featureDelegates = featureDelegates;
   }
 
   private createConfigObject(url:string, method:HTTPMethod): RequestConfig {
@@ -990,7 +994,10 @@ export class HTTPRequest {
    * @return {string} A unique hash-based identifier for this request
    */
   getHash(): string {
-    throw new Error("Feature not enabled. Call use(RequestHashFeature) on the factory.");
+    if(!this.featureDelegates.getHash)
+      throw new Error("Feature not enabled. Call use(RequestHashFeature) on the factory.");
+    
+    return this.featureDelegates.getHash(this);
   }
 
   withProgressHandlers(...handlers: ProgressHandlerConfig[]): HTTPRequest {

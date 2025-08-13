@@ -1,6 +1,8 @@
 import { HTTPRequest } from "./HTTPRequest.js";
 import HTTPError from "./HTTPError.js";
 import { LoggerFacade, LogLevel } from "@apihive/logger-facade";
+import { Adapter, AdapterOptions } from "./adapter-types.js";
+import { HTTPRequestFactory } from "./HTTPRequestFactory.js";
 
 export type ProgressPhase = 'upload' | 'download';
 export type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
@@ -23,14 +25,31 @@ export type ProgressHandlerConfig = {
   throttleMs?: number;
 };
 
-export interface Feature<T> {
-  apply(target: T, commands: FeatureCommands): void;
+export interface Feature {
+  apply?(target: HTTPRequestFactory, commands: FeatureCommands): void;
+  getDelegates?(factory: HTTPRequestFactory): {
+    request? : FeatureRequestDelegates,
+    factory? : FeatureFactoryDelegates
+  }
+}
+
+export type FeatureRequestDelegates = {
+  getHash?: (request: HTTPRequest) => string;
+  handleUploadProgress?: (info: ProgressInfo) => void;
+  handleDownloadProgress?: (info: ProgressInfo) => void;
+}
+
+export type FeatureFactoryDelegates = {
+  withAdapter: (adapter: Adapter, options?: AdapterOptions) => Promise<HTTPRequestFactory>;
+  detachAdapter: (adapterName: string) => Promise<HTTPRequestFactory>;
+  getAttachedAdapters: () => string[];
+  hasAdapter: (name: string) => boolean;
 }
 
 export type FeatureCommands = {
   addRequestDefaults: (...args: RequestConfigBuilder[]) => void;
   removeRequestDefaults: (...args: RequestConfigBuilder[]) => void;
-  afterRequestCreated: (hook: (request: HTTPRequest) => void) => void;
+  afterRequestCreated: (hook: (request: HTTPRequest) => void) => void | FeatureRequestDelegates;
   beforeFetch: (hook: BeforeFetchHook) => void;
 };
 

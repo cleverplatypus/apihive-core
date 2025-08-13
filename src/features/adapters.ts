@@ -1,23 +1,25 @@
 import type { HTTPRequest } from "../HTTPRequest.js";
 import type { HTTPRequestFactory } from "../HTTPRequestFactory.js";
 import type {
-    Adapter,
-    AdapterEntry,
-    AdapterOptions,
-    AdapterPriority,
+  Adapter,
+  AdapterEntry,
+  AdapterOptions,
+  AdapterPriority,
 } from "../adapter-types.js";
 import {
-    ErrorInterceptor,
-    Feature,
-    FeatureCommands,
-    RequestConfigBuilder,
-    RequestInterceptor,
-    ResponseInterceptor,
-    ResponseInterceptorWithOptions,
+  ErrorInterceptor,
+  Feature,
+  FeatureCommands,
+  FeatureFactoryDelegates,
+  RequestConfigBuilder,
+  RequestInterceptor,
+  ResponseInterceptor,
+  ResponseInterceptorWithOptions,
 } from "../types.js";
 
 type FactoryInstanceInfo = {
   factoryCommands: FeatureCommands;
+  adapters: Map<string, AdapterEntry>;
   adapterInterceptorApplier: RequestConfigBuilder | null;
   adapterRequestInterceptors: Array<{
     interceptor: RequestInterceptor;
@@ -31,9 +33,15 @@ type FactoryInstanceInfo = {
     interceptor: ErrorInterceptor;
     priority: number;
   }>;
+  addedFactoryDefaults: Map<string, RequestConfigBuilder[]>;
 };
 
-class AdaptersFeature implements Feature<HTTPRequestFactory> {
+class AdaptersFeature implements Feature {
+  private factoriesInstanceInfo: WeakMap<
+    HTTPRequestFactory,
+    FactoryInstanceInfo
+  > = new WeakMap();
+
   private updateAdapterInterceptorApplier(instanceInfo: FactoryInstanceInfo) {
     // Remove existing applier if it exists
     if (instanceInfo.adapterInterceptorApplier) {
@@ -46,17 +54,15 @@ class AdaptersFeature implements Feature<HTTPRequestFactory> {
     instanceInfo.adapterInterceptorApplier = (request: HTTPRequest) => {
       // Apply request interceptors in priority order
       const sortedRequestInterceptors = instanceInfo.adapterRequestInterceptors
-        .sort((a, b) => a.priority - b.priority)
         .map((entry) => entry.interceptor);
 
       // Apply response interceptors in priority order
-      const sortedResponseInterceptors = instanceInfo.adapterResponseInterceptors
-        .sort((a, b) => a.priority - b.priority)
-        .map((entry) => entry.entry);
+      const sortedResponseInterceptors =
+        instanceInfo.adapterResponseInterceptors
+          .map((entry) => entry.entry);
 
       // Apply error interceptors in priority order
       const sortedErrorInterceptors = instanceInfo.adapterErrorInterceptors
-        .sort((a, b) => a.priority - b.priority)
         .map((entry) => entry.interceptor);
 
       if (sortedRequestInterceptors.length > 0) {
@@ -94,7 +100,9 @@ class AdaptersFeature implements Feature<HTTPRequestFactory> {
         priority: priority.requestInterceptor!,
       });
     }
-    instanceInfo.adapterRequestInterceptors.sort((a, b) => a.priority - b.priority);
+    instanceInfo.adapterRequestInterceptors.sort(
+      (a, b) => a.priority - b.priority
+    );
 
     // Register response interceptors (functions or registrations)
     const responseInterceptors = adapter.getResponseInterceptors?.() || [];
@@ -104,7 +112,9 @@ class AdaptersFeature implements Feature<HTTPRequestFactory> {
         priority: priority.responseInterceptor!,
       });
     }
-    instanceInfo.adapterResponseInterceptors.sort((a, b) => a.priority - b.priority);
+    instanceInfo.adapterResponseInterceptors.sort(
+      (a, b) => a.priority - b.priority
+    );
 
     // Register error interceptors
     const errorInterceptors = adapter.getErrorInterceptors?.() || [];
@@ -114,7 +124,9 @@ class AdaptersFeature implements Feature<HTTPRequestFactory> {
         priority: priority.errorInterceptor!,
       });
     }
-    instanceInfo.adapterErrorInterceptors.sort((a, b) => a.priority - b.priority);
+    instanceInfo.adapterErrorInterceptors.sort(
+      (a, b) => a.priority - b.priority
+    );
 
     // Update the central adapter interceptor applier
     this.updateAdapterInterceptorApplier(instanceInfo);
@@ -129,9 +141,10 @@ class AdaptersFeature implements Feature<HTTPRequestFactory> {
     const errorInterceptors = adapter.getErrorInterceptors?.() || [];
 
     // Remove from adapter interceptor arrays
-    instanceInfo.adapterRequestInterceptors = instanceInfo.adapterRequestInterceptors.filter(
-      (entry) => !requestInterceptors.includes(entry.interceptor)
-    );
+    instanceInfo.adapterRequestInterceptors =
+      instanceInfo.adapterRequestInterceptors.filter(
+        (entry) => !requestInterceptors.includes(entry.interceptor)
+      );
     // Build a set of function references for comparison
     const responseFns = new Set(
       responseInterceptors.map((e) =>
@@ -140,37 +153,46 @@ class AdaptersFeature implements Feature<HTTPRequestFactory> {
           : (e as ResponseInterceptorWithOptions).interceptor
       )
     );
-    instanceInfo.adapterResponseInterceptors = instanceInfo.adapterResponseInterceptors.filter(
-      (stored) => {
+    instanceInfo.adapterResponseInterceptors =
+      instanceInfo.adapterResponseInterceptors.filter((stored) => {
         const fn =
           typeof stored.entry === "function"
             ? (stored.entry as ResponseInterceptor)
             : (stored.entry as ResponseInterceptorWithOptions).interceptor;
         return !responseFns.has(fn);
-      }
-    );
-    instanceInfo.adapterErrorInterceptors = instanceInfo.adapterErrorInterceptors.filter(
-      (entry) => !errorInterceptors.includes(entry.interceptor)
-    );
+      });
+    instanceInfo.adapterErrorInterceptors =
+      instanceInfo.adapterErrorInterceptors.filter(
+        (entry) => !errorInterceptors.includes(entry.interceptor)
+      );
 
     // Update the central applier
     this.updateAdapterInterceptorApplier(instanceInfo);
   }
 
   apply(factory, commands: FeatureCommands) {
-    const adapters = new Map<string, AdapterEntry>();
     const instanceInfo: FactoryInstanceInfo = {
+      adapters: new Map<string, AdapterEntry>(),
       factoryCommands: commands,
       adapterInterceptorApplier: null,
       adapterRequestInterceptors: [],
       adapterResponseInterceptors: [],
       adapterErrorInterceptors: [],
+      addedFactoryDefaults: new Map<string, RequestConfigBuilder[]>(),
     };
-    factory.withAdapter = async (
+    this.factoriesInstanceInfo.set(factory, instanceInfo);
+  }
+
+  getDelegates(factory: HTTPRequestFactory) {
+    const delegates: FeatureFactoryDelegates =
+      {} as FeatureFactoryDelegates;
+
+    delegates.withAdapter = async (
       adapter: Adapter,
       options?: AdapterOptions
     ) => {
-      if (adapters.has(adapter.name)) {
+      const instanceInfo = this.factoriesInstanceInfo.get(factory)!;
+      if (instanceInfo.adapters.has(adapter.name)) {
         throw new Error(`Adapter '${adapter.name}' is already attached`);
       }
 
@@ -201,11 +223,12 @@ class AdaptersFeature implements Feature<HTTPRequestFactory> {
 
       // Add factory defaults if provided
       const factoryDefaults = adapter.getFactoryDefaults?.() || [];
-      commands.addRequestDefaults(...factoryDefaults);
+      instanceInfo.factoryCommands.addRequestDefaults(...factoryDefaults);
+      instanceInfo.addedFactoryDefaults.set(adapter.name, factoryDefaults);
 
       // Mark as attached and store
       entry.attached = true;
-      adapters.set(adapter.name, entry);
+      instanceInfo.adapters.set(adapter.name, entry);
 
       factory.logger
         .withMinimumLevel(factory.logLevel)
@@ -214,20 +237,23 @@ class AdaptersFeature implements Feature<HTTPRequestFactory> {
       return factory;
     };
 
-    factory.detachAdapter = async (adapterName: string) => {
-      const entry = adapters.get(adapterName);
+    delegates.detachAdapter = async (adapterName: string) => {
+      const instanceInfo = this.factoriesInstanceInfo.get(factory)!;
+      const entry = instanceInfo.adapters.get(adapterName);
       if (!entry) {
         throw new Error(`Adapter '${adapterName}' is not attached`);
       }
 
-      // Remove interceptors registered by this adapter
       this.unregisterAdapterInterceptors(entry.adapter, instanceInfo);
+      const defaultsForAdapter = instanceInfo.addedFactoryDefaults.get(adapterName) || [];
+      if (defaultsForAdapter.length) {
+        instanceInfo.factoryCommands.removeRequestDefaults(...defaultsForAdapter);
+        instanceInfo.addedFactoryDefaults.delete(adapterName);
+      }
 
-      // Call adapter's detach hook
       await entry.adapter.onDetach?.(factory);
 
-      // Remove from registry
-      adapters.delete(adapterName);
+      instanceInfo.adapters.delete(adapterName);
 
       factory.logger
         .withMinimumLevel(factory.logLevel)
@@ -236,13 +262,17 @@ class AdaptersFeature implements Feature<HTTPRequestFactory> {
       return factory;
     };
 
-    factory.hasAdapter = function (name: string) {
-      return adapters.has(name);
+    delegates.hasAdapter = (name: string) => {
+      const instanceInfo = this.factoriesInstanceInfo.get(factory)!;
+      return instanceInfo.adapters.has(name);
     };
 
-    factory.getAttachedAdapters = () => {
-      return Array.from(adapters.keys());
+    delegates.getAttachedAdapters = () => {
+      const instanceInfo = this.factoriesInstanceInfo.get(factory)!;
+      return Array.from(instanceInfo.adapters.keys());
     };
+
+    return { factory: delegates };
   }
 }
 

@@ -1,6 +1,6 @@
 import { HTTPRequest } from "../HTTPRequest";
 import { HTTPRequestFactory } from "../HTTPRequestFactory";
-import { Feature, FeatureCommands } from "../types";
+import { Feature, FeatureRequestDelegates } from "../types";
 import { maybeFunction } from "../utils";
 
 function isTypedArray(v: any): boolean {
@@ -84,94 +84,97 @@ function simpleHash(str: string): string {
   return (hash >>> 0).toString(16);
 }
 
-class RequestHashFeature implements Feature<HTTPRequestFactory> {
+class RequestHashFeature implements Feature {
   private hashes = new WeakMap<HTTPRequest, string>();
 
-  apply(target: HTTPRequestFactory, commands: FeatureCommands) {
-    commands.afterRequestCreated((request) => {
-      request.getHash = () => {
-        if (this.hashes.has(request)) {
-          return this.hashes.get(request)!;
-        }
-        const config = request.getReadOnlyConfig();
-        const contentType = config.headers["content-type"];
-        const bodyContent = maybeFunction(config.body, request);
-        const isBinary = isBinaryBody(bodyContent, contentType as string, [
-            ... config.textMimeTypes,
-            ... config.jsonMimeTypes,
-        ]);
-
-        if (isBinary) {
-          throw new Error("Hashing binary request bodies are not supported");
-        }
-        // Ensure URL is finalized before hashing
-        if (!config.finalURL) {
-          throw new Error(
-            "Request URL is not finalised. Hashing is only valid after URL finalisation (happens during execute())."
-          );
-        }
-
-        // Create a normalized representation of the request
-        const keyComponents = {
-          method: config.method,
-          url: config.finalURL,
-          queryParams: config.queryParams,
-          urlParams: config.urlParams,
-          body: null as any,
-          // Only include headers that affect response (exclude auth, user-agent, etc.)
-          relevantHeaders: {} as Record<string, any>,
-        };
-
-        // Include request body if present
-        if (bodyContent) {
-          // Handle FormData specially for consistent hashing
-          if (bodyContent instanceof FormData) {
-            const entries = Array.from(bodyContent.entries()).sort();
-            keyComponents.body = JSON.stringify(entries);
-          } else if (typeof bodyContent === "string") {
-            // Check if it's a JSON string and normalize it for consistent property order
-            try {
-              const parsedJSON = JSON.parse(bodyContent);
-              // If it's valid JSON, use deterministic stringify for consistent ordering
-              keyComponents.body = deterministicStringify(parsedJSON);
-            } catch {
-              // Not valid JSON, use as-is
+  getDelegates(_factory?: HTTPRequestFactory) {
+    return {
+      request: {
+        getHash: (request: HTTPRequest) => {
+          if (this.hashes.has(request)) {
+            return this.hashes.get(request)!;
+          }
+          const config = request.getReadOnlyConfig();
+          const contentType = config.headers["content-type"];
+          const bodyContent = maybeFunction(config.body, request);
+          const isBinary = isBinaryBody(bodyContent, contentType as string, [
+              ... config.textMimeTypes,
+              ... config.jsonMimeTypes,
+          ]);
+  
+          if (isBinary) {
+            throw new Error("Hashing binary request bodies are not supported");
+          }
+          // Ensure URL is finalized before hashing
+          if (!config.finalURL) {
+            throw new Error(
+              "Request URL is not finalised. Hashing is only valid after URL finalisation (happens during execute())."
+            );
+          }
+  
+          // Create a normalized representation of the request
+          const keyComponents = {
+            method: config.method,
+            url: config.finalURL,
+            queryParams: config.queryParams,
+            urlParams: config.urlParams,
+            body: null as any,
+            // Only include headers that affect response (exclude auth, user-agent, etc.)
+            relevantHeaders: {} as Record<string, any>,
+          };
+  
+          // Include request body if present
+          if (bodyContent) {
+            // Handle FormData specially for consistent hashing
+            if (bodyContent instanceof FormData) {
+              const entries = Array.from(bodyContent.entries()).sort();
+              keyComponents.body = JSON.stringify(entries);
+            } else if (typeof bodyContent === "string") {
+              // Check if it's a JSON string and normalize it for consistent property order
+              try {
+                const parsedJSON = JSON.parse(bodyContent);
+                // If it's valid JSON, use deterministic stringify for consistent ordering
+                keyComponents.body = deterministicStringify(parsedJSON);
+              } catch {
+                // Not valid JSON, use as-is
+                keyComponents.body = bodyContent;
+              }
+            } else {
               keyComponents.body = bodyContent;
             }
-          } else {
-            keyComponents.body = bodyContent;
           }
-        }
-
-        // Include only cache-relevant headers (content-type, accept, etc.)
-        const relevantHeaderKeys = [
-          "content-type",
-          "accept",
-          "accept-language",
-          "accept-encoding",
-        ];
-        for (const headerKey of relevantHeaderKeys) {
-          const headerValue =
-            config.headers[headerKey] ||
-            config.headers[headerKey.toLowerCase()];
-          if (headerValue !== undefined) {
-            keyComponents.relevantHeaders[headerKey.toLowerCase()] =
-              typeof headerValue === "function"
-                ? headerValue(request.getReadOnlyConfig())
-                : headerValue;
+  
+          // Include only cache-relevant headers (content-type, accept, etc.)
+          const relevantHeaderKeys = [
+            "content-type",
+            "accept",
+            "accept-language",
+            "accept-encoding",
+          ];
+          for (const headerKey of relevantHeaderKeys) {
+            const headerValue =
+              config.headers[headerKey] ||
+              config.headers[headerKey.toLowerCase()];
+            if (headerValue !== undefined) {
+              keyComponents.relevantHeaders[headerKey.toLowerCase()] =
+                typeof headerValue === "function"
+                  ? headerValue(request.getReadOnlyConfig())
+                  : headerValue;
+            }
           }
+  
+          // Create a stable string representation with deep sorting
+          const keyString = deterministicStringify(keyComponents);
+  
+          // Generate a hash of the key string for efficiency and cache it
+          const hash = simpleHash(keyString);
+          this.hashes.set(request, hash);
+          return hash;
         }
-
-        // Create a stable string representation with deep sorting
-        const keyString = deterministicStringify(keyComponents);
-
-        // Generate a hash of the key string for efficiency and cache it
-        const hash = simpleHash(keyString);
-        this.hashes.set(request, hash);
-        return hash;
-      };
-    });
+      } as FeatureRequestDelegates
+    } 
   }
+
 }
 
 export default new RequestHashFeature();

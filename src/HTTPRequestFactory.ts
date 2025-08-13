@@ -11,6 +11,8 @@ import {
   Endpoint,
   ErrorInterceptor,
   Feature,
+  FeatureFactoryDelegates,
+  FeatureRequestDelegates,
   HeaderValue,
   HTTPMethod,
   ProgressHandlerConfig,
@@ -44,9 +46,18 @@ function getEndpointURL(endpoint: Endpoint, api: APIConfig) {
 export class HTTPRequestFactory {
   private requestDefaults: RequestConfigBuilder[] = [];
   private apiConfigs: { [key: string]: APIConfig } = {};
-  private logger: LoggerFacade = new ConsoleLogger();
-  private logLevel: LogLevel = "error";
+  private _logger: LoggerFacade = new ConsoleLogger();
+  private _logLevel: LogLevel = "error";
   private afterRequestCreatedHooks: ((request: HTTPRequest) => void)[] = [];
+  
+
+  get logger() {
+    return this._logger;
+  }
+
+  get logLevel() {
+    return this._logLevel;
+  }
   /**
    * @internal 
    * Keeps a mapping of defaults for interceptors to allow removing them
@@ -55,9 +66,11 @@ export class HTTPRequestFactory {
     RequestInterceptor,
     RequestConfigBuilder
   > = new Map();
+  private requestDelegates: FeatureRequestDelegates = {} as FeatureRequestDelegates;
+  private factoryDelegates: FeatureFactoryDelegates = {} as FeatureFactoryDelegates;
 
-  use(feature: Feature<HTTPRequestFactory>) {
-    feature.apply(this, {
+  use(feature: Feature) {
+    feature.apply?.(this, {
       addRequestDefaults: (...args: RequestConfigBuilder[]) => {
         this.requestDefaults.push(...args);
       },
@@ -75,6 +88,15 @@ export class HTTPRequestFactory {
         );
       },
     });
+    if(feature.getDelegates) {
+      const delegates = feature.getDelegates(this);
+      if(delegates.request) {
+        Object.assign(this.requestDelegates, delegates.request);
+      }
+      if(delegates.factory) {
+        Object.assign(this.factoryDelegates, delegates.factory);
+      }
+    }
     return this;
   }
   
@@ -147,7 +169,7 @@ export class HTTPRequestFactory {
    * @returns {HTTPRequestFactory} the factory instance
    */
   withLogger(logger: LoggerFacade) {
-    this.logger = logger;
+    this._logger = logger;
     this.requestDefaults.push((request: HTTPRequest) =>
       request.withLogger(logger)
     );
@@ -213,7 +235,7 @@ export class HTTPRequestFactory {
    * @returns {HTTPRequestFactory} the factory instance
    */
   withLogLevel(level: LogLevel) {
-    this.logLevel = level;
+    this._logLevel = level;
     this.requestDefaults.push((request: HTTPRequest) =>
       request.withLogLevel(level)
     );
@@ -322,7 +344,10 @@ export class HTTPRequestFactory {
     adapter: Adapter,
     options?: AdapterOptions
   ): Promise<HTTPRequestFactory> {
-    throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.use(adaptersFeature).');
+    if(!this.factoryDelegates.withAdapter)
+      throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.use(adaptersFeature).');
+    
+    return this.factoryDelegates.withAdapter(adapter, options);
   }
 
   /**
@@ -332,7 +357,10 @@ export class HTTPRequestFactory {
    * @returns The factory instance for method chaining
    */
   async detachAdapter(adapterName: string): Promise<HTTPRequestFactory> {
-    throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.use(adaptersFeature).');
+    if(!this.factoryDelegates.detachAdapter)
+      throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.use(adaptersFeature).');
+    
+    return this.factoryDelegates.detachAdapter(adapterName);
   }
 
   /**
@@ -341,7 +369,10 @@ export class HTTPRequestFactory {
    * @returns Array of adapter names
    */
   getAttachedAdapters(): string[] {
-    throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.use(adaptersFeature).');
+    if(!this.factoryDelegates.getAttachedAdapters)
+       throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.use(adaptersFeature).');
+    
+    return this.factoryDelegates.getAttachedAdapters();
   }
 
   /**
@@ -351,7 +382,10 @@ export class HTTPRequestFactory {
    * @returns True if the adapter is attached
    */
   hasAdapter(adapterName: string): boolean {
-    throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.use(adaptersFeature).');
+    if(!this.factoryDelegates.hasAdapter)
+      throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.use(adaptersFeature).');
+    
+    return this.factoryDelegates.hasAdapter(adapterName);
   }
 
 
@@ -399,11 +433,14 @@ export class HTTPRequestFactory {
   }
 
   createRequest(url: string, method: HTTPMethod = "GET") {
+    const featureDelegates = this.requestDelegates;
     const request = new HTTPRequest({
       url,
       method,
-      defaultConfigBuilders: this.requestDefaults
+      defaultConfigBuilders: this.requestDefaults,
+      featureDelegates,
     });
+
     this.afterRequestCreatedHooks.forEach((hook) => hook(request));
     return request;
   }
@@ -425,8 +462,8 @@ export class HTTPRequestFactory {
   createAPIRequest(...args: [string, string] | [string]): HTTPRequest {
     const [apiName, endpointName] =
       args.length === 1 ? ["default", args[0]] : args;
-    this.logger
-      .withMinimumLevel(this.logLevel)
+    this._logger
+      .withMinimumLevel(this._logLevel)
       .trace("Creating API request", apiName, endpointName);
     const api = this.apiConfigs[apiName];
     const endpoint: Endpoint = api?.endpoints[endpointName];
@@ -456,7 +493,7 @@ export class HTTPRequestFactory {
       if('api' in (api.meta || {}) || 'api' in (endpoint.meta || {})) {
         additionalInfo.push("You're trying to assign the reserved `api` property name to meta");
       }
-      this.logger.error(
+      this._logger.error(
         "Unable to merge meta",
         ...additionalInfo,
         e
