@@ -104,10 +104,17 @@ class RequestHashFeature implements Feature<HTTPRequestFactory> {
         if (isBinary) {
           throw new Error("Hashing binary request bodies are not supported");
         }
+        // Ensure URL is finalized before hashing
+        if (!config.finalURL) {
+          throw new Error(
+            "Request URL is not finalised. Hashing is only valid after URL finalisation (happens during execute())."
+          );
+        }
+
         // Create a normalized representation of the request
         const keyComponents = {
           method: config.method,
-          url: config.url,
+          url: config.finalURL,
           queryParams: config.queryParams,
           urlParams: config.urlParams,
           body: null as any,

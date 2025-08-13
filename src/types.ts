@@ -56,6 +56,13 @@ export interface RequestInterceptorControls {
    * Update request headers (merges with existing headers)
    */
   updateHeaders(headers: Record<string, any>): void;
+
+  /**
+   * Finalise the request URL. After this call, the URL becomes immutable
+   * and further calls to replaceURL() will throw.
+   * Returns the composed final URL.
+   */
+  finaliseURL(): string;
 }
 
 export type URLParams = Record<
@@ -137,7 +144,11 @@ export type ErrorInterceptor = (error: HTTPError) => boolean | Promise<boolean>;
  * Internal representation of a {@link HTTPRequest}'s configuration
  */
 export type RequestConfig = {
-  url: string;
+  // Internal history of template URLs (tip is the last element)
+  templateURLHistory: string[];
+  // Virtual/computed fields exposed via read-only proxy (not persisted on config)
+  readonly finalURL?: string;       // stable after finalisation
+  readonly templateURL?: string;    // alias to tip of templateURLHistory
   headers: Record<string, HeaderValue>;
   body: any;
   jsonMimeTypes: string[];

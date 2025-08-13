@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Adapter, AdapterPriority } from "../src/adapter-types.ts";
 import { HTTPRequest } from "../src/HTTPRequest.ts";
 import { HTTPRequestFactory } from "../src/HTTPRequestFactory.ts";
-import { ErrorInterceptor, RequestConfig, RequestInterceptor, ResponseInterceptor } from "../src/types.ts";
+import { ErrorInterceptor, RequestConfig, RequestInterceptor, RequestInterceptorControls, ResponseInterceptor } from "../src/types.ts";
 import adaptersFeature from "../src/features/adapters.ts";
 import requestHashFeature from "../src/features/request-hash.ts";
 
@@ -25,10 +25,10 @@ class TestRequestAdapter implements Adapter {
 
   getRequestInterceptors(): RequestInterceptor[] {
     return [
-      async (config: RequestConfig) => {
+      async (config: RequestConfig, commands : RequestInterceptorControls) => {
         this.interceptedRequests.push({
           method: config.method,
-          url: config.url,
+          url: commands.finaliseURL(),
           body: config.body
         });
       }
@@ -47,7 +47,7 @@ class TestResponseAdapter implements Adapter {
       async (response: Response, config: RequestConfig) => {
         this.interceptedResponses.push({
           status: response.status,
-          url: config.url
+          url: config.finalURL || ""
         });
         return response;
       }

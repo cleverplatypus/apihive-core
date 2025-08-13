@@ -42,6 +42,7 @@ export class HTTPRequest {
   private fetchBody: RequestInit | null = null;
   private abortController = new AbortController();
   private readOnlyConfig: RequestConfig | null = null;
+  private finalizedURL?: string;
   /**
    * Returns the fetch response content in its appropriate format
    * @param {Response} response
@@ -190,7 +191,7 @@ export class HTTPRequest {
     this.configBuilders = defaultConfigBuilders;
     this.wasUsed = false;
     this.config = {
-      url,
+      templateURLHistory: [url],
       headers: {},
       body: null,
       timeout: 0,
@@ -233,7 +234,11 @@ export class HTTPRequest {
    * @returns {string} the URL of the request
    */
   get url() {
-    return this.config.url;
+    return this.composeURL();
+  }
+
+  private isFinalized(): boolean {
+    return typeof this.finalizedURL === "string";
   }
 
   private getLogger() {
@@ -265,45 +270,47 @@ export class HTTPRequest {
     );
   }
 
-  private setupQueryParams() {
-    if (Object.keys(this.config.queryParams).length) {
-      const params: Record<string, string | string[]> = {};
-      for (let k of Object.keys(this.config.queryParams)) {
-        const value = maybeFunction<string | Array<string>>(
-          this.config.queryParams[k],
-          this
-        );
-        params[k] = value;
-      }
-      if (Object.keys(params).length) {
-        const url = new URL(this.config.url);
-        for (const k of Object.keys(params)) {
-          if (Array.isArray(params[k])) {
-            for (const v of params[k]) {
-              url.searchParams.append(k, v);
-            }
-          } else {
-            url.searchParams.append(k, params[k] as string);
-          }
-        }
-        this.config.url = url.toString();
-      }
-    }
-  }
-
   private setupBody() {
     if (!this.config.body) return;
     this.fetchBody.body = this.config.body();
   }
 
-  private setupURL() {
+  // Build the final URL without mutating template or params
+  private composeURL(): string {
+    // Start from the tip of the template history
+    const tip = this.config.templateURLHistory[this.config.templateURLHistory.length - 1];
+    let urlString = tip;
+
+    // Apply path params
     for (const key in this.config.urlParams) {
-      const value = this.config.urlParams[key];
-      this.config.url = this.config.url.replace(
-        `{{${key}}}`,
-        typeof value === "function" ? (value as Function)(this) : value
-      );
+      const raw = this.config.urlParams[key];
+      const value =
+        typeof raw === "function" ? (raw as Function)(this.getReadOnlyConfig()) : raw;
+      urlString = urlString.replace(`{{${key}}}`, String(value));
     }
+
+    // Apply query params
+    const url = new URL(urlString, urlString.startsWith('http') ? undefined : 'http://dummy');
+    // If template was relative, toString() would include dummy origin; strip it later.
+    for (const k of Object.keys(this.config.queryParams)) {
+      const qp = this.config.queryParams[k];
+      const evaluated = maybeFunction<any>(qp, this.getReadOnlyConfig());
+      if (evaluated == null) continue;
+      if (Array.isArray(evaluated)) {
+        for (const v of evaluated) url.searchParams.append(k, String(v));
+      } else {
+        url.searchParams.append(k, String(evaluated));
+      }
+    }
+
+    const composed = url.toString();
+    if (!urlString.startsWith('http')) {
+      // Remove dummy origin
+      const i = composed.indexOf('://');
+      const slash = composed.indexOf('/', i + 3);
+      return composed.slice(slash);
+    }
+    return composed;
   }
 
   /**
@@ -336,11 +343,7 @@ export class HTTPRequest {
 
     this.setupTimeout();
 
-    this.setupQueryParams();
-
     this.setupBody();
-
-    this.setupURL();
 
     this.wasUsed = true;
 
@@ -363,15 +366,21 @@ export class HTTPRequest {
 
     let response;
     try {
+      // Compute final URL after potential interceptor mutations
+      const finalURL = this.composeURL();
+      // Persist the finalized URL so interceptors/hooks and features (e.g., hashing)
+      // can access a stable value after execute()
+      this.finalizedURL = finalURL;
       logger.debug(
         "HttpRequestFactory : Fetch url to be called",
-        this.config.url
+        finalURL
       );
       for (const hook of this.config.beforeFetchHooks || []) {
-        await hook(this.fetchBody, this.config);
+        // Keep mutable config for hooks to support adapters/tests that set fetchImpl dynamically
+        await hook(this.fetchBody, this.config as any);
       }
       const fetchImpl = this.config.fetchImpl;
-      response = await fetchImpl(this.config.url, this.fetchBody);
+      response = await fetchImpl(finalURL, this.fetchBody);
 
       logger.trace("HttpRequestFactory : Fetch response", response);
 
@@ -441,7 +450,7 @@ export class HTTPRequest {
 
       logger.error("HttpRequestFactory : Fetch error", {
         type: "fetch-error",
-        endpoint: this.config.url,
+        endpoint: this.composeURL(),
         details: error,
       });
 
@@ -471,120 +480,105 @@ export class HTTPRequest {
    */
   getReadOnlyConfig(): RequestConfig {
     if (this.readOnlyConfig) return this.readOnlyConfig;
-    // IMPORTANT: Proxy the live config object, not a cloned snapshot.
-    // Cloning would freeze values like url at creation time, hiding later mutations
-    // performed by setupURL/setupQueryParams/request interceptors.
+    // IMPORTANT: Proxy the live config object (no cloning) so updates remain visible.
     const target = this.config;
 
-    // Create a proxy that lazily evaluates function-based properties while reflecting live mutations
-    return (this.readOnlyConfig = new Proxy(target, {
-      get: (target, prop: string | symbol) => {
-        const value = target[prop as keyof RequestConfig];
-
-        // Handle body property - evaluate function if needed
-        try {
-          if (prop === "body") {
-            return maybeFunction(value);
+    const readonly = new Proxy(target, {
+      get: (t, prop: string | symbol) => {
+        // Expose finalURL if finalized; warn if accessed prematurely
+        if (prop === "finalURL") {
+          if (!this.isFinalized()) {
+            this.getLogger().warn(
+              "HttpRequestFactory : Access to finalURL before URL finalisation",
+              { type: "final-url-access-before-finalise" }
+            );
+            return undefined;
           }
-        } catch (error) {
-          this.getLogger().warn("HttpRequestFactory : Error evaluating body", {
-            type: "body-error",
-            endpoint: this.config.url,
-            details: error,
-          });
-          return null;
+          return this.finalizedURL;
         }
 
-        // Handle headers property - create lazy header proxy
-        if (prop === "headers" && typeof value === "object" && value !== null) {
-          return new Proxy(value as Record<string, any>, {
-            get: (headerTarget, headerProp: string | symbol) => {
-              const headerValue = headerTarget[headerProp as string];
+        // Expose the current template URL tip
+        if (prop === "templateURL") {
+          const tip = t.templateURLHistory[t.templateURLHistory.length - 1];
+          return tip;
+        }
 
-              // Evaluate function-based header when accessed
-                try {
-                  return maybeFunction(headerValue, this.config)
-                } catch (error) {
-                  this.getLogger().warn("HttpRequestFactory : Error evaluating header", {
+        if (prop === "body") {
+          try {
+            return maybeFunction(t.body, readonly);
+          } catch (error) {
+            this.getLogger().warn("HttpRequestFactory : Error evaluating body", {
+              type: "body-error",
+              endpoint: this.composeURL(),
+              details: error,
+            });
+            return null;
+          }
+        }
+
+        if (prop === "headers") {
+          const headersTarget = t.headers || {};
+          return new Proxy(headersTarget as Record<string, any>, {
+            get: (hTarget, hProp: string | symbol) => {
+              const headerValue = hTarget[hProp as string];
+              try {
+                return maybeFunction(headerValue, readonly);
+              } catch (error) {
+                this.getLogger().warn(
+                  "HttpRequestFactory : Error evaluating header",
+                  {
                     type: "header-error",
-                    endpoint: this.config.url,
+                    key: String(hProp),
+                    endpoint: this.composeURL(),
                     details: error,
-                  });
-                  return undefined;
-                }
-            },
-
-            // Make headers enumerable and read-only
-            ownKeys: (headerTarget) => Object.keys(headerTarget),
-            getOwnPropertyDescriptor: (headerTarget, headerProp) => {
-              if (headerProp in headerTarget) {
-                const headerValue = headerTarget[headerProp as string];
-                let evaluatedValue;
-                  try {
-                    evaluatedValue = maybeFunction(headerValue, target);
-                  } catch (error) {
-                    this.getLogger().warn("HttpRequestFactory : Error evaluating header", {
-                      type: "header-error",
-                      endpoint: this.config.url,
-                      details: error,
-                    });
-                    return undefined;
                   }
-                  return {
-                    enumerable: true,
-                    configurable: false,
-                    writable: false,
-                    value: evaluatedValue,
-                  };
+                );
+                return undefined;
+              }
+            },
+            ownKeys: (hTarget) => Object.keys(hTarget),
+            getOwnPropertyDescriptor: (hTarget, hProp) => {
+              if (Object.prototype.hasOwnProperty.call(hTarget, hProp)) {
+                let evaluatedValue: any;
+                try {
+                  evaluatedValue = maybeFunction(
+                    hTarget[hProp as string],
+                    readonly
+                  );
+                } catch (error) {
+                  this.getLogger().warn(
+                    "HttpRequestFactory : Error evaluating header",
+                    {
+                      type: "header-error",
+                      key: String(hProp),
+                      endpoint: this.composeURL(),
+                      details: error,
+                    }
+                  );
+                  evaluatedValue = undefined;
+                }
+                return {
+                  enumerable: true,
+                  configurable: false,
+                  writable: false,
+                  value: evaluatedValue,
+                } as PropertyDescriptor;
               }
               return undefined;
             },
-
-            // Prevent modifications
             set: () => false,
             deleteProperty: () => false,
           });
         }
 
-        // Return other properties as-is
-        return value;
+        return (t as any)[prop as any];
       },
-
-      // Make config enumerable and read-only
-      ownKeys: (target) => Object.keys(target),
-      getOwnPropertyDescriptor: (target, prop) => {
-        if (prop in target) {
-          const value = target[prop as keyof RequestConfig];
-          let evaluatedValue = value;
-
-          // Evaluate if needed (same logic as the get handler)
-          if (prop === "body") {
-            try {
-              evaluatedValue = maybeFunction(value);
-            } catch (error) {
-              this.getLogger().warn("HttpRequestFactory : Error evaluating body", {
-                type: "body-error",
-                endpoint: this.config.url,
-                details: error,
-              });
-              evaluatedValue = null;
-            }
-          }
-
-          return {
-            enumerable: true,
-            configurable: false,
-            writable: false,
-            value: evaluatedValue,
-          };
-        }
-        return undefined;
-      },
-
-      // Prevent modifications
       set: () => false,
       deleteProperty: () => false,
-    }) as RequestConfig);
+    });
+
+    this.readOnlyConfig = readonly as unknown as RequestConfig;
+    return this.readOnlyConfig;
   }
 
   /**
@@ -603,16 +597,27 @@ export class HTTPRequest {
       },
 
       replaceURL: (newURL: string, newURLParams?: URLParams) => {
-        this.config.url = newURL;
+        if (this.isFinalized()) {
+          throw new Error("URL has already been finalised; replaceURL() is not allowed");
+        }
+        // Push new template (absolute or relative), placeholders allowed
+        this.config.templateURLHistory.push(newURL);
         if (newURLParams) {
           this.config.urlParams = newURLParams;
         }
-        this.setupURL();
+        // Do not persist composed URL; it will be computed on demand.
       },
 
       updateHeaders: (headers: Record<string, string | null>) => {
         Object.assign(this.config.headers, headers);
         this.setupHeaders();
+      },
+
+      finaliseURL: (): string => {
+        if (!this.isFinalized()) {
+          this.finalizedURL = this.composeURL();
+        }
+        return this.finalizedURL!;
       },
     };
   }
