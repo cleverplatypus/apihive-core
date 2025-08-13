@@ -23,6 +23,7 @@ import type {
   BeforeFetchHook,
 } from "./types.js";
 
+import { DEFAULT_JSON_MIME_TYPES, DEFAULT_TEXT_MIME_TYPES } from "./constants.js";
 
 type RequestConstructorArgs = {
   url: string;
@@ -43,27 +44,11 @@ export class HTTPRequest {
   private abortController = new AbortController();
   private readOnlyConfig: RequestConfig | null = null;
   private finalizedURL?: string;
-  /**
-   * Returns the fetch response content in its appropriate format
-   * @param {Response} response
-   */
-  private readResponse = async (response: Response): Promise<any> => {
-    const contentType = response.headers.get("content-type")?.split(/;\s?/)[0];
-    if (!contentType) {
-      this.getLogger().info(`No content-type header found for response`);
-      return null;
-    }
-    if (this.config.jsonMimeTypes.find((type) => 
-      new RegExp(type).test(contentType))) return response.json();
+  private beforeFetchHooks: BeforeFetchHook[] = [];
 
-    if (this.config.textMimeTypes.find((type) => new RegExp(type).test(contentType))) {
-      return await response.text();
-    }
 
-    if (
-      this.config.progressHandlers?.find((handler) => !!handler.download)
-    ) {
-      const reader = response.body?.getReader();
+  private async readResponseWithProgress(response: Response, contentType?: string): Promise<any> {
+    const reader = response.body?.getReader();
       if (!reader) {
         // No readable stream available; fall back
         return await response.blob();
@@ -167,6 +152,29 @@ export class HTTPRequest {
       // Final emit at 100%
       emitProgress(receivedSize, true);
       return blob;
+  }
+
+  /**
+   * Returns the fetch response content in its appropriate format
+   * @param {Response} response
+   */
+  private readResponse = async (response: Response): Promise<any> => {
+    const contentType = response.headers.get("content-type")?.split(/;\s?/)[0];
+    if (!contentType) {
+      this.getLogger().info(`No content-type header found for response`);
+      return null;
+    }
+    if (this.config.jsonMimeTypes.find((type) => 
+      new RegExp(type).test(contentType))) return response.json();
+
+    if (this.config.textMimeTypes.find((type) => new RegExp(type).test(contentType))) {
+      return await response.text();
+    }
+
+    if (
+      this.config.progressHandlers?.find((handler) => !!handler.download)
+    ) {
+      return await this.readResponseWithProgress(response, contentType);
     }
 
     return await response.blob();
@@ -190,7 +198,11 @@ export class HTTPRequest {
   constructor({ url, method, defaultConfigBuilders }: RequestConstructorArgs) {
     this.configBuilders = defaultConfigBuilders;
     this.wasUsed = false;
-    this.config = {
+    this.config = this.createConfigObject(url, method);
+  }
+
+  private createConfigObject(url:string, method:HTTPMethod): RequestConfig {
+    const config : RequestConfig = {
       templateURLHistory: [url],
       headers: {},
       body: null,
@@ -200,16 +212,11 @@ export class HTTPRequest {
       method,
       // Defaults: match application/json and application/*+json
       jsonMimeTypes: [
-        "^application/(?:.+\\+)?json$",
+        ...DEFAULT_JSON_MIME_TYPES,
       ],
       // Defaults: common textual types
       textMimeTypes: [
-        "^text/.*$",
-        "^application/.*\\+xml$",
-        "^image/.*\\+xml$",
-        "^application/javascript$",
-        "^application/xml$",
-        "application/x-www-form-urlencoded"
+        ...DEFAULT_TEXT_MIME_TYPES,
       ],
       credentials: "same-origin",
       logLevel: "error",
@@ -224,20 +231,16 @@ export class HTTPRequest {
       requestInterceptors: [],
       responseBodyTransformers: [],
       fetchImpl: fetch,
-      beforeFetchHooks: [],
     };
+    Object.defineProperty(config,  'templateURL', {
+      get: () => config.templateURLHistory[config.templateURLHistory.length - 1],
+      configurable: false,
+      enumerable: true
+    })
+    return config;
   }
 
-  /**
-   * Gets the URL of the request.
-   *
-   * @returns {string} the URL of the request
-   */
-  get url() {
-    return this.composeURL();
-  }
-
-  private isFinalized(): boolean {
+  private isURLFinalized(): boolean {
     return typeof this.finalizedURL === "string";
   }
 
@@ -366,21 +369,17 @@ export class HTTPRequest {
 
     let response;
     try {
-      // Compute final URL after potential interceptor mutations
-      const finalURL = this.composeURL();
-      // Persist the finalized URL so interceptors/hooks and features (e.g., hashing)
-      // can access a stable value after execute()
-      this.finalizedURL = finalURL;
+      this.finalizedURL = this.composeURL();
       logger.debug(
         "HttpRequestFactory : Fetch url to be called",
-        finalURL
+        this.finalizedURL
       );
-      for (const hook of this.config.beforeFetchHooks || []) {
+      for (const hook of this.beforeFetchHooks) {
         // Keep mutable config for hooks to support adapters/tests that set fetchImpl dynamically
         await hook(this.fetchBody, this.config as any);
       }
       const fetchImpl = this.config.fetchImpl;
-      response = await fetchImpl(finalURL, this.fetchBody);
+      response = await fetchImpl(this.finalizedURL, this.fetchBody);
 
       logger.trace("HttpRequestFactory : Fetch response", response);
 
@@ -487,7 +486,7 @@ export class HTTPRequest {
       get: (t, prop: string | symbol) => {
         // Expose finalURL if finalized; warn if accessed prematurely
         if (prop === "finalURL") {
-          if (!this.isFinalized()) {
+          if (!this.isURLFinalized()) {
             this.getLogger().warn(
               "HttpRequestFactory : Access to finalURL before URL finalisation",
               { type: "final-url-access-before-finalise" }
@@ -509,7 +508,7 @@ export class HTTPRequest {
           } catch (error) {
             this.getLogger().warn("HttpRequestFactory : Error evaluating body", {
               type: "body-error",
-              endpoint: this.composeURL(),
+              endpoint: target.templateURL,
               details: error,
             });
             return null;
@@ -529,7 +528,7 @@ export class HTTPRequest {
                   {
                     type: "header-error",
                     key: String(hProp),
-                    endpoint: this.composeURL(),
+                    endpoint: target.templateURL,
                     details: error,
                   }
                 );
@@ -551,7 +550,7 @@ export class HTTPRequest {
                     {
                       type: "header-error",
                       key: String(hProp),
-                      endpoint: this.composeURL(),
+                      endpoint: target.templateURL,
                       details: error,
                     }
                   );
@@ -597,7 +596,7 @@ export class HTTPRequest {
       },
 
       replaceURL: (newURL: string, newURLParams?: URLParams) => {
-        if (this.isFinalized()) {
+        if (this.isURLFinalized()) {
           throw new Error("URL has already been finalised; replaceURL() is not allowed");
         }
         // Push new template (absolute or relative), placeholders allowed
@@ -614,7 +613,7 @@ export class HTTPRequest {
       },
 
       finaliseURL: (): string => {
-        if (!this.isFinalized()) {
+        if (!this.isURLFinalized()) {
           this.finalizedURL = this.composeURL();
         }
         return this.finalizedURL!;
@@ -1000,7 +999,7 @@ export class HTTPRequest {
   }
 
   withBeforeFetchHook(hook: BeforeFetchHook): HTTPRequest {
-    this.config.beforeFetchHooks.push(hook);
+    this.beforeFetchHooks.push(hook);
     return this;
   }
 }

@@ -171,7 +171,6 @@ export type RequestConfig = {
   errorInterceptors: ErrorInterceptor[];
   progressHandlers?: ProgressHandlerConfig[];
   fetchImpl: FetchLike;
-  beforeFetchHooks?: BeforeFetchHook[];
 };
 
 /**
