@@ -47,6 +47,7 @@ export type FeatureRequestDelegates = {
     abortController: AbortController,
     config: RequestConfig
   }) => Promise<Blob>;
+  fetch?: FetchLike;
 }
 
 export type FeatureFactoryDelegates = {
@@ -199,7 +200,6 @@ export type RequestConfig = {
   responseInterceptors: Array<ResponseInterceptor | ResponseInterceptorWithOptions>;
   errorInterceptors: ErrorInterceptor[];
   progressHandlers?: ProgressHandlerConfig[];
-  fetchImpl: FetchLike;
 };
 
 /**

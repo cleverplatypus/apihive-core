@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { HTTPRequestFactory } from '../src/index.ts';
-import type { RequestConfig } from '../src/types.ts';
+import type { FeatureName, RequestConfig } from '../src/types.ts';
 import downloadProgressFeature from '../src/features/download-progress.ts';
 
 // Helper to build a ReadableStream of Uint8Array chunks
@@ -227,11 +227,15 @@ describe('progress_handlers_download', () => {
     };
 
     const result = await factory
-      .createGETRequest('https://example.com/download.bin')
-      .withBeforeFetchHook((_init: RequestInit, config: RequestConfig) => {
-        // Override per-request fetch implementation
-        config.fetchImpl = mockFetch;
+      .use({
+        name : 'mock-fetch-feature' as FeatureName,
+        getDelegates: (_factory : HTTPRequestFactory) => ({
+          request : {
+            fetch: mockFetch
+          }
+        })
       })
+      .createGETRequest('https://example.com/download.bin')
       .withProgressHandlers(h1, h2)
       .execute();
 

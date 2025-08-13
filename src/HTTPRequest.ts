@@ -133,8 +133,7 @@ export class HTTPRequest {
       errorInterceptors: [],
       responseInterceptors: [],
       requestInterceptors: [],
-      responseBodyTransformers: [],
-      fetchImpl: fetch,
+      responseBodyTransformers: []
     };
     Object.defineProperty(config,  'templateURL', {
       get: () => config.templateURLHistory[config.templateURLHistory.length - 1],
@@ -282,7 +281,9 @@ export class HTTPRequest {
         // Keep mutable config for hooks to support adapters/tests that set fetchImpl dynamically
         await hook(this.fetchBody, this.config as any);
       }
-      const fetchImpl = this.config.fetchImpl;
+      const fetchImpl =
+        this.featureDelegates.fetch ||
+        globalThis.fetch;
       response = await fetchImpl(this.finalizedURL, this.fetchBody);
 
       logger.trace("HttpRequestFactory : Fetch response", response);
