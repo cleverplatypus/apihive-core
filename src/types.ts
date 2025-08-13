@@ -36,7 +36,11 @@ export interface Feature {
 export type FeatureRequestDelegates = {
   getHash?: (request: HTTPRequest) => string;
   handleUploadProgress?: (info: ProgressInfo) => void;
-  handleDownloadProgress?: (info: ProgressInfo) => void;
+  handleDownloadProgress?: (info : {
+    response: Response, 
+    abortController: AbortController,
+    config: RequestConfig
+  }) => Promise<Blob>;
 }
 
 export type FeatureFactoryDelegates = {

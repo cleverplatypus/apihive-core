@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { HTTPRequestFactory } from '../src/HTTPRequestFactory.js';
+import downloadProgressFeature from '../src/features/download-progress.ts';
 
 describe('progress_handlers_download_abort_behavior', () => {
   it('aborts_mid_download_due_to_timeout_and_rejects_with_httperror_neg1', async () => {
@@ -55,7 +56,8 @@ describe('progress_handlers_download_abort_behavior', () => {
     // Mock fetch to return the custom response
     globalThis.fetch = vi.fn(async () => resp);
 
-    const factory = new HTTPRequestFactory();
+    const factory = new HTTPRequestFactory()
+      .use(downloadProgressFeature);
 
     const calls: Array<{ percent: number; loaded: number; total?: number }> = [];
 
@@ -151,7 +153,8 @@ describe('progress_handlers_download_abort_behavior', () => {
 
     globalThis.fetch = vi.fn(async () => resp);
 
-    const factory = new HTTPRequestFactory();
+    const factory = new HTTPRequestFactory()
+      .use(downloadProgressFeature);
     const calls: Array<{ percent: number; loaded: number; total?: number }> = [];
     const req = factory
       .createGETRequest('https://example.test/timeout')

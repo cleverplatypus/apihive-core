@@ -531,6 +531,8 @@ export class HTTPRequestFactory {
   }
 
   withProgressHandlers(...handlers: ProgressHandlerConfig[]): HTTPRequestFactory {
+    if(handlers.some(handler => handler.download) && !this.requestDelegates.handleDownloadProgress)
+      throw new Error("Download progress feature not enabled. Call factory.use(downloadProgressFeature).");
     this.requestDefaults.push((request: HTTPRequest) =>
       request.withProgressHandlers(...handlers)
     );

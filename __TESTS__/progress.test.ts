@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { HTTPRequestFactory } from '../src/index.ts';
 import type { RequestConfig } from '../src/types.ts';
+import downloadProgressFeature from '../src/features/download-progress.ts';
 
 // Helper to build a ReadableStream of Uint8Array chunks
 function makeStream(chunks: Uint8Array[]): ReadableStream<Uint8Array> {
@@ -45,6 +46,7 @@ describe('progress_handlers', () => {
       const factory = new HTTPRequestFactory();
       const calls: Array<{ percent: number; loaded: number; total?: number }> = [];
       const result = await factory
+        .use(downloadProgressFeature)
         .createGETRequest('https://example.test/noclen')
         .withProgressHandlers({
           download: (info) => {
@@ -185,7 +187,8 @@ describe('progress_handlers', () => {
 
 describe('progress_handlers_download', () => {
   it('dispatches_download_progress_with_fall_through_and_returns_blob', async () => {
-    const factory = new HTTPRequestFactory();
+    const factory = new HTTPRequestFactory()
+      .use(downloadProgressFeature);
 
     // Prepare chunks totalling a known size
     const chunk1 = new Uint8Array([1, 2, 3, 4, 5]); // 5 bytes
@@ -257,7 +260,8 @@ describe('progress_handlers_download', () => {
   });
 
   it('actually_downloads_the_public_128kb_jpg_emits_progress_and_returns_a_blob', async () => {
-    const factory = new HTTPRequestFactory();
+    const factory = new HTTPRequestFactory()
+      .use(downloadProgressFeature);
 
     const url =
       'https://freetestdata.com/wp-content/uploads/2022/02/Free_Test_Data_1MB_JPG.jpg';
