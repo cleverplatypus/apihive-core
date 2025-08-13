@@ -41,6 +41,7 @@ export class HTTPRequest {
   private timeoutID?: any;
   private fetchBody: RequestInit | null = null;
   private abortController = new AbortController();
+  private readOnlyConfig: RequestConfig | null = null;
   /**
    * Returns the fetch response content in its appropriate format
    * @param {Response} response
@@ -469,10 +470,14 @@ export class HTTPRequest {
    * @return {RequestConfig} A read-only configuration object with lazy evaluation.
    */
   getReadOnlyConfig(): RequestConfig {
-    const config = { ...this.config };
+    if (this.readOnlyConfig) return this.readOnlyConfig;
+    // IMPORTANT: Proxy the live config object, not a cloned snapshot.
+    // Cloning would freeze values like url at creation time, hiding later mutations
+    // performed by setupURL/setupQueryParams/request interceptors.
+    const target = this.config;
 
-    // Create a proxy that lazily evaluates function-based properties
-    return new Proxy(config, {
+    // Create a proxy that lazily evaluates function-based properties while reflecting live mutations
+    return (this.readOnlyConfig = new Proxy(target, {
       get: (target, prop: string | symbol) => {
         const value = target[prop as keyof RequestConfig];
 
@@ -498,7 +503,7 @@ export class HTTPRequest {
 
               // Evaluate function-based header when accessed
                 try {
-                  return maybeFunction(headerValue, target)
+                  return maybeFunction(headerValue, this.config)
                 } catch (error) {
                   this.getLogger().warn("HttpRequestFactory : Error evaluating header", {
                     type: "header-error",
@@ -579,7 +584,7 @@ export class HTTPRequest {
       // Prevent modifications
       set: () => false,
       deleteProperty: () => false,
-    }) as RequestConfig;
+    }) as RequestConfig);
   }
 
   /**
