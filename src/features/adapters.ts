@@ -37,6 +37,8 @@ type FactoryInstanceInfo = {
 };
 
 class AdaptersFeature implements Feature {
+  readonly name : 'adapters';
+
   private factoriesInstanceInfo: WeakMap<
     HTTPRequestFactory,
     FactoryInstanceInfo

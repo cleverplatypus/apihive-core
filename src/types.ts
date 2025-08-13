@@ -24,8 +24,14 @@ export type ProgressHandlerConfig = {
   download?: ProgressHandler;
   throttleMs?: number;
 };
+export type FeatureName = 
+  | 'adapters'
+  | 'download-progress'
+  | 'request-hash'
+  | 'upload-progress'
 
 export interface Feature {
+  name : FeatureName;
   apply?(target: HTTPRequestFactory, commands: FeatureCommands): void;
   getDelegates?(factory: HTTPRequestFactory): {
     request? : FeatureRequestDelegates,

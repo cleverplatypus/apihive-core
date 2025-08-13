@@ -21,6 +21,7 @@ import {
   RequestInterceptor,
   ResponseBodyTransformer
 } from "./types.js";
+import { throwMissingFeatureError } from "./utils.js";
 
 function getEndpointURL(endpoint: Endpoint, api: APIConfig) {
   if (/^(https?:)?\/\//.test(endpoint.target)) {
@@ -49,7 +50,7 @@ export class HTTPRequestFactory {
   private _logger: LoggerFacade = new ConsoleLogger();
   private _logLevel: LogLevel = "error";
   private afterRequestCreatedHooks: ((request: HTTPRequest) => void)[] = [];
-  
+  private enabledFeatures: Map<string, Feature> = new Map();
 
   get logger() {
     return this._logger;
@@ -70,6 +71,7 @@ export class HTTPRequestFactory {
   private factoryDelegates: FeatureFactoryDelegates = {} as FeatureFactoryDelegates;
 
   use(feature: Feature) {
+    this.enabledFeatures.set(feature.name, feature);
     feature.apply?.(this, {
       addRequestDefaults: (...args: RequestConfigBuilder[]) => {
         this.requestDefaults.push(...args);
@@ -345,7 +347,7 @@ export class HTTPRequestFactory {
     options?: AdapterOptions
   ): Promise<HTTPRequestFactory> {
     if(!this.factoryDelegates.withAdapter)
-      throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.use(adaptersFeature).');
+      throwMissingFeatureError('adapters');
     
     return this.factoryDelegates.withAdapter(adapter, options);
   }
@@ -358,7 +360,7 @@ export class HTTPRequestFactory {
    */
   async detachAdapter(adapterName: string): Promise<HTTPRequestFactory> {
     if(!this.factoryDelegates.detachAdapter)
-      throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.use(adaptersFeature).');
+      throwMissingFeatureError('adapters');
     
     return this.factoryDelegates.detachAdapter(adapterName);
   }
@@ -370,7 +372,7 @@ export class HTTPRequestFactory {
    */
   getAttachedAdapters(): string[] {
     if(!this.factoryDelegates.getAttachedAdapters)
-       throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.use(adaptersFeature).');
+      throwMissingFeatureError('adapters');
     
     return this.factoryDelegates.getAttachedAdapters();
   }
@@ -383,7 +385,7 @@ export class HTTPRequestFactory {
    */
   hasAdapter(adapterName: string): boolean {
     if(!this.factoryDelegates.hasAdapter)
-      throw new Error('Adapters feature not enabled. Import adaptersFeature and call factory.use(adaptersFeature).');
+      throwMissingFeatureError('adapters');
     
     return this.factoryDelegates.hasAdapter(adapterName);
   }
@@ -532,7 +534,7 @@ export class HTTPRequestFactory {
 
   withProgressHandlers(...handlers: ProgressHandlerConfig[]): HTTPRequestFactory {
     if(handlers.some(handler => handler.download) && !this.requestDelegates.handleDownloadProgress)
-      throw new Error("Download progress feature not enabled. Call factory.use(downloadProgressFeature).");
+      throwMissingFeatureError("download-progress");
     this.requestDefaults.push((request: HTTPRequest) =>
       request.withProgressHandlers(...handlers)
     );

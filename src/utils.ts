@@ -1,3 +1,5 @@
+import { FeatureName } from "./types.js";
+
 /**
  *
  * @param target either a value or a function to call with the provided args
@@ -11,3 +13,9 @@ export function maybeFunction<T>(target: any, ...args: any[]): T {
     return target as T
   }
   
+export function throwMissingFeatureError(
+  featureName : FeatureName,
+  ): void {
+    throw new Error(`Feature "${featureName}" not enabled. Call factory.use(featureObj).`);
+
+}

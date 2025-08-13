@@ -85,6 +85,7 @@ function simpleHash(str: string): string {
 }
 
 class RequestHashFeature implements Feature {
+  readonly name: "request-hash";
   private hashes = new WeakMap<HTTPRequest, string>();
 
   getDelegates(_factory?: HTTPRequestFactory) {

@@ -1,4 +1,4 @@
-import { maybeFunction } from "./utils.js";
+import { maybeFunction, throwMissingFeatureError } from "./utils.js";
 import HTTPError from "./HTTPError.js";
 import {
   type LoggerFacade,
@@ -71,7 +71,7 @@ export class HTTPRequest {
       this.config.progressHandlers?.find((handler) => !!handler.download)
     ) {
       if(!this.featureDelegates.handleDownloadProgress)
-        throw new Error("Download progress feature not enabled. Import DownloadProgressFeature and call factory.use(downloadProgressFeature)");
+        throwMissingFeatureError("download-progress");
       
       return this.featureDelegates.handleDownloadProgress({
         response,
@@ -895,14 +895,14 @@ export class HTTPRequest {
    */
   getHash(): string {
     if(!this.featureDelegates.getHash)
-      throw new Error("Feature not enabled. Call use(RequestHashFeature) on the factory.");
+      throwMissingFeatureError("request-hash");
     
     return this.featureDelegates.getHash(this);
   }
 
   withProgressHandlers(...handlers: ProgressHandlerConfig[]): HTTPRequest {
     if(handlers.some(handler => handler.download) && !this.featureDelegates.handleDownloadProgress)
-      throw new Error("Download progress feature not enabled. Call factory.use(downloadProgressFeature).");
+      throwMissingFeatureError("download-progress");
 
     this.config.progressHandlers = handlers;
     return this;
