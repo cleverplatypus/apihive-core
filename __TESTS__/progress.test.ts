@@ -231,7 +231,7 @@ describe('progress_handlers_download', () => {
         name : 'mock-fetch-feature' as FeatureName,
         getDelegates: (_factory : HTTPRequestFactory) => ({
           request : {
-            fetch: mockFetch
+            getFetchImpl: () => mockFetch
           }
         })
       })

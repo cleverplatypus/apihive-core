@@ -26,7 +26,6 @@ import type {
 import { maybeFunction } from "./utils.js";
 
 import { DEFAULT_JSON_MIME_TYPES, DEFAULT_TEXT_MIME_TYPES } from "./constants.js";
-import { HTTPRequestFactory } from "./HTTPRequestFactory.js";
 
 type FactoryMethods = {
   requireFeature: (featureName: FeatureName) => void;
@@ -283,12 +282,15 @@ export class HTTPRequest {
         "HttpRequestFactory : Fetch url to be called",
         this.finalizedURL
       );
+      if(this.config.progressHandlers?.find(handler => !!handler.upload)) {
+        this.factoryMethods.requireFeature("upload-progress");
+      }
       for (const hook of this.beforeFetchHooks) {
         // Keep mutable config for hooks to support adapters/tests that set fetchImpl dynamically
         await hook(this.fetchBody, this.config as any);
       }
       const fetchImpl =
-        this.featureDelegates.fetch ||
+        this.featureDelegates.getFetchImpl?.(this.getReadOnlyConfig()) ||
         globalThis.fetch;
       response = await fetchImpl(this.finalizedURL, this.fetchBody);
 

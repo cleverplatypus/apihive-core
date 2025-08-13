@@ -5,7 +5,7 @@ import { Adapter, AdapterOptions } from "./adapter-types.js";
 import { HTTPRequestFactory } from "./HTTPRequestFactory.js";
 
 export type ProgressPhase = 'upload' | 'download';
-export type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+export type FetchLike = (url: string, init: RequestInit) => Promise<Response>;
 export type BeforeFetchHook = (init: RequestInit, config: RequestConfig) => void | Promise<void>;
 
 export type ProgressInfo = {
@@ -47,7 +47,7 @@ export type FeatureRequestDelegates = {
     abortController: AbortController,
     config: RequestConfig
   }) => Promise<Blob>;
-  fetch?: FetchLike;
+  getFetchImpl?: (config:RequestConfig) => FetchLike;
 }
 
 export type FeatureFactoryDelegates = {
