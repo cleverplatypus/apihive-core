@@ -48,13 +48,16 @@ export class HTTPRequest {
   private config: RequestConfig;
   private timeoutID?: any;
   private fetchBody: RequestInit | null = null;
-  private abortController = new AbortController();
+  private _abortController = new AbortController();
   private readOnlyConfig: RequestConfig | null = null;
   private finalizedURL?: string;
   private beforeFetchHooks: BeforeFetchHook[] = [];
   private featureDelegates: FeatureRequestDelegates;
   private factoryMethods: FactoryMethods;
 
+  get abortController() {
+    return this._abortController;
+  }
   /**
    * Returns the fetch response content in its appropriate format
    * @param {Response} response
@@ -79,7 +82,7 @@ export class HTTPRequest {
       
       return this.featureDelegates.handleDownloadProgress({
         response,
-        abortController: this.abortController,
+        abortController: this._abortController,
         config: this.getReadOnlyConfig()
       });
     }
@@ -172,7 +175,7 @@ export class HTTPRequest {
           "HttpRequestFactory : Fetch timeout",
           `Request timeout after ${this.config.timeout / 1000} seconds`
         );
-        this.abortController.abort();
+        this._abortController.abort();
       }, this.config.timeout);
     }
     this.getLogger().debug(
@@ -248,7 +251,7 @@ export class HTTPRequest {
       credentials: this.config.credentials,
     };
 
-    this.fetchBody!.signal = this.abortController.signal;
+    this.fetchBody!.signal = this._abortController.signal;
 
     this.setupHeaders();
 
@@ -505,7 +508,7 @@ export class HTTPRequest {
         if (this.timeoutID) {
           clearTimeout(this.timeoutID);
         }
-        this.abortController.abort();
+        this._abortController.abort();
       },
 
       replaceURL: (newURL: string, newURLParams?: URLParams) => {
