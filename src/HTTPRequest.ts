@@ -54,6 +54,7 @@ export class HTTPRequest {
   private beforeFetchHooks: BeforeFetchHook[] = [];
   private featureDelegates: FeatureRequestDelegates;
   private factoryMethods: FactoryMethods;
+  private abortListeners: ((event: Event) => void)[] = [];
 
   get abortController() {
     return this._abortController;
@@ -184,6 +185,13 @@ export class HTTPRequest {
     );
   }
 
+  private registerAbortListeners() {
+    this._abortController.signal.addEventListener("abort", (event) => {
+      for (const listener of this.abortListeners) {
+        listener(event);
+      }
+    });
+  }
   private setupBody() {
     if (!this.config.body) return;
     this.fetchBody.body = this.config.body();
@@ -295,6 +303,8 @@ export class HTTPRequest {
       const fetchImpl =
         this.featureDelegates.getFetchImpl?.(this.getReadOnlyConfig()) ||
         globalThis.fetch;
+
+      this.registerAbortListeners();
       response = await fetchImpl(this.finalizedURL, this.fetchBody);
 
       logger.trace("HttpRequestFactory : Fetch response", response);
@@ -605,6 +615,17 @@ export class HTTPRequest {
    */
   blank() {
     this.configBuilders.splice(0, this.configBuilders.length);
+    return this;
+  }
+
+  /**
+   * Adds an abort handler to the request.
+   *
+   * @param {(event : Event) => void} handler - The abort handler to add.
+   * @return {HTTPRequest} - The updated request instance.
+   */
+  withAbortListener(handler: (event : Event) => void) {
+    this.abortListeners.push(handler);
     return this;
   }
 

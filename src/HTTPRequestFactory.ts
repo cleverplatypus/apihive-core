@@ -340,6 +340,19 @@ export class HTTPRequestFactory {
   }
 
   /**
+   * Adds an abort listener to the factory defaults.
+   *
+   * @param {(event: Event) => void} listener - The abort listener to add.
+   * @return {HTTPRequestFactory} - The updated factory instance.
+   */
+  withAbortListener(listener: (event: Event) => void) {
+    this.requestDefaults.push((request: HTTPRequest) => {
+      request.withAbortListener(listener);
+    });
+    return this;
+  }
+
+  /**
    * Attaches an adapter to this factory instance.
    * Adapters extend the factory's functionality through interceptors and hooks.
    *
@@ -390,8 +403,6 @@ export class HTTPRequestFactory {
     
     return this.factoryDelegates.hasAdapter(adapterName);
   }
-
-
 
   /**
    * Factory method for creating POST requests
