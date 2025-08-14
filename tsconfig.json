@@ -1,6 +1,6 @@
 {
   "type": "module",
-  "files": ["src/index.ts"],
+  "include": ["src/**/*.ts"],
   "compilerOptions": {
     "declaration": true,
     "emitDeclarationOnly": false,

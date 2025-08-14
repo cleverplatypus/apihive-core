@@ -1,5 +1,5 @@
-import { Feature, FetchLike, RequestConfig } from "../types";
-import { HTTPRequestFactory } from "../HTTPRequestFactory";
+import { Feature, FetchLike, RequestConfig } from "../types.js";
+import { HTTPRequestFactory } from "../HTTPRequestFactory.js";
 
 function createXhrFetchFacade(config: RequestConfig, factory: HTTPRequestFactory): FetchLike {
   const uploadHandlers = (config.progressHandlers || []).filter(h => h.upload);
@@ -57,7 +57,9 @@ function createXhrFetchFacade(config: RequestConfig, factory: HTTPRequestFactory
           const throttleMs = h.throttleMs ?? 0;
           const now = Date.now();
           const last = lastEmittedAt.get(h.upload!);
-          if (!(throttleMs > 0 && last && now - last < throttleMs)) {
+          // Always allow the final 100% event to pass through, even if within throttle window
+          const isFinal = percent === 100 || (lengthComputable && total != null && loaded >= (total as number));
+          if (!(throttleMs > 0 && last && now - last < throttleMs) || isFinal) {
             lastEmittedAt.set(h.upload!, now);
             try {
               h.upload!({

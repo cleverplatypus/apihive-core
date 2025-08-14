@@ -1,7 +1,7 @@
 import { type LoggerFacade, type LogLevel } from "@apihive/logger-facade";
 import { HTTPRequest } from "./HTTPRequest.js";
 import { Adapter, AdapterOptions } from "./adapter-types.js";
-import { APIConfig, ErrorInterceptor, Feature, HeaderValue, HTTPMethod, RequestConfig, RequestInterceptor, ResponseBodyTransformer } from "./types.js";
+import { APIConfig, ErrorInterceptor, Feature, HeaderValue, HTTPMethod, ProgressHandlerConfig, RequestConfig, RequestInterceptor, ResponseBodyTransformer } from "./types.js";
 /**
  * A factory for creating {@link HTTPRequest} instances.
  * It can be configured with defaults, logging options as well as
@@ -13,14 +13,21 @@ import { APIConfig, ErrorInterceptor, Feature, HeaderValue, HTTPMethod, RequestC
 export declare class HTTPRequestFactory {
     private requestDefaults;
     private apiConfigs;
-    private logger;
-    private logLevel;
+    private _logger;
+    private _logLevel;
+    private afterRequestCreatedHooks;
+    private enabledFeatures;
+    get logger(): LoggerFacade;
+    get logLevel(): LogLevel;
     /**
      * @internal
      * Keeps a mapping of defaults for interceptors to allow removing them
      */
     private interceptorsToRequestDefaults;
-    enable(feature: Feature<HTTPRequestFactory>): this;
+    private requestDelegates;
+    private factoryDelegates;
+    private requireFeature;
+    use(feature: Feature): this;
     /**
      * Resets any conditions in the method chain set by {@link when}
      * @returns {HTTPRequestFactory} the factory instance
@@ -198,4 +205,5 @@ export declare class HTTPRequestFactory {
      *    .execute();
      */
     createAPIRequest(...args: [string, string] | [string]): HTTPRequest;
+    withProgressHandlers(...handlers: ProgressHandlerConfig[]): HTTPRequestFactory;
 }

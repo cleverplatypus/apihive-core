@@ -1,7 +1,7 @@
-import { HTTPRequest } from "../HTTPRequest";
-import { HTTPRequestFactory } from "../HTTPRequestFactory";
-import { Feature, FeatureRequestDelegates } from "../types";
-import { maybeFunction } from "../utils";
+import { HTTPRequest } from "../HTTPRequest.js";
+import { HTTPRequestFactory } from "../HTTPRequestFactory.js";
+import { Feature, FeatureRequestDelegates } from "../types.js";
+import { maybeFunction } from "../utils.js";
 
 function isTypedArray(v: any): boolean {
   return ArrayBuffer.isView(v) && !(v instanceof DataView);

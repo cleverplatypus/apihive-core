@@ -1,5 +1,5 @@
-import { HTTPRequestFactory } from "../HTTPRequestFactory";
-import { Feature, RequestConfig } from "../types";
+import { HTTPRequestFactory } from "../HTTPRequestFactory.js";
+import { Feature, RequestConfig } from "../types.js";
 
 class DownloadProgressFeature implements Feature {
   readonly name = "download-progress" as const;

@@ -8,8 +8,26 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": "./dist/index.js",
-    "./adapters": "./dist/features/adapters.js"
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./features/upload-progress": {
+      "types": "./lib/features/upload-progress.d.ts",
+      "default": "./lib/features/upload-progress.js"
+    },
+    "./features/download-progress": {
+      "types": "./lib/features/download-progress.d.ts",
+      "default": "./lib/features/download-progress.js"
+    },
+    "./features/request-hash": {
+      "types": "./lib/features/request-hash.d.ts",
+      "default": "./lib/features/request-hash.js"
+    },
+    "./features/adapters": {
+      "types": "./lib/features/adapters.d.ts",
+      "default": "./lib/features/adapters.js"
+    }
   },
   "repository": {
     "url": "https://github.com/cleverplatypus/apihive-core",

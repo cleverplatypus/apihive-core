@@ -126,7 +126,7 @@ describe('upload-progress feature', () => {
     expect(calls2).toEqual([25, 100]);
   });
 
-  it('respects throttleMs on handlers', async () => {
+  it('respects throttleMs on handlers but always emits final 100%', async () => {
     const calls: number[] = [];
     const factory = new HTTPRequestFactory()
       .use(uploadProgressFeature)
@@ -146,8 +146,10 @@ describe('upload-progress feature', () => {
     const req = factory.createRequest('https://example.com/upload', 'POST');
     await req.execute();
 
-    expect(calls.length).toBe(1);
-    expect(calls[0]).toBe(25); // first emission only
+    // Throttling should allow the first emission and the final 100% emission
+    expect(calls.length).toBe(2);
+    expect(calls[0]).toBe(25);
+    expect(calls[1]).toBe(100);
   });
 });
 

@@ -1,9 +1,14 @@
 import { type LoggerFacade, type LogLevel } from "@apihive/logger-facade";
-import type { ErrorInterceptor, HeaderValue, HTTPMethod, QueryParameterValue, RequestConfigBuilder, RequestInterceptor, ResponseBodyTransformer, ResponseInterceptor, ResponseInterceptorWithOptions } from "./types.js";
+import type { BeforeFetchHook, ErrorInterceptor, FeatureName, FeatureRequestDelegates, HeaderValue, HTTPMethod, ProgressHandlerConfig, QueryParameterValue, RequestConfig, RequestConfigBuilder, RequestInterceptor, ResponseBodyTransformer, ResponseInterceptor, ResponseInterceptorWithOptions } from "./types.js";
+type FactoryMethods = {
+    requireFeature: (featureName: FeatureName) => void;
+};
 type RequestConstructorArgs = {
     url: string;
     method: HTTPMethod;
     defaultConfigBuilders: RequestConfigBuilder[];
+    featureDelegates: FeatureRequestDelegates;
+    factoryMethods: FactoryMethods;
 };
 /**
  * HTTP Request. This class shouldn't be instanciated directly.
@@ -16,8 +21,12 @@ export declare class HTTPRequest {
     private config;
     private timeoutID?;
     private fetchBody;
-    private hash?;
     private abortController;
+    private readOnlyConfig;
+    private finalizedURL?;
+    private beforeFetchHooks;
+    private featureDelegates;
+    private factoryMethods;
     /**
      * Returns the fetch response content in its appropriate format
      * @param {Response} response
@@ -28,19 +37,14 @@ export declare class HTTPRequest {
      * If there are no transformers, returns the value untouched.
      */
     private applyResponseTransformers;
-    constructor({ url, method, defaultConfigBuilders }: RequestConstructorArgs);
-    /**
-     * Gets the URL of the request.
-     *
-     * @returns {string} the URL of the request
-     */
-    get url(): string;
+    constructor({ url, method, defaultConfigBuilders, featureDelegates, factoryMethods }: RequestConstructorArgs);
+    private createConfigObject;
+    private isURLFinalized;
     private getLogger;
     private setupHeaders;
     private setupTimeout;
-    private setupQueryParams;
     private setupBody;
-    private setupURL;
+    private composeURL;
     /**
      * Executes the fetch request and returns a Promise that resolves with the parsed result.
      *
@@ -53,7 +57,7 @@ export declare class HTTPRequest {
      *
      * @return {RequestConfig} A read-only configuration object with lazy evaluation.
      */
-    private getReadOnlyConfig;
+    getReadOnlyConfig(): RequestConfig;
     /**
      * Creates request controls for interceptors to manipulate the request during execution.
      * @internal
@@ -267,22 +271,7 @@ export declare class HTTPRequest {
      * @return {string} A unique hash-based identifier for this request
      */
     getHash(): string;
-    /**
-     * Creates a deterministic string representation of an object with sorted keys.
-     * This ensures that objects with the same properties in different orders
-     * will produce identical string representations.
-     *
-     * @param {any} obj - The object to stringify
-     * @return {string} A deterministic JSON string
-     */
-    private deterministicStringify;
-    /**
-     * Simple hash function for generating cache keys.
-     * Uses a variant of the djb2 algorithm for good distribution and speed.
-     *
-     * @param {string} str - The string to hash
-     * @return {string} A hexadecimal hash string
-     */
-    private simpleHash;
+    withProgressHandlers(...handlers: ProgressHandlerConfig[]): HTTPRequest;
+    withBeforeFetchHook(hook: BeforeFetchHook): HTTPRequest;
 }
 export {};

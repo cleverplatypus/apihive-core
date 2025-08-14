@@ -1,12 +1,55 @@
 import { HTTPRequest } from "./HTTPRequest.js";
 import HTTPError from "./HTTPError.js";
 import { LoggerFacade, LogLevel } from "@apihive/logger-facade";
-export interface Feature<T> {
-    apply(target: T, commands: FeatureCommands): void;
+import { Adapter, AdapterOptions } from "./adapter-types.js";
+import { HTTPRequestFactory } from "./HTTPRequestFactory.js";
+export type ProgressPhase = 'upload' | 'download';
+export type FetchLike = (url: string, init: RequestInit) => Promise<Response>;
+export type BeforeFetchHook = (init: RequestInit, config: RequestConfig) => void | Promise<void>;
+export type ProgressInfo = {
+    phase: ProgressPhase;
+    percentProgress: number;
+    loadedBytes: number;
+    totalBytes?: number;
+    requestConfig: RequestConfig;
+    fallThrough: () => void;
+};
+export type ProgressHandler = (info: ProgressInfo) => void;
+export type ProgressHandlerConfig = {
+    upload?: ProgressHandler;
+    download?: ProgressHandler;
+    throttleMs?: number;
+};
+export type FeatureName = 'adapters' | 'download-progress' | 'request-hash' | 'upload-progress';
+export interface Feature {
+    name: FeatureName;
+    apply?(target: HTTPRequestFactory, commands: FeatureCommands): void;
+    getDelegates?(factory: HTTPRequestFactory): {
+        request?: FeatureRequestDelegates;
+        factory?: FeatureFactoryDelegates;
+    };
 }
+export type FeatureRequestDelegates = {
+    getHash?: (request: HTTPRequest) => string;
+    handleUploadProgress?: (info: ProgressInfo) => void;
+    handleDownloadProgress?: (info: {
+        response: Response;
+        abortController: AbortController;
+        config: RequestConfig;
+    }) => Promise<Blob>;
+    getFetchImpl?: (config: RequestConfig) => FetchLike;
+};
+export type FeatureFactoryDelegates = {
+    withAdapter: (adapter: Adapter, options?: AdapterOptions) => Promise<HTTPRequestFactory>;
+    detachAdapter: (adapterName: string) => Promise<HTTPRequestFactory>;
+    getAttachedAdapters: () => string[];
+    hasAdapter: (name: string) => boolean;
+};
 export type FeatureCommands = {
     addRequestDefaults: (...args: RequestConfigBuilder[]) => void;
     removeRequestDefaults: (...args: RequestConfigBuilder[]) => void;
+    afterRequestCreated: (hook: (request: HTTPRequest) => void) => void | FeatureRequestDelegates;
+    beforeFetch: (hook: BeforeFetchHook) => void;
 };
 export type MaybeGetterFunction<T, Args extends any[] = any[]> = T | ((...args: Args extends infer U ? U : never) => T);
 /**
@@ -25,6 +68,12 @@ export interface RequestInterceptorControls {
      * Update request headers (merges with existing headers)
      */
     updateHeaders(headers: Record<string, any>): void;
+    /**
+     * Finalise the request URL. After this call, the URL becomes immutable
+     * and further calls to replaceURL() will throw.
+     * Returns the composed final URL.
+     */
+    finaliseURL(): string;
 }
 export type URLParams = Record<string, LiteralValue | MaybeGetterFunction<LiteralValue, [config: RequestConfig]>>;
 /**
@@ -61,7 +110,9 @@ export type ErrorInterceptor = (error: HTTPError) => boolean | Promise<boolean>;
  * Internal representation of a {@link HTTPRequest}'s configuration
  */
 export type RequestConfig = {
-    url: string;
+    templateURLHistory: string[];
+    readonly finalURL?: string;
+    readonly templateURL?: string;
     headers: Record<string, HeaderValue>;
     body: any;
     jsonMimeTypes: string[];
@@ -82,6 +133,7 @@ export type RequestConfig = {
     requestInterceptors: RequestInterceptor[];
     responseInterceptors: Array<ResponseInterceptor | ResponseInterceptorWithOptions>;
     errorInterceptors: ErrorInterceptor[];
+    progressHandlers?: ProgressHandlerConfig[];
 };
 /**
  * The definition of an API endpoint to be listed in the {@link APIConfig.endpoints} map
@@ -265,4 +317,5 @@ export type APIConfig<TApiConfig extends BaseAPIInterface = DefaultAPIConfig> = 
     } : {
         [endpointName: string]: Endpoint;
     };
+    progressHandlers?: ProgressHandlerConfig[];
 };
