@@ -1,9 +1,5 @@
-import {
-  type LoggerFacade,
-  type LogLevel,
-  ConsoleLogger,
-} from "@apihive/logger-facade";
-import HTTPError from "./HTTPError.js";
+import { type LoggerFacade, type LogLevel, ConsoleLogger } from '@apihive/logger-facade';
+import HTTPError from './HTTPError.js';
 import type {
   BeforeFetchHook,
   ErrorInterceptor,
@@ -21,27 +17,31 @@ import type {
   ResponseInterceptor,
   ResponseInterceptorControls,
   ResponseInterceptorWithOptions,
-  URLParams,
-} from "./types.js";
-import { maybeFunction } from "./utils.js";
+  URLParams
+} from './types.js';
+import { maybeFunction } from './utils.js';
 
-import { DEFAULT_JSON_MIME_TYPES, DEFAULT_TEXT_MIME_TYPES } from "./constants.js";
+import { DEFAULT_JSON_MIME_TYPES, DEFAULT_TEXT_MIME_TYPES } from './constants.js';
 
-type FactoryMethods = {
+type SharedFactoryMethods = {
   requireFeature: (featureName: FeatureName) => void;
-}
+};
+
 type RequestConstructorArgs = {
   url: string;
   method: HTTPMethod;
   defaultConfigBuilders: RequestConfigBuilder[];
   featureDelegates: FeatureRequestDelegates;
-  factoryMethods: FactoryMethods;
+  factoryMethods: SharedFactoryMethods;
 };
 /**
  * HTTP Request. This class shouldn't be instanciated directly.
  * Use {@link HTTPRequestFactory} createXXXRequest() instead
  */
 export class HTTPRequest {
+  // ---------------------------------------------------------------------------
+  // Private fields
+  // ---------------------------------------------------------------------------
   private configBuilders: RequestConfigBuilder[];
   private wasUsed: boolean = false;
   private logger: LoggerFacade = new ConsoleLogger();
@@ -53,34 +53,38 @@ export class HTTPRequest {
   private finalizedURL?: string;
   private beforeFetchHooks: BeforeFetchHook[] = [];
   private featureDelegates: FeatureRequestDelegates;
-  private factoryMethods: FactoryMethods;
+  private factoryMethods: SharedFactoryMethods;
   private abortListeners: ((event: Event) => void)[] = [];
 
+  // ---------------------------------------------------------------------------
+  // Public getters
+  // ---------------------------------------------------------------------------
   get abortController() {
     return this._abortController;
   }
   /**
-   * Returns the fetch response content in its appropriate format
-   * @param {Response} response
+   * Returns the fetch response content in its appropriate format.
+   * If progress handlers are enabled, the response will be processed
+   * using the download progress handler.
+   * 
+   * @internal
+   * @param response the fetch response
    */
   private readResponse = async (response: Response): Promise<any> => {
-    const contentType = response.headers.get("content-type")?.split(/;\s?/)[0];
+    const contentType = response.headers.get('content-type')?.split(/;\s?/)[0];
     if (!contentType) {
       this.getLogger().info(`No content-type header found for response`);
       return null;
     }
-    if (this.config.jsonMimeTypes.find((type) => 
-      new RegExp(type).test(contentType))) return response.json();
+    if (this.config.jsonMimeTypes.find((type) => new RegExp(type).test(contentType))) return response.json();
 
     if (this.config.textMimeTypes.find((type) => new RegExp(type).test(contentType))) {
       return await response.text();
     }
 
-    if (
-      this.config.progressHandlers?.find((handler) => !!handler.download)
-    ) {
-      this.factoryMethods.requireFeature("download-progress");
-      
+    if (this.config.progressHandlers?.find((handler) => !!handler.download)) {
+      this.factoryMethods.requireFeature('download-progress');
+
       return this.featureDelegates.handleDownloadProgress({
         response,
         abortController: this._abortController,
@@ -94,6 +98,10 @@ export class HTTPRequest {
   /**
    * Applies configured response body transformers to a value, in order.
    * If there are no transformers, returns the value untouched.
+   * 
+   * @internal
+   * @param value the value to transform
+   * @returns a promise that resolves to the transformed value
    */
   private async applyResponseTransformers(value: any): Promise<any> {
     if (!this.config.responseBodyTransformers?.length) return value;
@@ -104,8 +112,6 @@ export class HTTPRequest {
     return transformed;
   }
 
-  
-
   constructor({ url, method, defaultConfigBuilders, featureDelegates, factoryMethods }: RequestConstructorArgs) {
     this.configBuilders = defaultConfigBuilders;
     this.wasUsed = false;
@@ -114,48 +120,60 @@ export class HTTPRequest {
     this.factoryMethods = factoryMethods;
   }
 
-  private createConfigObject(url:string, method:HTTPMethod): RequestConfig {
-    const config : RequestConfig = {
+  // ---------------------------------------------------------------------------
+  // Private helpers
+  // ---------------------------------------------------------------------------
+  /**
+   * Creates a new request config object.
+   * 
+   * @internal
+   * @param url the URL of the request
+   * @param method the HTTP method of the request
+   * @returns a new request config object
+   */
+  private createConfigObject(url: string, method: HTTPMethod): RequestConfig {
+    const config: RequestConfig = {
       templateURLHistory: [url],
       headers: {},
       body: null,
       timeout: 0,
       ignoreResponseBody: false,
-      uriEncodedBody: false,
       method,
       // Defaults: match application/json and application/*+json
-      jsonMimeTypes: [
-        ...DEFAULT_JSON_MIME_TYPES,
-      ],
+      jsonMimeTypes: [...DEFAULT_JSON_MIME_TYPES],
       // Defaults: common textual types
-      textMimeTypes: [
-        ...DEFAULT_TEXT_MIME_TYPES,
-      ],
-      credentials: "same-origin",
-      logLevel: "error",
-      corsMode: "cors",
+      textMimeTypes: [...DEFAULT_TEXT_MIME_TYPES],
+      credentials: 'same-origin',
+      logLevel: 'error',
+      corsMode: 'cors',
       meta: {},
       queryParams: {},
-      expectedResponseFormat: "auto",
-      acceptedMIMETypes: ["*/*"],
+      expectedResponseFormat: 'auto',
+      acceptedMIMETypes: ['*/*'],
       urlParams: {},
       errorInterceptors: [],
       responseInterceptors: [],
       requestInterceptors: [],
-      responseBodyTransformers: []
+      responseBodyTransformers: [],
+      progressHandlers: [],
     };
-    Object.defineProperty(config,  'templateURL', {
+    Object.defineProperty(config, 'templateURL', {
       get: () => config.templateURLHistory[config.templateURLHistory.length - 1],
       configurable: false,
       enumerable: true
-    })
+    });
     return config;
   }
 
-  private isURLFinalized(): boolean {
-    return typeof this.finalizedURL === "string";
+  private isFinalized(): boolean {
+    return typeof this.finalizedURL === 'string';
   }
 
+  private throwIfFinalized() {
+    if (this.isFinalized()) {
+      throw new Error('The request has already been finalised. Request modification is not allowed.');
+    }
+  }
   private getLogger() {
     return this.logger.withMinimumLevel(this.config.logLevel);
   }
@@ -173,20 +191,17 @@ export class HTTPRequest {
     if (this.config.timeout) {
       this.timeoutID = setTimeout(() => {
         this.getLogger().debug(
-          "HttpRequestFactory : Fetch timeout",
+          'HttpRequestFactory : Fetch timeout',
           `Request timeout after ${this.config.timeout / 1000} seconds`
         );
         this._abortController.abort();
       }, this.config.timeout);
     }
-    this.getLogger().debug(
-      "HttpRequestFactory : Fetch invoked",
-      this.fetchBody
-    );
+    this.getLogger().debug('HttpRequestFactory : Fetch invoked', this.fetchBody);
   }
 
   private registerAbortListeners() {
-    this._abortController.signal.addEventListener("abort", (event) => {
+    this._abortController.signal.addEventListener('abort', (event) => {
       for (const listener of this.abortListeners) {
         listener(event);
       }
@@ -206,8 +221,7 @@ export class HTTPRequest {
     // Apply path params
     for (const key in this.config.urlParams) {
       const raw = this.config.urlParams[key];
-      const value =
-        typeof raw === "function" ? (raw as Function)(this.getReadOnlyConfig()) : raw;
+      const value = typeof raw === 'function' ? (raw as Function)(this.getReadOnlyConfig()) : raw;
       urlString = urlString.replace(`{{${key}}}`, String(value));
     }
 
@@ -235,16 +249,17 @@ export class HTTPRequest {
     return composed;
   }
 
+  // ---------------------------------------------------------------------------
+  // Execution
+  // ---------------------------------------------------------------------------
   /**
    * Executes the fetch request and returns a Promise that resolves with the parsed result.
    *
-   * @return {Promise<any>} A Promise that resolves with the result of the request.
+   * @returns A Promise that resolves with the result of the request.
    */
   async execute(): Promise<any> {
     if (this.wasUsed) {
-      throw new Error(
-        "HttpRequests cannot be reused. Please call a request factory method for every new call"
-      );
+      throw new Error('HttpRequests cannot be reused. Please call a request factory method for every new call');
     }
     const logger = this.getLogger();
 
@@ -256,7 +271,7 @@ export class HTTPRequest {
       method: this.config.method,
       mode: this.config.corsMode,
 
-      credentials: this.config.credentials,
+      credentials: this.config.credentials
     };
 
     this.fetchBody!.signal = this._abortController.signal;
@@ -273,69 +288,50 @@ export class HTTPRequest {
     const requestInterceptorControls = this.createRequestInterceptorControls();
 
     for (const interceptor of this.config.requestInterceptors || []) {
-      let interceptorResponse = await interceptor(
-        this.getReadOnlyConfig(),
-        requestInterceptorControls
-      );
+      let interceptorResponse = await interceptor(this.getReadOnlyConfig(), requestInterceptorControls);
       if (interceptorResponse === undefined) {
         continue;
       }
-      interceptorResponse = await this.applyResponseTransformers(
-        interceptorResponse
-      );
+      interceptorResponse = await this.applyResponseTransformers(interceptorResponse);
       return interceptorResponse;
     }
 
     let response;
     try {
       this.finalizedURL = this.composeURL();
-      logger.debug(
-        "HttpRequestFactory : Fetch url to be called",
-        this.finalizedURL
-      );
-      if(this.config.progressHandlers?.find(handler => !!handler.upload)) {
-        this.factoryMethods.requireFeature("upload-progress");
+      logger.debug('HttpRequestFactory : Fetch url to be called', this.finalizedURL);
+      if (this.config.progressHandlers?.find((handler) => !!handler.upload)) {
+        this.factoryMethods.requireFeature('upload-progress');
       }
       for (const hook of this.beforeFetchHooks) {
         // Keep mutable config for hooks to support adapters/tests that set fetchImpl dynamically
         await hook(this.fetchBody, this.config as any);
       }
-      const fetchImpl =
-        this.featureDelegates.getFetchImpl?.(this.getReadOnlyConfig()) ||
-        globalThis.fetch;
+      const fetchImpl = this.featureDelegates.getFetchImpl?.(this.getReadOnlyConfig()) || globalThis.fetch;
 
       this.registerAbortListeners();
       response = await fetchImpl(this.finalizedURL, this.fetchBody);
 
-      logger.trace("HttpRequestFactory : Fetch response", response);
+      logger.trace('HttpRequestFactory : Fetch response', response);
 
       if (this.config.responseInterceptors.length) {
         const responseControls = this.createResponseControls();
         for (const entry of this.config.responseInterceptors) {
           const { interceptor, skipTransformersOnReturn } =
-            typeof entry === "function"
+            typeof entry === 'function'
               ? {
                   interceptor: entry as ResponseInterceptor,
-                  skipTransformersOnReturn: false,
+                  skipTransformersOnReturn: false
                 }
               : {
-                  interceptor: (entry as ResponseInterceptorWithOptions)
-                    .interceptor,
-                  skipTransformersOnReturn:
-                    (entry as ResponseInterceptorWithOptions)
-                      .skipTransformersOnReturn ?? false,
+                  interceptor: (entry as ResponseInterceptorWithOptions).interceptor,
+                  skipTransformersOnReturn: (entry as ResponseInterceptorWithOptions).skipTransformersOnReturn ?? false
                 };
 
-          let interceptorResponse = await interceptor(
-            response,
-            this.getReadOnlyConfig(),
-            responseControls
-          );
+          let interceptorResponse = await interceptor(response, this.getReadOnlyConfig(), responseControls);
           if (interceptorResponse !== undefined) {
             if (!skipTransformersOnReturn) {
-              interceptorResponse = await this.applyResponseTransformers(
-                interceptorResponse
-              );
+              interceptorResponse = await this.applyResponseTransformers(interceptorResponse);
             }
             return interceptorResponse;
           }
@@ -349,11 +345,7 @@ export class HTTPRequest {
         body = await this.applyResponseTransformers(body);
         return body;
       } else {
-        const error = new HTTPError(
-          response.status,
-          response.statusText,
-          await this.readResponse(response)
-        );
+        const error = new HTTPError(response.status, response.statusText, await this.readResponse(response));
         for (const interceptor of this.config.errorInterceptors || []) {
           if (await interceptor(error)) {
             break;
@@ -362,8 +354,8 @@ export class HTTPRequest {
         return Promise.reject(error);
       }
     } catch (error) {
-      if (error.name === "AbortError") {
-        const abortError = new HTTPError(-1, "Request aborted");
+      if (error.name === 'AbortError') {
+        const abortError = new HTTPError(-1, 'Request aborted');
         // Call error interceptors for abort errors
         for (const interceptor of this.config.errorInterceptors || []) {
           if (await interceptor(abortError)) {
@@ -373,18 +365,14 @@ export class HTTPRequest {
         return Promise.reject(abortError);
       }
 
-      logger.error("HttpRequestFactory : Fetch error", {
-        type: "fetch-error",
+      logger.error('HttpRequestFactory : Fetch error', {
+        type: 'fetch-error',
         endpoint: this.composeURL(),
-        details: error,
+        details: error
       });
 
       // Convert network error to HTTPError and call error interceptors
-      const httpError = new HTTPError(
-        -1,
-        error.message || "Network error",
-        error
-      );
+      const httpError = new HTTPError(-1, error.message || 'Network error', error);
       for (const interceptor of this.config.errorInterceptors || []) {
         if (await interceptor(httpError)) {
           break;
@@ -397,11 +385,14 @@ export class HTTPRequest {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Read-only configuration view
+  // ---------------------------------------------------------------------------
   /**
    * Retrieves a read-only copy of configuration with lazy evaluation.
    * Function-based values (body, headers) are only evaluated when accessed.
    *
-   * @return {RequestConfig} A read-only configuration object with lazy evaluation.
+   * @returns A read-only configuration object with lazy evaluation.
    */
   getReadOnlyConfig(): RequestConfig {
     if (this.readOnlyConfig) return this.readOnlyConfig;
@@ -411,37 +402,36 @@ export class HTTPRequest {
     const readonly = new Proxy(target, {
       get: (t, prop: string | symbol) => {
         // Expose finalURL if finalized; warn if accessed prematurely
-        if (prop === "finalURL") {
-          if (!this.isURLFinalized()) {
-            this.getLogger().warn(
-              "HttpRequestFactory : Access to finalURL before URL finalisation",
-              { type: "final-url-access-before-finalise" }
-            );
+        if (prop === 'finalURL') {
+          if (!this.isFinalized()) {
+            this.getLogger().warn('HttpRequestFactory : Access to finalURL before URL finalisation', {
+              type: 'final-url-access-before-finalise'
+            });
             return undefined;
           }
           return this.finalizedURL;
         }
 
         // Expose the current template URL tip
-        if (prop === "templateURL") {
+        if (prop === 'templateURL') {
           const tip = t.templateURLHistory[t.templateURLHistory.length - 1];
           return tip;
         }
 
-        if (prop === "body") {
+        if (prop === 'body') {
           try {
             return maybeFunction(t.body, readonly);
           } catch (error) {
-            this.getLogger().warn("HttpRequestFactory : Error evaluating body", {
-              type: "body-error",
+            this.getLogger().warn('HttpRequestFactory : Error evaluating body', {
+              type: 'body-error',
               endpoint: target.templateURL,
-              details: error,
+              details: error
             });
             return null;
           }
         }
 
-        if (prop === "headers") {
+        if (prop === 'headers') {
           const headersTarget = t.headers || {};
           return new Proxy(headersTarget as Record<string, any>, {
             get: (hTarget, hProp: string | symbol) => {
@@ -449,15 +439,12 @@ export class HTTPRequest {
               try {
                 return maybeFunction(headerValue, readonly);
               } catch (error) {
-                this.getLogger().warn(
-                  "HttpRequestFactory : Error evaluating header",
-                  {
-                    type: "header-error",
-                    key: String(hProp),
-                    endpoint: target.templateURL,
-                    details: error,
-                  }
-                );
+                this.getLogger().warn('HttpRequestFactory : Error evaluating header', {
+                  type: 'header-error',
+                  key: String(hProp),
+                  endpoint: target.templateURL,
+                  details: error
+                });
                 return undefined;
               }
             },
@@ -466,40 +453,34 @@ export class HTTPRequest {
               if (Object.prototype.hasOwnProperty.call(hTarget, hProp)) {
                 let evaluatedValue: any;
                 try {
-                  evaluatedValue = maybeFunction(
-                    hTarget[hProp as string],
-                    readonly
-                  );
+                  evaluatedValue = maybeFunction(hTarget[hProp as string], readonly);
                 } catch (error) {
-                  this.getLogger().warn(
-                    "HttpRequestFactory : Error evaluating header",
-                    {
-                      type: "header-error",
-                      key: String(hProp),
-                      endpoint: target.templateURL,
-                      details: error,
-                    }
-                  );
+                  this.getLogger().warn('HttpRequestFactory : Error evaluating header', {
+                    type: 'header-error',
+                    key: String(hProp),
+                    endpoint: target.templateURL,
+                    details: error
+                  });
                   evaluatedValue = undefined;
                 }
                 return {
                   enumerable: true,
                   configurable: false,
                   writable: false,
-                  value: evaluatedValue,
+                  value: evaluatedValue
                 } as PropertyDescriptor;
               }
               return undefined;
             },
             set: () => false,
-            deleteProperty: () => false,
+            deleteProperty: () => false
           });
         }
 
         return (t as any)[prop as any];
       },
       set: () => false,
-      deleteProperty: () => false,
+      deleteProperty: () => false
     });
 
     this.readOnlyConfig = readonly as unknown as RequestConfig;
@@ -522,8 +503,8 @@ export class HTTPRequest {
       },
 
       replaceURL: (newURL: string, newURLParams?: URLParams) => {
-        if (this.isURLFinalized()) {
-          throw new Error("URL has already been finalised; replaceURL() is not allowed");
+        if (this.isFinalized()) {
+          throw new Error('URL has already been finalised; replaceURL() is not allowed');
         }
         // Push new template (absolute or relative), placeholders allowed
         this.config.templateURLHistory.push(newURL);
@@ -539,11 +520,11 @@ export class HTTPRequest {
       },
 
       finaliseURL: (): string => {
-        if (!this.isURLFinalized()) {
+        if (!this.isFinalized()) {
           this.finalizedURL = this.composeURL();
         }
         return this.finalizedURL!;
-      },
+      }
     };
   }
 
@@ -553,33 +534,39 @@ export class HTTPRequest {
    */
   private createResponseControls(): ResponseInterceptorControls {
     return {
-      getLogger: () => this.getLogger(),
+      getLogger: () => this.getLogger()
     };
   }
 
+  // ---------------------------------------------------------------------------
+  // Configuration builders
+  // ---------------------------------------------------------------------------
   /**
    * Configures the request with metadata that can be inspected later.
    *
-   * @param {string | Record<string, any>} param1 - The key or object containing the key-value pairs to update the meta property.
-   * @param {any} [param2] - The value to associate with the key when param1 is a string.
-   * @return {this} - Returns the current object instance for method chaining.
+   * @param param1 The key or object containing the key-value pairs to update the meta property.
+   * @param param2 The value to associate with the key when param1 is a string.
+   * @returns The current object instance for method chaining.
    */
   withMeta(param1: string | Record<string, any>, param2?: any) {
-    if (typeof param1 === "string") {
+    this.throwIfFinalized();
+    if (typeof param1 === 'string') {
       this.config.meta[param1] = param2;
-    } else if (typeof param1 === "object") {
+    } else if (typeof param1 === 'object') {
       Object.assign(this.config.meta, param1);
     }
     return this;
   }
 
   /**
-   * Sets an ILogger compatible logger for the request. Normally the logger will be set by the factory.
+   * Sets an LoggerFacade compatible logger for the request.
+   * Normally the logger will be set by the factory.
    *
-   * @param {LoggerFacade} logger - The logger to be set.
-   * @return {HTTPRequest} - The updated HTTP request instance.
+   * @param logger The logger to be set.
+   * @returns The updated HTTP request instance.
    */
   withLogger(logger: LoggerFacade) {
+    this.throwIfFinalized();
     this.logger = logger;
     return this;
   }
@@ -587,22 +574,12 @@ export class HTTPRequest {
   /**
    * Sets the credentials policy for the HTTP request.
    *
-   * @param {RequestCredentials} config - The configuration for the credentials.
-   * @return {HTTPRequest} - The updated HTTP request instance.
+   * @param config The configuration for the credentials.
+   * @returns The updated HTTP request instance.
    */
   withCredentialsPolicy(config: RequestCredentials): HTTPRequest {
+    this.throwIfFinalized();
     this.config.credentials = config;
-    return this;
-  }
-
-  /**
-   * Sets the `uriEncodedBody` property of the config object to `true`.
-   * This function is used to indicate that the body of the request should be URL encoded.
-   *
-   * @return {HTTPRequest} - The updated instance of the class.
-   */
-  withUriEncodedBody() {
-    this.config.uriEncodedBody = true;
     return this;
   }
 
@@ -611,9 +588,10 @@ export class HTTPRequest {
    * Useful in cases where you want to create a new request that doesn't inherit
    * from API/factory settings that might have headers or other unwanted configuration
    *
-   * @return {HTTPRequest} the updated request
+   * @returns the updated request
    */
   blank() {
+    this.throwIfFinalized();
     this.configBuilders.splice(0, this.configBuilders.length);
     return this;
   }
@@ -621,33 +599,39 @@ export class HTTPRequest {
   /**
    * Adds an abort handler to the request.
    *
-   * @param {(event : Event) => void} handler - The abort handler to add.
-   * @return {HTTPRequest} - The updated request instance.
+   * @param handler The abort handler to add.
+   * @returns The updated request instance.
    */
-  withAbortListener(handler: (event : Event) => void) {
+  withAbortListener(handler: (event: Event) => void) {
     this.abortListeners.push(handler);
     return this;
   }
 
+  // ---------------------------------------------------------------------------
+  // MIME type helpers
+  // ---------------------------------------------------------------------------
   /**
    * Sets the accepted MIME types for the request.
    *
-   * @param {...string} mimeTypes - An array of MIME types to accept.
-   * @return {HTTPRequest} - The updated request instance.
+   * Short hand for `withHeader('Accept', 'application/json')`
+   *
+   * @param mimeTypes An array of MIME types to accept.
+   * @returns The updated request instance.
    */
-  withAccept(...mimeTypes) {
+  withAccept(...mimeTypes: string[]) {
+    this.throwIfFinalized();
     this.config.acceptedMIMETypes = mimeTypes;
     return this;
   }
-
   /**
    * Adds a URL parameter to the request configuration.
    *
-   * @param {string} name - The name of the URL parameter.
-   * @param {string} value - The value of the URL parameter.
-   * @return {HTTPRequest} - The updated request instance.
+   * @param name The name of the URL parameter.
+   * @param value The value of the URL parameter.
+   * @returns The updated request instance.
    */
   withURLParam(name: string, value: string) {
+    this.throwIfFinalized();
     this.config.urlParams[name] = value;
     return this;
   }
@@ -655,24 +639,47 @@ export class HTTPRequest {
   /**
    * Assigns multiple query params to the request configuration.
    *
-   * @param {Record<string, QueryParameterValue>} params - The URL parameters to assign.
-   * @return {HTTPRequest} - The updated request instance.
+   * @param params The URL parameters to assign.
+   * @returns The updated request instance.
    */
   withURLParams(params: Record<string, QueryParameterValue>) {
+    this.throwIfFinalized();
     Object.assign(this.config.urlParams, params);
     return this;
   }
 
+  /**
+   * Sets the request body to a form encoded string.
+   *
+   * @param data The form encoded string to set as the request body.
+   * @returns The updated request instance.
+   */
   withFormEncodedBody(data: string) {
-    this.withHeader("content-type", "application/x-www-form-urlencoded");
+    this.throwIfFinalized();
+    this.withHeader('content-type', 'application/x-www-form-urlencoded');
     this.config.body = () => {
       return data;
     };
     return this;
   }
 
+  /**
+   * Adds error interceptors to the request configuration.
+   *
+   * Error interceptors are executed in the order they are added.
+   * - If an error interceptor returns a rejected promise, the request will fail.
+   * - If an error interceptor returns a resolved promise, the promise's result will be used as the response.
+   * - If the interceptor returns `undefined`, the request will continue to the next interceptor, if present, or to the regular request handling
+   *
+   * See [Error Interceptors](https://cleverplatypus.github.io/apihive-core/guide/error-interceptors.html)
+   *
+   * @param interceptors The error interceptors to add.
+   * @returns The updated request instance.
+   */
   withErrorInterceptors(...interceptors: ErrorInterceptor[]) {
+    this.throwIfFinalized();
     this.config.errorInterceptors.push(...interceptors);
+    return this;
   }
 
   /**
@@ -683,24 +690,27 @@ export class HTTPRequest {
    * - If the interceptor returns `undefined`, the request will continue to the next interceptor, if present, or to the regular request handling
    * - the interceptor's second parameter is is a function that can be used to remove the interceptor from further request handling
    *
-   * @param {RequestInterceptor} interceptor - The interceptor to add.
-   * @return {HTTPRequest} - The updated request instance.
+   * @param interceptors The interceptors to add.
+   * @returns The updated request instance.
    */
   withRequestInterceptors(...interceptors: RequestInterceptor[]) {
+    this.throwIfFinalized();
     this.config.requestInterceptors.push(...interceptors);
+    return this;
   }
 
   /**
    * Set the request body as a JSON object or string.
    *
-   * @param {any} json - The JSON object or string to set as the request body.
-   * @return {HTTPRequest} - The updated request instance.
+   * @param json The JSON object or string to set as the request body.
+   * @returns The updated request instance.
    */
   withJSONBody(json: any) {
-    this.withHeader("content-type", "application/json");
+    this.throwIfFinalized();
+    this.withHeader('content-type', 'application/json');
     this.config.body = () => {
       switch (typeof json) {
-        case "string":
+        case 'string':
           try {
             JSON.parse(json);
 
@@ -709,14 +719,10 @@ export class HTTPRequest {
             //do nothing. logging below
           }
           break;
-        case "object":
+        case 'object':
           return JSON.stringify(json);
       }
-      this.getLogger().error(
-        "POSTHttpRequest.withJSONBody",
-        "Passed body is not a valid JSON string",
-        json
-      );
+      this.getLogger().error('POSTHttpRequest.withJSONBody', 'Passed body is not a valid JSON string', json);
     };
     return this;
   }
@@ -724,14 +730,15 @@ export class HTTPRequest {
   /**
    * Set the request body to a FormData object and allows customizing the form data before sending the request.
    *
-   * @param {Function} composerCallBack - the callback function that customizes the FormData object
-   * @return {HTTPRequest}
+   * @param composerCallBack The callback function that customizes the FormData object
+   * @returns The updated request instance.
    */
   withFormDataBody(
     composerCallBack: (formData: FormData) => void = () => {
-      throw new Error("No composer callback provided");
+      throw new Error('No composer callback provided');
     }
   ): HTTPRequest {
+    this.throwIfFinalized();
     this.config.body = () => {
       const formData = new FormData();
       composerCallBack(formData);
@@ -743,19 +750,21 @@ export class HTTPRequest {
   /**
    * Short-hand for setting the accepted MIME types to ['*\/*'] which means the API accepts any MIME type.
    *
-   * @return {Object} - The current object instance.
+   * @returns The current object instance.
    */
   withAcceptAny() {
-    this.config.acceptedMIMETypes = ["*/*"];
+    this.throwIfFinalized();
+    this.config.acceptedMIMETypes = ['*/*'];
     return this;
   }
 
   /**
    * When called, the request will not try to parse the response
    *
-   * @return {HTTPRequest} - The updated request instance.
+   * @returns The updated request instance.
    */
   ignoreResponseBody() {
+    this.throwIfFinalized();
     this.config.ignoreResponseBody = true;
     return this;
   }
@@ -764,86 +773,121 @@ export class HTTPRequest {
    * Adds multiple query parameters to the existing query parameters
    * of the API configuration.
    *
-   * @param {Record<string, QueryParameterValue>} params - The query parameters
+   * Parameter values can be literal values or a function that receives
+   * the request config as an argument and returns a value.
+   *
+   * See [Query Parameters](https://cleverplatypus.github.io/apihive-core/guide/query-parameters.html)
+   *
+   * @param params The query parameters
    * to be added.
-   * @return {HTTPRequest} - The updated request instance.
+   * @returns The updated request instance.
    */
   withQueryParams(params: Record<string, QueryParameterValue>) {
+    this.throwIfFinalized();
     Object.assign(this.config.queryParams, params);
-    return this;
-  }
-
-  /**
-   * Sets the CORS mode to 'no-cors' and returns the current object.
-   *
-   * @return {Object} - The current object.
-   */
-  withNoCors() {
-    this.config.corsMode = "no-cors";
-    return this;
-  }
-
-  withJSONMimeTypes(...mimeTypes: string[]) {
-    // Extend current patterns (avoid replacing defaults)
-    this.config.jsonMimeTypes = [
-      ...this.config.jsonMimeTypes,
-      ...mimeTypes,
-    ];
-    return this;
-  }
-
-  withTextMimeTypes(...mimeTypes: string[]) {
-    // Extend current patterns (avoid replacing defaults)
-    this.config.textMimeTypes = [
-      ...this.config.textMimeTypes,
-      ...mimeTypes,
-    ];
     return this;
   }
 
   /**
    * Adds a query parameter to the request.
    *
-   * @param {string} name - The name of the query parameter.
-   * @param {QueryParameterValue} value - The value of the query parameter.
-   * @return {HTTPRequest} - The updated request instance.
+   * The value can be a literal value or a function that receives
+   * the request config as an argument and returns a value.
+   *
+   * @param name The name of the query parameter.
+   * @param value The value of the query parameter.
+   * @returns The updated request instance.
    */
   withQueryParam(name: string, value: QueryParameterValue) {
+    this.throwIfFinalized();
     this.config.queryParams[name] = value;
     return this;
   }
 
   /**
+   * Sets the CORS mode to 'no-cors' and returns the current object.
    *
-   * @param {String} level the log level to apply for this request. One of LOG_LEVEL_ERROR, LOG_LEVEL_WARN, LOG_LEVEL_INFO, LOG_LEVEL_DEBUG defined in constants.js
+   * @returns The current object.
+   */
+  withNoCors() {
+    this.throwIfFinalized();
+    this.config.corsMode = 'no-cors';
+    return this;
+  }
+
+  /**
+   * Sets the MIME types that are considered JSON on top of the default
+   * patterns.
+   *
+   * @param mimeTypes The MIME types to add.
+   * @returns The updated request instance.
+   */
+  withJSONMimeTypes(...mimeTypes: string[]) {
+    this.throwIfFinalized();
+    // Extend current patterns (avoid replacing defaults)
+    this.config.jsonMimeTypes = [...this.config.jsonMimeTypes, ...mimeTypes];
+    return this;
+  }
+
+  /**
+   * Sets the MIME types that are considered text on top of the default
+   * patterns.
+   *
+   * @param mimeTypes The MIME types to add.
+   * @returns The updated request instance.
+   */
+  withTextMimeTypes(...mimeTypes: string[]) {
+    this.throwIfFinalized();
+    // Extend current patterns (avoid replacing defaults)
+    this.config.textMimeTypes = [...this.config.textMimeTypes, ...mimeTypes];
+    return this;
+  }
+
+  /**
+   *
+   * @param level the log level to apply for this request
    * Overrides the default log level.
-   * @return {HTTPRequest} - The updated request instance.
+   * @returns The updated request instance.
    */
   withLogLevel(level: LogLevel) {
+    this.throwIfFinalized();
     this.config.logLevel = level;
     return this;
   }
 
   /**
-   * Sets the request's Accept header to 'application/json'
+   * Sets the request headers for the request.
+   * Header values can be literal values or a function that receives
+   * the request config as an argument and returns a value.
+   *
+   * If the value is undefined, the corresponding header will be removed if present
+   *
+   * @param {Object} headers name-value pairs to set as headers
+   * @returns The updated request instance.
    */
-  acceptJSON() {
-    this.config.acceptedMIMETypes = ["application/json"];
+  withHeaders(headers: Record<string, HeaderValue>) {
+    this.throwIfFinalized();
+    if (typeof headers === 'object') {
+      const normalised = Object.fromEntries(Object.entries(headers).map(([key, value]) => [key.toLowerCase(), value]));
+      Object.assign(this.config.headers, normalised);
+    }
     return this;
   }
 
   /**
-   * @param {Object} headers name-value pairs to set as headers
-   * If value is undefined, the corresponding header will be removed if present
-   * @return {HTTPRequest} - The updated request instance.
+   * Sets a single header for the request.
+   * Header values can be literal values or a function that receives
+   * the request config as an argument and returns a value.
+   *
+   * If the value is undefined, the corresponding header will be removed if present
+   *
+   * @param name header name
+   * @param value the value for the header, omit this parameter to remove the header
+   * @returns The updated request instance.
    */
-  withHeaders(headers: Record<string, HeaderValue>) {
-    if (typeof headers === "object") {
-      const normalised = Object.fromEntries(
-        Object.entries(headers).map(([key, value]) => [key.toLowerCase(), value])
-      );
-      Object.assign(this.config.headers, normalised);
-    }
+  withHeader(name: string, value: HeaderValue) {
+    this.throwIfFinalized();
+    this.config.headers[name.toLowerCase()] = value;
     return this;
   }
 
@@ -853,93 +897,83 @@ export class HTTPRequest {
    * This is especially useful when used in conjuncion with APIs definition
    * to hide some data massaging logic specific to the api.
    *
-   * @param {ResponseBodyTransformer} transformer - The function to transform the body.
-   * @param {HTTPRequest} request - The HTTP request object.
-   * @return {object} - The updated instance of the class.
+   * Transformers are executed in the order they are added.
    *
-   * @example
-   * factory.withAPIConfig({
-   *    name : 'some-api',
-   *    responseBodyTransformer : (body, request) => {
-   *         //the response.details is a JSON string that we want
-   *         //to parse before the app receives the response
-   *         body.details = JSON.parse(body.details)
-   *         return body;
-   *    }),
-   *    endpoints : {
-   *       'get-stuff' : {
-   *          endpoint : '/get-stuff'
-   *       }
-   *    }
-   * };
-   *
-   * const response = factory
-   *    .createAPIRequest('some-api', 'get-stuff')
-   *    .execute();
-   * console.log(response.details.some.deep.data);
+   * @param transformers The response body transformers to apply.
+   * @returns The updated request object.
    */
   withResponseBodyTransformers(...transformers: ResponseBodyTransformer[]) {
+    this.throwIfFinalized();
     this.config.responseBodyTransformers.push(...transformers);
     return this;
   }
 
   /**
    *
-   * @param {String} name header name
-   * @param {*} value the value for the header, omit this parameter to remove the header
-   * @return {HTTPRequest} - The updated request instance.
-   */
-  withHeader(name: string, value: HeaderValue) {
-    this.config.headers[name.toLowerCase()] = value;
-    return this;
-  }
-
-  /**
-   *
-   * @param {Number} timeout milliseconds to wait before failing the request as timed out
-   * @return {HTTPRequest} - The updated request instance.
+   * @param timeout milliseconds to wait before failing the request as timed out
+   * @returns The updated request instance.
    */
   withTimeout(timeout: number) {
+    this.throwIfFinalized();
     this.config.timeout = timeout;
     return this;
   }
 
   /**
    *
-   * @param {Function} handler a callback function to process the raw response coming from the Fetch API.
+   * @param handler a callback function to process the raw response coming from the Fetch API.
    * This can be defined if, to override the default behaviour for HTTP status handling.
    * The callback signature is `function(response:Object, requestObj:HttpRequest)`
-   * @return {HTTPRequest} - The updated request instance.
+   * @returns The updated request instance.
    */
-  withResponseInterceptors(
-    ...interceptors: Array<ResponseInterceptor | ResponseInterceptorWithOptions>
-  ): HTTPRequest {
+  withResponseInterceptors(...interceptors: Array<ResponseInterceptor | ResponseInterceptorWithOptions>): HTTPRequest {
     this.config.responseInterceptors.push(...interceptors);
     return this;
   }
 
+  // ---------------------------------------------------------------------------
+  // Utilities
+  // ---------------------------------------------------------------------------
   /**
    * Generates a hash of the request configuration.
    * The hash is deterministic and includes method, URL, relevant headers,
    * query parameters, and body content to ensure consistent identification.
    * This key can be used for request caching purposes.
+   * 
+   * @remark This is an optional feature (request-hash) that must be enabled on the factory.
    *
    * @return {string} A unique hash-based identifier for this request
    */
   getHash(): string {
-    this.factoryMethods.requireFeature("request-hash");    
+    this.factoryMethods.requireFeature('request-hash');
     return this.featureDelegates.getHash(this);
   }
 
+  // ---------------------------------------------------------------------------
+  // Progress and abort
+  // ---------------------------------------------------------------------------
+  /**
+   * Adds progress handlers for the request.
+   * 
+   * See [Progress Handlers](https://cleverplatypus.github.io/apihive-core/guide/progress-handlers.html)
+   * 
+   * @remark This is an optional feature (download-progress and upload-progress) that must be enabled on the factory.
+   * @param handlers The progress handlers to apply.
+   * @returns The updated request object.
+   */
   withProgressHandlers(...handlers: ProgressHandlerConfig[]): HTTPRequest {
-    if(handlers.some(handler => handler.download))
-      this.factoryMethods.requireFeature("download-progress");
-    if(handlers.some(handler => handler.upload))
-      this.factoryMethods.requireFeature("upload-progress");
-    this.config.progressHandlers = handlers;
+    if (handlers.some((handler) => handler.download)) this.factoryMethods.requireFeature('download-progress');
+    if (handlers.some((handler) => handler.upload)) this.factoryMethods.requireFeature('upload-progress');
+    this.config.progressHandlers.push(...handlers);
     return this;
   }
 
+  /**
+   * Adds a {@link BeforeFetchHook} for the request.
+   * 
+   * @param hook The before fetch hook to apply.
+   * @returns The updated request object.
+   */
   withBeforeFetchHook(hook: BeforeFetchHook): HTTPRequest {
     this.beforeFetchHooks.push(hook);
     return this;

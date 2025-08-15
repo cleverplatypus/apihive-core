@@ -1,5 +1,3 @@
-import { FeatureName } from "./types.js";
-
 /**
  *
  * @param target either a value or a function to call with the provided args

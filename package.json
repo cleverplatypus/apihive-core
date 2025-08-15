@@ -1,7 +1,10 @@
 {
   "name": "@apihive/core",
-  "version": "1.0.0-beta.1",
-  "publishConfig": { "access": "public", "tag": "beta" },
+  "version": "1.0.0-beta.2",
+  "publishConfig": {
+    "access": "public",
+    "tag": "beta"
+  },
   "main": "./lib/index.js",
   "module": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -43,6 +46,13 @@
     "docs:preview": "vitepress preview docs",
     "publish:jsr": "npx jsr publish",
     "publish:npm": "npm run build && npm publish"
+  },
+  "prettier": {
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "none",
+    "printWidth": 120,
+    "tabWidth": 2
   },
   "files": [
     "lib"

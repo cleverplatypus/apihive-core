@@ -191,7 +191,6 @@ export type RequestConfig = {
   responseBodyTransformers: ResponseBodyTransformer[];
   ignoreResponseBody: boolean;
   credentials: RequestCredentials;
-  uriEncodedBody: boolean;
   expectedResponseFormat: ExpectedResponseFormat;
   acceptedMIMETypes: string[];
   corsMode: RequestMode;

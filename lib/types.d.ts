@@ -125,7 +125,6 @@ export type RequestConfig = {
     responseBodyTransformers: ResponseBodyTransformer[];
     ignoreResponseBody: boolean;
     credentials: RequestCredentials;
-    uriEncodedBody: boolean;
     expectedResponseFormat: ExpectedResponseFormat;
     acceptedMIMETypes: string[];
     corsMode: RequestMode;
@@ -317,5 +316,5 @@ export type APIConfig<TApiConfig extends BaseAPIInterface = DefaultAPIConfig> = 
     } : {
         [endpointName: string]: Endpoint;
     };
-    progressHandlers?: ProgressHandlerConfig[];
+    progressHandlers?: ProgressHandlerConfig | ProgressHandlerConfig[];
 };
