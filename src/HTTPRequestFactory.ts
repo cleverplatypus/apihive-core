@@ -489,6 +489,36 @@ export class HTTPRequestFactory {
     }
 
     const url = getEndpointURL(endpoint, api);
+    const meta = this.constructMeta(api, endpointName, endpoint);
+    const request = this.createRequest(url, endpoint.method)
+      .withMeta(meta)
+      .withHeaders(api.headers || {});
+    
+
+    this.applyAPIDefaultsToRequest(api, request);
+
+    return request;
+  }
+
+  private applyAPIDefaultsToRequest(api: APIConfig, request: HTTPRequest): void {
+    const apiArrayProps : Array<keyof APIConfig> = [
+      "responseBodyTransformers",
+      "requestInterceptors",
+      "responseInterceptors",
+      "errorInterceptors",
+      "progressHandlers",
+    ] as const;
+
+    for (const key of apiArrayProps) {
+      const value = (api as any)[key];
+      if (!value) continue;
+      const arr = Array.isArray(value) ? value : [value];
+      const method = ("with" + key.charAt(0).toUpperCase() + key.slice(1)) as keyof HTTPRequest;
+      (request as any)[method](...arr);
+    }
+  }
+
+  private constructMeta(api: APIConfig, endpointName: string, endpoint: Endpoint): any {
     const meta = {
       api: {
         name: api.name,
@@ -516,48 +546,16 @@ export class HTTPRequestFactory {
         e
       );
     }
-    const request = this.createRequest(url, endpoint.method)
-      .withMeta(meta)
-      .withHeaders(api.headers || {});
-    
-    if (api.responseBodyTransformers) {
-      const transformers = Array.isArray(api.responseBodyTransformers)
-        ? api.responseBodyTransformers
-        : [api.responseBodyTransformers];
-      request.withResponseBodyTransformers(...transformers);
-    }
-    if (api.requestInterceptors) {
-      const interceptors = Array.isArray(api.requestInterceptors)
-        ? api.requestInterceptors
-        : [api.requestInterceptors];
-      request.withRequestInterceptors(...interceptors);
-    }
-    if (api.responseInterceptors) {
-      const interceptors = Array.isArray(api.responseInterceptors)
-        ? api.responseInterceptors
-        : [api.responseInterceptors];
-      request.withResponseInterceptors(...interceptors);
-    }
-    if (api.errorInterceptors) {
-      const errorInterceptors = Array.isArray(api.errorInterceptors)
-        ? api.errorInterceptors
-        : [api.errorInterceptors];
-      request.withErrorInterceptors(...errorInterceptors);
-    }
-
-    if(api.progressHandlers) {
-      const handlers = Array.isArray(api.progressHandlers)
-        ? api.progressHandlers
-        : [api.progressHandlers];
-      request.withProgressHandlers(...handlers);
-    }
-    return request;
+    return meta;
   }
 
   withProgressHandlers(...handlers: ProgressHandlerConfig[]): HTTPRequestFactory {
     if(handlers.some(handler => handler.download) && !this.requestDelegates.handleDownloadProgress)
       this.requireFeature('download-progress');
-      
+    
+    if(handlers.some(handler => handler.upload) && !this.requestDelegates.handleUploadProgress)
+      this.requireFeature('upload-progress');
+    
     this.requestDefaults.push((request: HTTPRequest) =>
       request.withProgressHandlers(...handlers)
     );
