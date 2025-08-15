@@ -35,8 +35,7 @@ type RequestConstructorArgs = {
   factoryMethods: SharedFactoryMethods;
 };
 /**
- * HTTP Request. This class shouldn't be instanciated directly.
- * Use {@link HTTPRequestFactory} createXXXRequest() instead
+ * @remarks This class shouldn't be instanciated directly.<br>Use {@link HTTPRequestFactory} createXXXRequest() instead
  */
 export class HTTPRequest {
   // ---------------------------------------------------------------------------
@@ -921,9 +920,10 @@ export class HTTPRequest {
 
   /**
    *
-   * @param handler a callback function to process the raw response coming from the Fetch API.
-   * This can be defined if, to override the default behaviour for HTTP status handling.
-   * The callback signature is `function(response:Object, requestObj:HttpRequest)`
+   * @param interceptors The response interceptors to apply.
+   * 
+   * See [Response Interceptors](https://cleverplatypus.github.io/apihive-core/guide/response-interceptors.html)
+   * 
    * @returns The updated request instance.
    */
   withResponseInterceptors(...interceptors: Array<ResponseInterceptor | ResponseInterceptorWithOptions>): HTTPRequest {
@@ -940,9 +940,9 @@ export class HTTPRequest {
    * query parameters, and body content to ensure consistent identification.
    * This key can be used for request caching purposes.
    * 
-   * @remark This is an optional feature (request-hash) that must be enabled on the factory.
+   * @remarks This is an optional feature (request-hash) that must be enabled on the factory.
    *
-   * @return {string} A unique hash-based identifier for this request
+   * @returns {string} A unique hash-based identifier for this request
    */
   getHash(): string {
     this.factoryMethods.requireFeature('request-hash');
@@ -957,7 +957,7 @@ export class HTTPRequest {
    * 
    * See [Progress Handlers](https://cleverplatypus.github.io/apihive-core/guide/progress-handlers.html)
    * 
-   * @remark This is an optional feature (download-progress and upload-progress) that must be enabled on the factory.
+   * @remarks This is an optional feature (download-progress and upload-progress) that must be enabled on the factory.
    * @param handlers The progress handlers to apply.
    * @returns The updated request object.
    */
