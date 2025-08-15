@@ -544,6 +544,13 @@ export class HTTPRequestFactory {
         : [api.errorInterceptors];
       request.withErrorInterceptors(...errorInterceptors);
     }
+
+    if(api.progressHandlers) {
+      const handlers = Array.isArray(api.progressHandlers)
+        ? api.progressHandlers
+        : [api.progressHandlers];
+      request.withProgressHandlers(...handlers);
+    }
     return request;
   }
 

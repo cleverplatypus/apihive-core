@@ -394,5 +394,5 @@ export type APIConfig<TApiConfig extends BaseAPIInterface = DefaultAPIConfig> =
       ? { [P in Extract<K, string>]: Endpoint }
       : { [endpointName: string]: Endpoint };
 
-    progressHandlers?: ProgressHandlerConfig[];
+    progressHandlers?: ProgressHandlerConfig | ProgressHandlerConfig[];
   };
