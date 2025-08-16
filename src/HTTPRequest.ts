@@ -285,29 +285,31 @@ export class HTTPRequest {
 
     this.fetchBody!.signal = this._abortController.signal;
 
-    this.setupHeaders();
-
-    this.setupTimeout();
-
-    this.setupBody();
-
-    this.wasUsed = true;
-
-    // Create controls for interceptors
-    const requestInterceptorControls = this.createRequestInterceptorControls();
-
-    for (const interceptor of this.config.requestInterceptors || []) {
-      let interceptorResponse = await interceptor(this.getReadOnlyConfig(), requestInterceptorControls);
-      if (interceptorResponse === undefined) {
-        continue;
-      }
-      interceptorResponse = await this.applyResponseTransformers(interceptorResponse);
-      return this.wrapErrors ? { response: interceptorResponse } : interceptorResponse;
-    }
-
+    
+    
     let response;
     try {
+      this.setupHeaders();
+  
+      this.setupTimeout();
+  
+      this.setupBody();
+  
+      this.wasUsed = true;
+        
+      // Create controls for interceptors
+      const requestInterceptorControls = this.createRequestInterceptorControls();
+      
+      for (const interceptor of this.config.requestInterceptors || []) {
+        let interceptorResponse = await interceptor(this.getReadOnlyConfig(), requestInterceptorControls);
+        if (interceptorResponse === undefined) {
+          continue;
+        }
+        interceptorResponse = await this.applyResponseTransformers(interceptorResponse);
+        return this.wrapErrors ? { response: interceptorResponse } : interceptorResponse;
+      }
       this.finalizedURL = this.composeURL();
+
       logger.debug('HttpRequestFactory : Fetch url to be called', this.finalizedURL);
       if (this.config.progressHandlers?.find((handler) => !!handler.upload)) {
         this.factoryMethods.requireFeature('upload-progress');
@@ -521,6 +523,10 @@ export class HTTPRequest {
           this.config.urlParams = newURLParams;
         }
         // Do not persist composed URL; it will be computed on demand.
+      },
+
+      getProvisionalURL: () => {
+        return this.composeURL();
       },
 
       updateHeaders: (headers: Record<string, string | null>) => {

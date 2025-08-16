@@ -74,7 +74,15 @@ export interface RequestInterceptorControls {
      * Returns the composed final URL.
      */
     finaliseURL(): string;
+    /**
+     * Get the provisional URL before finalisation
+     */
+    getProvisionalURL(): string;
 }
+export type WrappedResponse = {
+    response?: any;
+    error?: HTTPError;
+};
 export type URLParams = Record<string, LiteralValue | MaybeGetterFunction<LiteralValue, [config: RequestConfig]>>;
 /**
  * Control APIs available to response interceptors.

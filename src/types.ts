@@ -93,6 +93,11 @@ export interface RequestInterceptorControls {
    * Returns the composed final URL.
    */
   finaliseURL(): string;
+
+  /**
+   * Get the provisional URL before finalisation
+   */
+  getProvisionalURL(): string;
 }
 
 export type WrappedResponse = {

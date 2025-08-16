@@ -1,5 +1,5 @@
 import { type LoggerFacade, type LogLevel } from '@apihive/logger-facade';
-import type { BeforeFetchHook, ErrorInterceptor, FeatureName, FeatureRequestDelegates, HeaderValue, HTTPMethod, ProgressHandlerConfig, QueryParameterValue, RequestConfig, RequestConfigBuilder, RequestInterceptor, ResponseBodyTransformer, ResponseInterceptor, ResponseInterceptorWithOptions } from './types.js';
+import type { BeforeFetchHook, ErrorInterceptor, FeatureName, FeatureRequestDelegates, HeaderValue, HTTPMethod, ProgressHandlerConfig, QueryParameterValue, RequestConfig, RequestConfigBuilder, RequestInterceptor, ResponseBodyTransformer, ResponseInterceptor, ResponseInterceptorWithOptions, WrappedResponse } from './types.js';
 type SharedFactoryMethods = {
     requireFeature: (featureName: FeatureName) => void;
 };
@@ -9,10 +9,10 @@ type RequestConstructorArgs = {
     defaultConfigBuilders: RequestConfigBuilder[];
     featureDelegates: FeatureRequestDelegates;
     factoryMethods: SharedFactoryMethods;
+    wrapErrors: boolean;
 };
 /**
- * HTTP Request. This class shouldn't be instanciated directly.
- * Use {@link HTTPRequestFactory} createXXXRequest() instead
+ * @remarks This class shouldn't be instanciated directly.<br>Use {@link HTTPRequestFactory} createXXXRequest() instead
  */
 export declare class HTTPRequest {
     private configBuilders;
@@ -28,6 +28,7 @@ export declare class HTTPRequest {
     private featureDelegates;
     private factoryMethods;
     private abortListeners;
+    private wrapErrors;
     get abortController(): AbortController;
     /**
      * Returns the fetch response content in its appropriate format.
@@ -47,7 +48,7 @@ export declare class HTTPRequest {
      * @returns a promise that resolves to the transformed value
      */
     private applyResponseTransformers;
-    constructor({ url, method, defaultConfigBuilders, featureDelegates, factoryMethods }: RequestConstructorArgs);
+    constructor({ url, method, defaultConfigBuilders, featureDelegates, factoryMethods, wrapErrors }: RequestConstructorArgs);
     /**
      * Creates a new request config object.
      *
@@ -70,7 +71,7 @@ export declare class HTTPRequest {
      *
      * @returns A Promise that resolves with the result of the request.
      */
-    execute(): Promise<any>;
+    execute(): Promise<any | WrappedResponse>;
     /**
      * Retrieves a read-only copy of configuration with lazy evaluation.
      * Function-based values (body, headers) are only evaluated when accessed.
@@ -306,9 +307,10 @@ export declare class HTTPRequest {
     withTimeout(timeout: number): this;
     /**
      *
-     * @param handler a callback function to process the raw response coming from the Fetch API.
-     * This can be defined if, to override the default behaviour for HTTP status handling.
-     * The callback signature is `function(response:Object, requestObj:HttpRequest)`
+     * @param interceptors The response interceptors to apply.
+     *
+     * See [Response Interceptors](https://cleverplatypus.github.io/apihive-core/guide/response-interceptors.html)
+     *
      * @returns The updated request instance.
      */
     withResponseInterceptors(...interceptors: Array<ResponseInterceptor | ResponseInterceptorWithOptions>): HTTPRequest;
@@ -318,9 +320,9 @@ export declare class HTTPRequest {
      * query parameters, and body content to ensure consistent identification.
      * This key can be used for request caching purposes.
      *
-     * @remark This is an optional feature (request-hash) that must be enabled on the factory.
+     * @remarks This is an optional feature (request-hash) that must be enabled on the factory.
      *
-     * @return {string} A unique hash-based identifier for this request
+     * @returns {string} A unique hash-based identifier for this request
      */
     getHash(): string;
     /**
@@ -328,7 +330,7 @@ export declare class HTTPRequest {
      *
      * See [Progress Handlers](https://cleverplatypus.github.io/apihive-core/guide/progress-handlers.html)
      *
-     * @remark This is an optional feature (download-progress and upload-progress) that must be enabled on the factory.
+     * @remarks This is an optional feature (download-progress and upload-progress) that must be enabled on the factory.
      * @param handlers The progress handlers to apply.
      * @returns The updated request object.
      */

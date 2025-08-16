@@ -31,6 +31,8 @@ export declare class HTTPRequestFactory {
     private interceptorsToRequestDefaults;
     private requestDelegates;
     private factoryDelegates;
+    private wrapErrors;
+    private baseURL;
     get logger(): LoggerFacade;
     get logLevel(): LogLevel;
     /**
@@ -51,6 +53,32 @@ export declare class HTTPRequestFactory {
      */
     use(feature: Feature): this;
     private requireFeature;
+    /**
+     * Enables factory-wide wrapping of results into a `{ response? , error? }` object.
+     *
+     * This leverages a fail-fast programming style without try/catch blocks.
+     *
+     * @example
+     * ```typescript
+     * const factory = new HTTPRequestFactory()
+     *   .withWrappeResponseError();
+     *
+     * const {response, error} = await factory
+     *   .createGETRequest('https://httpbin.org/json')
+     *   .execute();
+     *
+     * if (error) { //fail fast
+     *   console.error('TODO: handle error', error);
+     *   return;
+     * }
+     *
+     * console.log('deal with response', response);
+     *
+     * ```
+     *
+     * @returns the factory instance
+     */
+    withWrappeResponseError(): this;
     /**
      * Sets the logger adapter for the factory.
      
@@ -94,6 +122,13 @@ export declare class HTTPRequestFactory {
      * @returns the factory instance
      */
     withCredentialsPolicy(config: RequestCredentials): this;
+    /**
+     * Sets the default base URL for requests created with a relative URL.
+     *
+     * @param baseURL the base URL to set
+     * @returns the factory instance
+     */
+    withBaseURL(baseURL: string): this;
     /**
      * Adds the provided request interceptors to the factory defaults.
      * See [Request Interceptors](http://cleverplatypus.github.io/apihive-core/guide/request-interceptors.html) in the documentation
@@ -326,6 +361,7 @@ export declare class HTTPRequestFactory {
      * @internal
      */
     private applyAPIDefaultsToRequest;
+    private computeURL;
     /**
      * @internal
      */

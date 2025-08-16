@@ -52,6 +52,7 @@ export class HTTPRequestFactory {
   private requestDelegates: FeatureRequestDelegates = {} as FeatureRequestDelegates;
   private factoryDelegates: FeatureFactoryDelegates = {} as FeatureFactoryDelegates;
   private wrapErrors: boolean = false;
+  private baseURL: string | null = null;
 
   // ---------------------------------------------------------------------------
   // Public getters
@@ -123,8 +124,27 @@ export class HTTPRequestFactory {
   // ---------------------------------------------------------------------------
 
   /**
-   * Enables factory-wide wrapping of results into { response? , error? } objects.
-   * This allows to avoid wrapping the execution of requests with try/catch blocks.
+   * Enables factory-wide wrapping of results into a `{ response? , error? }` object.
+   * 
+   * This leverages a fail-fast programming style without try/catch blocks.
+   * 
+   * @example
+   * ```typescript
+   * const factory = new HTTPRequestFactory()
+   *   .withWrappeResponseError();
+   * 
+   * const {response, error} = await factory
+   *   .createGETRequest('https://httpbin.org/json')
+   *   .execute();
+   * 
+   * if (error) { //fail fast
+   *   console.error('TODO: handle error', error);
+   *   return;
+   * }
+   * 
+   * console.log('deal with response', response);
+   * 
+   * ```
    * 
    * @returns the factory instance
    */
@@ -205,6 +225,18 @@ export class HTTPRequestFactory {
     this.requestDefaults.push((request: HTTPRequest) => request.withCredentialsPolicy(config));
     return this;
   }
+
+  /**
+   * Sets the default base URL for requests created with a relative URL.
+   *
+   * @param baseURL the base URL to set
+   * @returns the factory instance
+   */
+  withBaseURL(baseURL: string) {
+    this.baseURL = baseURL;
+    return this;
+  }
+  
 
   // ---------------------------------------------------------------------------
   // Interceptors and transformers
@@ -401,6 +433,7 @@ export class HTTPRequestFactory {
    * @returns the created HTTPRequest object
    */
   createRequest(url: string, method: HTTPMethod = 'GET') {
+    url = this.computeURL(url);
     const featureDelegates = this.requestDelegates;
     const request = new HTTPRequest({
       url,
@@ -638,6 +671,28 @@ export class HTTPRequestFactory {
       const method = ('with' + key.charAt(0).toUpperCase() + key.slice(1)) as keyof HTTPRequest;
       (request as any)[method](...arr);
     }
+  }
+
+  private computeURL(url: string): string {
+    const isAbsolute = (u: string) => /^(https?:)?\/\//.test(u);
+
+    // If the provided url is absolute (http/https or protocol-relative), always use it
+    if (isAbsolute(url)) return url;
+
+    // If no baseURL, use the url as provided (HTTPRequest will compose params later)
+    if (!this.baseURL) return url;
+
+    const base = this.baseURL;
+
+    // If base is absolute/protocol-relative, delegate to URL resolution
+    if (isAbsolute(base)) {
+      return new URL(url, base).toString();
+    }
+
+    // Both are relative (including root-relative base like '/api') -> concatenate cleanly
+    const stripTrailing = base.replace(/\/+$/, '');
+    const stripLeading = url.replace(/^\/+/, '');
+    return `${stripTrailing}/${stripLeading}`;
   }
 
   /**
