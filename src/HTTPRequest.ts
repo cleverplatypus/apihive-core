@@ -17,7 +17,8 @@ import type {
   ResponseInterceptor,
   ResponseInterceptorControls,
   ResponseInterceptorWithOptions,
-  URLParams
+  URLParams,
+  WrappedResponse
 } from './types.js';
 import { maybeFunction } from './utils.js';
 
@@ -33,6 +34,7 @@ type RequestConstructorArgs = {
   defaultConfigBuilders: RequestConfigBuilder[];
   featureDelegates: FeatureRequestDelegates;
   factoryMethods: SharedFactoryMethods;
+  wrapErrors: boolean;
 };
 /**
  * @remarks This class shouldn't be instanciated directly.<br>Use {@link HTTPRequestFactory} createXXXRequest() instead
@@ -54,6 +56,7 @@ export class HTTPRequest {
   private featureDelegates: FeatureRequestDelegates;
   private factoryMethods: SharedFactoryMethods;
   private abortListeners: ((event: Event) => void)[] = [];
+  private wrapErrors: boolean = false;
 
   // ---------------------------------------------------------------------------
   // Public getters
@@ -111,12 +114,19 @@ export class HTTPRequest {
     return transformed;
   }
 
-  constructor({ url, method, defaultConfigBuilders, featureDelegates, factoryMethods }: RequestConstructorArgs) {
+  constructor({ 
+      url,
+      method,
+      defaultConfigBuilders,
+      featureDelegates,
+      factoryMethods,
+      wrapErrors = false }: RequestConstructorArgs) {
     this.configBuilders = defaultConfigBuilders;
     this.wasUsed = false;
     this.config = this.createConfigObject(url, method);
     this.featureDelegates = featureDelegates;
     this.factoryMethods = factoryMethods;
+    this.wrapErrors = wrapErrors;
   }
 
   // ---------------------------------------------------------------------------
@@ -256,7 +266,7 @@ export class HTTPRequest {
    *
    * @returns A Promise that resolves with the result of the request.
    */
-  async execute(): Promise<any> {
+  async execute(): Promise<any | WrappedResponse> {
     if (this.wasUsed) {
       throw new Error('HttpRequests cannot be reused. Please call a request factory method for every new call');
     }
@@ -292,7 +302,7 @@ export class HTTPRequest {
         continue;
       }
       interceptorResponse = await this.applyResponseTransformers(interceptorResponse);
-      return interceptorResponse;
+      return this.wrapErrors ? { response: interceptorResponse } : interceptorResponse;
     }
 
     let response;
@@ -332,17 +342,17 @@ export class HTTPRequest {
             if (!skipTransformersOnReturn) {
               interceptorResponse = await this.applyResponseTransformers(interceptorResponse);
             }
-            return interceptorResponse;
+            return this.wrapErrors ? { response: interceptorResponse } : interceptorResponse;
           }
         }
       }
       if (response.ok) {
         if (this.config.ignoreResponseBody || response.status === 204) {
-          return;
+          return this.wrapErrors ? { response: undefined } : undefined;
         }
         let body = await this.readResponse(response);
         body = await this.applyResponseTransformers(body);
-        return body;
+        return this.wrapErrors ? { response: body } : body;
       } else {
         const error = new HTTPError(response.status, response.statusText, await this.readResponse(response));
         for (const interceptor of this.config.errorInterceptors || []) {
@@ -350,7 +360,7 @@ export class HTTPRequest {
             break;
           }
         }
-        return Promise.reject(error);
+        return this.wrapErrors ? { error } : Promise.reject(error);
       }
     } catch (error) {
       if (error.name === 'AbortError') {
@@ -361,7 +371,7 @@ export class HTTPRequest {
             break;
           }
         }
-        return Promise.reject(abortError);
+        return this.wrapErrors ? { error: abortError } : Promise.reject(abortError);
       }
 
       logger.error('HttpRequestFactory : Fetch error', {
@@ -378,7 +388,7 @@ export class HTTPRequest {
         }
       }
 
-      return Promise.reject(httpError);
+      return this.wrapErrors ? { error: httpError } : Promise.reject(httpError);
     } finally {
       clearTimeout(this.timeoutID);
     }

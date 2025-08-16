@@ -73,7 +73,7 @@ describe('upload-progress feature', () => {
     (globalThis as any).XMLHttpRequest = OriginalXHR;
   });
 
-  it('emits upload progress and does not propagate to further handlers when handler does not fallThrough', async () => {
+  it('emits_upload_progress_and_does_not_propagate_to_further_handlers_when_handler_does_not_fallThrough', async () => {
     const calls: any[] = [];
     const factory = new HTTPRequestFactory().use(uploadProgressFeature).withProgressHandlers({
       upload: (info) => {
@@ -100,7 +100,7 @@ describe('upload-progress feature', () => {
     ]);
   });
 
-  it('falls through to next handler when fallThrough() is called', async () => {
+  it('falls_through_to_next_handler_when_fallThrough_is_called', async () => {
     const calls1: number[] = [];
     const calls2: number[] = [];
     const factory = new HTTPRequestFactory()
@@ -126,7 +126,7 @@ describe('upload-progress feature', () => {
     expect(calls2).toEqual([25, 100]);
   });
 
-  it('respects throttleMs on handlers but always emits final 100%', async () => {
+  it('respects_throttleMs_on_handlers_but_always_emits_final_100_percent', async () => {
     const calls: number[] = [];
     const factory = new HTTPRequestFactory()
       .use(uploadProgressFeature)

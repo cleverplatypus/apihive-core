@@ -95,6 +95,11 @@ export interface RequestInterceptorControls {
   finaliseURL(): string;
 }
 
+export type WrappedResponse = {
+  response?: any;
+  error?: HTTPError;
+}
+
 export type URLParams = Record<
   string,
   LiteralValue | MaybeGetterFunction<LiteralValue, [config: RequestConfig]>

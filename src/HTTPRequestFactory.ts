@@ -51,6 +51,7 @@ export class HTTPRequestFactory {
   private interceptorsToRequestDefaults: Map<RequestInterceptor, RequestConfigBuilder> = new Map();
   private requestDelegates: FeatureRequestDelegates = {} as FeatureRequestDelegates;
   private factoryDelegates: FeatureFactoryDelegates = {} as FeatureFactoryDelegates;
+  private wrapErrors: boolean = false;
 
   // ---------------------------------------------------------------------------
   // Public getters
@@ -121,6 +122,17 @@ export class HTTPRequestFactory {
   // Defaults configuration
   // ---------------------------------------------------------------------------
 
+  /**
+   * Enables factory-wide wrapping of results into { response? , error? } objects.
+   * This allows to avoid wrapping the execution of requests with try/catch blocks.
+   * 
+   * @returns the factory instance
+   */
+  withWrappeResponseError() {
+    this.wrapErrors = true;
+    return this;
+  }  
+  
   /**
    * Sets the logger adapter for the factory.
    
@@ -397,7 +409,8 @@ export class HTTPRequestFactory {
       featureDelegates,
       factoryMethods: {
         requireFeature: this.requireFeature.bind(this)
-      }
+      },
+      wrapErrors: this.wrapErrors
     });
 
     this.afterRequestCreatedHooks.forEach((hook) => hook(request));
