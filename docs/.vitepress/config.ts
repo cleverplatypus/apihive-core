@@ -1,7 +1,4 @@
-import {
-  componentPreview,
-  containerPreview,
-} from '@vitepress-demo-preview/plugin';
+
 import { resolve } from 'path';
 import { defineConfig } from 'vitepress';
 
@@ -17,12 +14,6 @@ export default defineConfig({
     resolve: {
       alias,
     },
-  },
-   markdown: {
-    config(md) {
-      md.use(containerPreview, { clientOnly: true, alias });
-      md.use(componentPreview, { clientOnly: true, alias });
-   },
   },
   themeConfig: {
     logo: 'images/logo.svg',
