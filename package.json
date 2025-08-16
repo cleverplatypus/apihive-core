@@ -40,7 +40,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest",
-    "docs:jsdoc": "typedoc --out docs/api src",
+    "docs:jsdoc": "typedoc --options typedoc.json",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
@@ -59,11 +59,11 @@
   ],
   "devDependencies": {
     "@types/node": "^20.4.2",
+    "sass": "^1.90.0",
     "typedoc": "^0.28.9",
     "typedoc-plugin-markdown": "^4.8.0",
     "typescript": "^5.1.6",
     "vitepress": "^1.6.3",
-    "vitepress-plugin-sandpack": "^1.1.4",
     "vitest": "^3.2.4"
   },
   "dependencies": {
