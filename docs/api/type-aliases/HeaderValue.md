@@ -8,4 +8,4 @@
 
 > **HeaderValue** = `string` \| [`DynamicHeaderValue`](DynamicHeaderValue.md)
 
-Defined in: [types.ts:147](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L147)
+Defined in: [types.ts:167](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L167)

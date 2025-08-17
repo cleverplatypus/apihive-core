@@ -54,3 +54,5 @@
 - [ResponseInterceptor](type-aliases/ResponseInterceptor.md)
 - [ResponseInterceptorWithOptions](type-aliases/ResponseInterceptorWithOptions.md)
 - [URLParams](type-aliases/URLParams.md)
+- [URLParamValue](type-aliases/URLParamValue.md)
+- [WrappedResponse](type-aliases/WrappedResponse.md)

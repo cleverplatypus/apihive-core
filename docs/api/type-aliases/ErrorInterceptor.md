@@ -8,7 +8,7 @@
 
 > **ErrorInterceptor** = (`error`) => `boolean` \| `Promise`\<`boolean`\>
 
-Defined in: [types.ts:172](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L172)
+Defined in: [types.ts:192](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L192)
 
 ## Parameters
 

@@ -94,7 +94,31 @@
   --vp-home-hero-name-color: transparent;
   --vp-home-hero-name-background: #fcbf09;
   --vp-home-hero-image-filter: blur(44px);
+  
+  .demo-button {
+    max-height: 3rem;
+    margin-bottom: 0.5rem;
+  }
 
+  .info.custom-block:has(.demo-button) {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    *:first-child {
+      flex: 0 1;
+    }
+    .custom-block-title {
+      display: none;
+    }
+    p {
+      margin: 0;
+    }
+  }
+  /*resets line-height of mermaid diagrams*/
+  .vp-doc .mermaid p { 
+    line-height: unset;
+  }
 
   .VPHero {
     .VPImage {

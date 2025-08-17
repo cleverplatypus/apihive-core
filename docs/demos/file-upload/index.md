@@ -1,4 +1,4 @@
-## File Upload Demo
+## DEMO: File Upload
 
 This demo shows how to upload a file using APIHive and tracking it's progress.
 
@@ -13,7 +13,7 @@ import FileUploadProgress from './FileUploadProgress.vue'
 
 </ClientOnly>
 
-### Source Code
+### Code
 
 ::: code-group
 

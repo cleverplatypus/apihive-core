@@ -6,7 +6,7 @@
 
 # Interface: Feature
 
-Defined in: [types.ts:33](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L33)
+Defined in: [types.ts:33](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L33)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:33](https://github.com/cleverplatypus/apihive-core/blob/91
 
 > **name**: [`FeatureName`](../type-aliases/FeatureName.md)
 
-Defined in: [types.ts:34](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L34)
+Defined in: [types.ts:34](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L34)
 
 ## Methods
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:34](https://github.com/cleverplatypus/apihive-core/blob/91
 
 > `optional` **apply**(`target`, `commands`): `void`
 
-Defined in: [types.ts:35](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L35)
+Defined in: [types.ts:35](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L35)
 
 #### Parameters
 
@@ -44,7 +44,7 @@ Defined in: [types.ts:35](https://github.com/cleverplatypus/apihive-core/blob/91
 
 > `optional` **getDelegates**(`factory`): `object`
 
-Defined in: [types.ts:36](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L36)
+Defined in: [types.ts:36](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L36)
 
 #### Parameters
 

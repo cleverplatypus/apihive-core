@@ -6,7 +6,7 @@
 
 # Interface: RequestInterceptorControls
 
-Defined in: [types.ts:74](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L74)
+Defined in: [types.ts:74](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L74)
 
 Control APIs available to interceptors for manipulating the request during execution.
 
@@ -16,7 +16,7 @@ Control APIs available to interceptors for manipulating the request during execu
 
 > **abort**(): `void`
 
-Defined in: [types.ts:78](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L78)
+Defined in: [types.ts:78](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L78)
 
 Abort the current request
 
@@ -30,7 +30,7 @@ Abort the current request
 
 > **finaliseURL**(): `string`
 
-Defined in: [types.ts:95](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L95)
+Defined in: [types.ts:95](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L95)
 
 Finalise the request URL. After this call, the URL becomes immutable
 and further calls to replaceURL() will throw.
@@ -42,11 +42,51 @@ Returns the composed final URL.
 
 ***
 
+### getProvisionalURL()
+
+> **getProvisionalURL**(): `string`
+
+Defined in: [types.ts:100](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L100)
+
+Get the provisional URL before finalisation
+
+#### Returns
+
+`string`
+
+***
+
+### replaceBody()
+
+> **replaceBody**(`replacer`): `void`
+
+Defined in: [types.ts:108](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L108)
+
+Sets a last-minute body replacer
+
+#### Parameters
+
+##### replacer
+
+(`body`) => `any`
+
+The function to be called with the current body as argument and returning the new body
+
+#### Returns
+
+`void`
+
+#### Remarks
+
+when a request has a JSON body, the received body is always a string.<br>This means the body would generally need parsing.
+
+***
+
 ### replaceURL()
 
 > **replaceURL**(`newURL`, `newURLParams?`): `void`
 
-Defined in: [types.ts:83](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L83)
+Defined in: [types.ts:83](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L83)
 
 Replace the request URL
 
@@ -70,7 +110,7 @@ Replace the request URL
 
 > **updateHeaders**(`headers`): `void`
 
-Defined in: [types.ts:88](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L88)
+Defined in: [types.ts:88](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L88)
 
 Update request headers (merges with existing headers)
 

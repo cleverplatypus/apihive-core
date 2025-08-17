@@ -2,7 +2,14 @@
 @import url('https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.colors.min.css');
 
 .demo {
-  .pico {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  .pico, &.pico {
+    .demo-button {
+      max-height: 2rem;
+    }
     font-size: 0.8rem;
 
     .v-enter-active,

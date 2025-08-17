@@ -8,7 +8,7 @@
 
 > **ProgressInfo** = `object`
 
-Defined in: [types.ts:11](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L11)
+Defined in: [types.ts:11](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L11)
 
 ## Properties
 
@@ -16,7 +16,7 @@ Defined in: [types.ts:11](https://github.com/cleverplatypus/apihive-core/blob/91
 
 > **fallThrough**: () => `void`
 
-Defined in: [types.ts:17](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L17)
+Defined in: [types.ts:17](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L17)
 
 #### Returns
 
@@ -28,7 +28,7 @@ Defined in: [types.ts:17](https://github.com/cleverplatypus/apihive-core/blob/91
 
 > **loadedBytes**: `number`
 
-Defined in: [types.ts:14](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L14)
+Defined in: [types.ts:14](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L14)
 
 ***
 
@@ -36,7 +36,7 @@ Defined in: [types.ts:14](https://github.com/cleverplatypus/apihive-core/blob/91
 
 > **percentProgress**: `number`
 
-Defined in: [types.ts:13](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L13)
+Defined in: [types.ts:13](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L13)
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: [types.ts:13](https://github.com/cleverplatypus/apihive-core/blob/91
 
 > **phase**: [`ProgressPhase`](ProgressPhase.md)
 
-Defined in: [types.ts:12](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L12)
+Defined in: [types.ts:12](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L12)
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: [types.ts:12](https://github.com/cleverplatypus/apihive-core/blob/91
 
 > **requestConfig**: [`RequestConfig`](RequestConfig.md)
 
-Defined in: [types.ts:16](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L16)
+Defined in: [types.ts:16](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L16)
 
 ***
 
@@ -60,4 +60,4 @@ Defined in: [types.ts:16](https://github.com/cleverplatypus/apihive-core/blob/91
 
 > `optional` **totalBytes**: `number`
 
-Defined in: [types.ts:15](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L15)
+Defined in: [types.ts:15](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L15)

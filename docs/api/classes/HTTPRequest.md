@@ -6,7 +6,7 @@
 
 # Class: HTTPRequest
 
-Defined in: [HTTPRequest.ts:40](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L40)
+Defined in: [HTTPRequest.ts:43](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L43)
 
 ## Remarks
 
@@ -18,7 +18,7 @@ This class shouldn't be instanciated directly.<br>Use [HTTPRequestFactory](HTTPR
 
 > **new HTTPRequest**(`__namedParameters`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:114](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L114)
+Defined in: [HTTPRequest.ts:118](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L118)
 
 #### Parameters
 
@@ -38,7 +38,7 @@ Defined in: [HTTPRequest.ts:114](https://github.com/cleverplatypus/apihive-core/
 
 > **get** **abortController**(): `AbortController`
 
-Defined in: [HTTPRequest.ts:61](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L61)
+Defined in: [HTTPRequest.ts:65](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L65)
 
 ##### Returns
 
@@ -50,7 +50,7 @@ Defined in: [HTTPRequest.ts:61](https://github.com/cleverplatypus/apihive-core/b
 
 > **blank**(): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:592](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L592)
+Defined in: [HTTPRequest.ts:624](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L624)
 
 Clears the config builders array and returns the instance.
 Useful in cases where you want to create a new request that doesn't inherit
@@ -68,7 +68,7 @@ the updated request
 
 > **execute**(): `Promise`\<`any`\>
 
-Defined in: [HTTPRequest.ts:259](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L259)
+Defined in: [HTTPRequest.ts:279](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L279)
 
 Executes the fetch request and returns a Promise that resolves with the parsed result.
 
@@ -84,7 +84,7 @@ A Promise that resolves with the result of the request.
 
 > **getHash**(): `string`
 
-Defined in: [HTTPRequest.ts:947](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L947)
+Defined in: [HTTPRequest.ts:979](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L979)
 
 Generates a hash of the request configuration.
 The hash is deterministic and includes method, URL, relevant headers,
@@ -107,7 +107,7 @@ This is an optional feature (request-hash) that must be enabled on the factory.
 
 > **getReadOnlyConfig**(): [`RequestConfig`](../type-aliases/RequestConfig.md)
 
-Defined in: [HTTPRequest.ts:396](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L396)
+Defined in: [HTTPRequest.ts:418](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L418)
 
 Retrieves a read-only copy of configuration with lazy evaluation.
 Function-based values (body, headers) are only evaluated when accessed.
@@ -124,7 +124,7 @@ A read-only configuration object with lazy evaluation.
 
 > **ignoreResponseBody**(): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:765](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L765)
+Defined in: [HTTPRequest.ts:797](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L797)
 
 When called, the request will not try to parse the response
 
@@ -140,7 +140,7 @@ The updated request instance.
 
 > **withAbortListener**(`handler`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:604](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L604)
+Defined in: [HTTPRequest.ts:636](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L636)
 
 Adds an abort handler to the request.
 
@@ -164,7 +164,7 @@ The updated request instance.
 
 > **withAccept**(...`mimeTypes`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:620](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L620)
+Defined in: [HTTPRequest.ts:652](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L652)
 
 Sets the accepted MIME types for the request.
 
@@ -190,7 +190,7 @@ The updated request instance.
 
 > **withAcceptAny**(): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:754](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L754)
+Defined in: [HTTPRequest.ts:786](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L786)
 
 Short-hand for setting the accepted MIME types to ['*/*'] which means the API accepts any MIME type.
 
@@ -206,7 +206,7 @@ The current object instance.
 
 > **withBeforeFetchHook**(`hook`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:977](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L977)
+Defined in: [HTTPRequest.ts:1009](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L1009)
 
 Adds a [BeforeFetchHook](../type-aliases/BeforeFetchHook.md) for the request.
 
@@ -230,7 +230,7 @@ The updated request object.
 
 > **withCredentialsPolicy**(`config`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:579](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L579)
+Defined in: [HTTPRequest.ts:611](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L611)
 
 Sets the credentials policy for the HTTP request.
 
@@ -254,7 +254,7 @@ The updated HTTP request instance.
 
 > **withErrorInterceptors**(...`interceptors`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:678](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L678)
+Defined in: [HTTPRequest.ts:710](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L710)
 
 Adds error interceptors to the request configuration.
 
@@ -285,7 +285,7 @@ The updated request instance.
 
 > **withFormDataBody**(`composerCallBack`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:735](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L735)
+Defined in: [HTTPRequest.ts:767](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L767)
 
 Set the request body to a FormData object and allows customizing the form data before sending the request.
 
@@ -309,7 +309,7 @@ The updated request instance.
 
 > **withFormEncodedBody**(`data`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:656](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L656)
+Defined in: [HTTPRequest.ts:688](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L688)
 
 Sets the request body to a form encoded string.
 
@@ -333,7 +333,7 @@ The updated request instance.
 
 > **withHeader**(`name`, `value`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:887](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L887)
+Defined in: [HTTPRequest.ts:919](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L919)
 
 Sets a single header for the request.
 Header values can be literal values or a function that receives
@@ -367,7 +367,7 @@ The updated request instance.
 
 > **withHeaders**(`headers`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:867](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L867)
+Defined in: [HTTPRequest.ts:899](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L899)
 
 Sets the request headers for the request.
 Header values can be literal values or a function that receives
@@ -395,7 +395,7 @@ The updated request instance.
 
 > **withJSONBody**(`json`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:707](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L707)
+Defined in: [HTTPRequest.ts:739](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L739)
 
 Set the request body as a JSON object or string.
 
@@ -419,7 +419,7 @@ The updated request instance.
 
 > **withJSONMimeTypes**(...`mimeTypes`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:824](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L824)
+Defined in: [HTTPRequest.ts:856](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L856)
 
 Sets the MIME types that are considered JSON on top of the default
 patterns.
@@ -444,7 +444,7 @@ The updated request instance.
 
 > **withLogger**(`logger`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:567](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L567)
+Defined in: [HTTPRequest.ts:599](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L599)
 
 Sets an LoggerFacade compatible logger for the request.
 Normally the logger will be set by the factory.
@@ -469,7 +469,7 @@ The updated HTTP request instance.
 
 > **withLogLevel**(`level`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:851](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L851)
+Defined in: [HTTPRequest.ts:883](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L883)
 
 #### Parameters
 
@@ -492,7 +492,7 @@ The updated request instance.
 
 > **withMeta**(`param1`, `param2?`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:550](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L550)
+Defined in: [HTTPRequest.ts:582](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L582)
 
 Configures the request with metadata that can be inspected later.
 
@@ -522,7 +522,7 @@ The current object instance for method chaining.
 
 > **withNoCors**(): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:811](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L811)
+Defined in: [HTTPRequest.ts:843](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L843)
 
 Sets the CORS mode to 'no-cors' and returns the current object.
 
@@ -538,7 +538,7 @@ The current object.
 
 > **withProgressHandlers**(...`handlers`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:964](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L964)
+Defined in: [HTTPRequest.ts:996](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L996)
 
 Adds progress handlers for the request.
 
@@ -568,7 +568,7 @@ This is an optional feature (download-progress and upload-progress) that must be
 
 > **withQueryParam**(`name`, `value`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:800](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L800)
+Defined in: [HTTPRequest.ts:832](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L832)
 
 Adds a query parameter to the request.
 
@@ -601,7 +601,7 @@ The updated request instance.
 
 > **withQueryParams**(`params`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:784](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L784)
+Defined in: [HTTPRequest.ts:816](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L816)
 
 Adds multiple query parameters to the existing query parameters
 of the API configuration.
@@ -632,7 +632,7 @@ The updated request instance.
 
 > **withRequestInterceptors**(...`interceptors`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:695](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L695)
+Defined in: [HTTPRequest.ts:727](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L727)
 
 Adds a request interceptor to the request configuration.
 Interceptors are executed in the order they are added.
@@ -661,7 +661,7 @@ The updated request instance.
 
 > **withResponseBodyTransformers**(...`transformers`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:904](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L904)
+Defined in: [HTTPRequest.ts:936](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L936)
 
 Sets the response body transformer for the request. The provided function will be called
 after the request body is parsed.
@@ -690,7 +690,7 @@ The updated request object.
 
 > **withResponseInterceptors**(...`interceptors`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:929](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L929)
+Defined in: [HTTPRequest.ts:961](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L961)
 
 #### Parameters
 
@@ -714,7 +714,7 @@ The updated request instance.
 
 > **withTextMimeTypes**(...`mimeTypes`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:838](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L838)
+Defined in: [HTTPRequest.ts:870](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L870)
 
 Sets the MIME types that are considered text on top of the default
 patterns.
@@ -739,7 +739,7 @@ The updated request instance.
 
 > **withTimeout**(`timeout`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:915](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L915)
+Defined in: [HTTPRequest.ts:947](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L947)
 
 #### Parameters
 
@@ -761,7 +761,7 @@ The updated request instance.
 
 > **withURLParam**(`name`, `value`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:632](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L632)
+Defined in: [HTTPRequest.ts:664](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L664)
 
 Adds a URL parameter to the request configuration.
 
@@ -775,7 +775,7 @@ The name of the URL parameter.
 
 ##### value
 
-`string`
+[`URLParamValue`](../type-aliases/URLParamValue.md)
 
 The value of the URL parameter.
 
@@ -791,7 +791,7 @@ The updated request instance.
 
 > **withURLParams**(`params`): `HTTPRequest`
 
-Defined in: [HTTPRequest.ts:644](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/HTTPRequest.ts#L644)
+Defined in: [HTTPRequest.ts:676](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequest.ts#L676)
 
 Assigns multiple query params to the request configuration.
 
@@ -799,7 +799,7 @@ Assigns multiple query params to the request configuration.
 
 ##### params
 
-`Record`\<`string`, [`QueryParameterValue`](../type-aliases/QueryParameterValue.md)\>
+`Record`\<`string`, [`URLParamValue`](../type-aliases/URLParamValue.md)\>
 
 The URL parameters to assign.
 

@@ -8,7 +8,7 @@
 
 > **EndpointParams** = `object`
 
-Defined in: [types.ts:238](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L238)
+Defined in: [types.ts:258](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L258)
 
 Parameter object structure for endpoint functions.
 
@@ -32,7 +32,7 @@ Standard usage:
 
 > `optional` **bodyParams**: `Record`\<`string`, `any`\>
 
-Defined in: [types.ts:240](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L240)
+Defined in: [types.ts:260](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L260)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [types.ts:240](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > `optional` **pathParams**: `Record`\<`string`, `any`\>
 
-Defined in: [types.ts:239](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L239)
+Defined in: [types.ts:259](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L259)
 
 ***
 
@@ -48,4 +48,4 @@ Defined in: [types.ts:239](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > `optional` **queryParams**: `Record`\<`string`, `any`\>
 
-Defined in: [types.ts:241](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L241)
+Defined in: [types.ts:261](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L261)

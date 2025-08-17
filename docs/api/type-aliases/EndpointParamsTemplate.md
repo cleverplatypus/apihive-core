@@ -8,7 +8,7 @@
 
 > **EndpointParamsTemplate** = `object`
 
-Defined in: [types.ts:256](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L256)
+Defined in: [types.ts:276](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L276)
 
 Template type for endpoint parameters that provides IntelliSense.
 Use intersection with this type to get autocomplete for standard parameter properties.
@@ -29,7 +29,7 @@ type CreateUserParams = EndpointParamsTemplate & {
 
 > `optional` **bodyParams**: `any`
 
-Defined in: [types.ts:258](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L258)
+Defined in: [types.ts:278](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L278)
 
 ***
 
@@ -37,7 +37,7 @@ Defined in: [types.ts:258](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > `optional` **pathParams**: `any`
 
-Defined in: [types.ts:257](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L257)
+Defined in: [types.ts:277](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L277)
 
 ***
 
@@ -45,4 +45,4 @@ Defined in: [types.ts:257](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > `optional` **queryParams**: `any`
 
-Defined in: [types.ts:259](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L259)
+Defined in: [types.ts:279](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L279)

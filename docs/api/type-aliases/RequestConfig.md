@@ -8,7 +8,7 @@
 
 > **RequestConfig** = `object`
 
-Defined in: [types.ts:176](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L176)
+Defined in: [types.ts:196](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L196)
 
 Internal representation of a [HTTPRequest](../classes/HTTPRequest.md)'s configuration
 
@@ -18,7 +18,7 @@ Internal representation of a [HTTPRequest](../classes/HTTPRequest.md)'s configur
 
 > **acceptedMIMETypes**: `string`[]
 
-Defined in: [types.ts:195](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L195)
+Defined in: [types.ts:215](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L215)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [types.ts:195](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **body**: `any`
 
-Defined in: [types.ts:183](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L183)
+Defined in: [types.ts:203](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L203)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [types.ts:183](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **corsMode**: `RequestMode`
 
-Defined in: [types.ts:196](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L196)
+Defined in: [types.ts:216](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L216)
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: [types.ts:196](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **credentials**: `RequestCredentials`
 
-Defined in: [types.ts:193](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L193)
+Defined in: [types.ts:213](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L213)
 
 ***
 
@@ -50,7 +50,7 @@ Defined in: [types.ts:193](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **errorInterceptors**: [`ErrorInterceptor`](ErrorInterceptor.md)[]
 
-Defined in: [types.ts:200](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L200)
+Defined in: [types.ts:220](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L220)
 
 ***
 
@@ -58,7 +58,7 @@ Defined in: [types.ts:200](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **expectedResponseFormat**: [`ExpectedResponseFormat`](ExpectedResponseFormat.md)
 
-Defined in: [types.ts:194](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L194)
+Defined in: [types.ts:214](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L214)
 
 ***
 
@@ -66,7 +66,7 @@ Defined in: [types.ts:194](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > `readonly` `optional` **finalURL**: `string`
 
-Defined in: [types.ts:180](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L180)
+Defined in: [types.ts:200](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L200)
 
 ***
 
@@ -74,7 +74,7 @@ Defined in: [types.ts:180](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **headers**: `Record`\<`string`, [`HeaderValue`](HeaderValue.md)\>
 
-Defined in: [types.ts:182](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L182)
+Defined in: [types.ts:202](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L202)
 
 ***
 
@@ -82,7 +82,7 @@ Defined in: [types.ts:182](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **ignoreResponseBody**: `boolean`
 
-Defined in: [types.ts:192](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L192)
+Defined in: [types.ts:212](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L212)
 
 ***
 
@@ -90,7 +90,7 @@ Defined in: [types.ts:192](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **jsonMimeTypes**: `string`[]
 
-Defined in: [types.ts:184](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L184)
+Defined in: [types.ts:204](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L204)
 
 ***
 
@@ -98,7 +98,7 @@ Defined in: [types.ts:184](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **logLevel**: `LogLevel`
 
-Defined in: [types.ts:188](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L188)
+Defined in: [types.ts:208](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L208)
 
 ***
 
@@ -106,7 +106,7 @@ Defined in: [types.ts:188](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **meta**: `Record`\<`string`, `any`\>
 
-Defined in: [types.ts:189](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L189)
+Defined in: [types.ts:209](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L209)
 
 ***
 
@@ -114,7 +114,7 @@ Defined in: [types.ts:189](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **method**: [`HTTPMethod`](HTTPMethod.md)
 
-Defined in: [types.ts:187](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L187)
+Defined in: [types.ts:207](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L207)
 
 ***
 
@@ -122,7 +122,7 @@ Defined in: [types.ts:187](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > `optional` **progressHandlers**: [`ProgressHandlerConfig`](ProgressHandlerConfig.md)[]
 
-Defined in: [types.ts:201](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L201)
+Defined in: [types.ts:221](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L221)
 
 ***
 
@@ -130,7 +130,7 @@ Defined in: [types.ts:201](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **queryParams**: `Record`\<`string`, [`QueryParameterValue`](QueryParameterValue.md)\>
 
-Defined in: [types.ts:190](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L190)
+Defined in: [types.ts:210](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L210)
 
 ***
 
@@ -138,7 +138,7 @@ Defined in: [types.ts:190](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **requestInterceptors**: [`RequestInterceptor`](RequestInterceptor.md)[]
 
-Defined in: [types.ts:198](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L198)
+Defined in: [types.ts:218](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L218)
 
 ***
 
@@ -146,7 +146,7 @@ Defined in: [types.ts:198](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **responseBodyTransformers**: [`ResponseBodyTransformer`](ResponseBodyTransformer.md)[]
 
-Defined in: [types.ts:191](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L191)
+Defined in: [types.ts:211](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L211)
 
 ***
 
@@ -154,7 +154,7 @@ Defined in: [types.ts:191](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **responseInterceptors**: ([`ResponseInterceptor`](ResponseInterceptor.md) \| [`ResponseInterceptorWithOptions`](ResponseInterceptorWithOptions.md))[]
 
-Defined in: [types.ts:199](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L199)
+Defined in: [types.ts:219](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L219)
 
 ***
 
@@ -162,7 +162,7 @@ Defined in: [types.ts:199](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > `readonly` `optional` **templateURL**: `string`
 
-Defined in: [types.ts:181](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L181)
+Defined in: [types.ts:201](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L201)
 
 ***
 
@@ -170,7 +170,7 @@ Defined in: [types.ts:181](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **templateURLHistory**: `string`[]
 
-Defined in: [types.ts:178](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L178)
+Defined in: [types.ts:198](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L198)
 
 ***
 
@@ -178,7 +178,7 @@ Defined in: [types.ts:178](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **textMimeTypes**: `string`[]
 
-Defined in: [types.ts:185](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L185)
+Defined in: [types.ts:205](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L205)
 
 ***
 
@@ -186,7 +186,7 @@ Defined in: [types.ts:185](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **timeout**: `number`
 
-Defined in: [types.ts:186](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L186)
+Defined in: [types.ts:206](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L206)
 
 ***
 
@@ -194,4 +194,4 @@ Defined in: [types.ts:186](https://github.com/cleverplatypus/apihive-core/blob/9
 
 > **urlParams**: [`URLParams`](URLParams.md)
 
-Defined in: [types.ts:197](https://github.com/cleverplatypus/apihive-core/blob/917ef8bbf07171bc9393193650ebef9dbc655327/src/types.ts#L197)
+Defined in: [types.ts:217](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L217)
