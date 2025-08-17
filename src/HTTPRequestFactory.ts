@@ -13,10 +13,12 @@ import {
   HeaderValue,
   HTTPMethod,
   ProgressHandlerConfig,
+  QueryParameterValue,
   RequestConfig,
   RequestConfigBuilder,
   RequestInterceptor,
-  ResponseBodyTransformer
+  ResponseBodyTransformer,
+  URLParamValue
 } from './types.js';
 
 /**
@@ -188,6 +190,69 @@ export class HTTPRequestFactory {
     return this;
   }
 
+  /**
+   * Adds multiple query parameters to the factory defaults.
+   *
+   * Parameter values can be literal values or a function that receives
+   * the request config as an argument and returns a value.
+   *
+   * See [Query Parameters](https://cleverplatypus.github.io/apihive-core/guide/query-parameters.html)
+   *
+   * @param params The query parameters
+   * to be added.
+   * @returns The updated request instance.
+   */
+  withQueryParams(params : Record<string, QueryParameterValue>) {
+    this.requestDefaults.push((request: HTTPRequest) => request.withQueryParams(params));
+    return this;
+  }
+
+  /**
+   * Adds a query parameter to the factory defaults.
+   *
+   * The value can be a literal value or a function that receives
+   * the request config as an argument and returns a value.
+   *
+   * @param name The name of the query parameter.
+   * @param value The value of the query parameter.
+   * @returns The updated request instance.
+   */
+  withQueryParam(key: string, value: QueryParameterValue) {
+    this.requestDefaults.push((request: HTTPRequest) => request.withQueryParam(key, value));
+    return this;
+  }
+
+  /**
+   * Adds multiple URL parameters to the factory defaults.
+   * 
+   * URL parameters are used to replace {{placeholders}} in the URL template.
+   * Their value can be a literal value or a function that receives
+   * the request config as an argument and returns a value.
+   *
+   * @param params The URL parameters to add.
+   * @returns The updated request instance.
+   */
+  withURLParams(params: Record<string, URLParamValue>) {
+    this.requestDefaults.push((request: HTTPRequest) => request.withURLParams(params));
+    return this;
+  }
+
+  /**
+   * Adds a URL parameter to the factory defaults.
+   * 
+   * URL parameters are used to replace {{placeholders}} in the URL template.
+   * Their value can be a literal value or a function that receives
+   * the request config as an argument and returns a value.
+   *
+   * @param name The name of the URL parameter.
+   * @param value The value of the URL parameter.
+   * @returns The updated request instance.
+   */
+  withURLParam(key: string, value: URLParamValue) {
+    this.requestDefaults.push((request: HTTPRequest) => request.withURLParam(key, value));
+    return this;
+  }
+  
   /**
    * Sets the default [value] for the header [key] to the factory defaults.
    *
