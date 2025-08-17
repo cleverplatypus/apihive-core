@@ -18,6 +18,7 @@ import type {
   ResponseInterceptorControls,
   ResponseInterceptorWithOptions,
   URLParams,
+  URLParamValue,
   WrappedResponse
 } from './types.js';
 import { maybeFunction } from './utils.js';
@@ -218,6 +219,15 @@ export class HTTPRequest {
   }
   private setupBody() {
     if (!this.config.body) return;
+    if([
+      'GET',
+      'HEAD',
+      'DELETE',
+      'TRACE'
+    ].includes(this.config.method)) {
+      this.getLogger().warn('HTTPRequest.replaceBody', 'HEAD, DELETE, GET or TRACE requests do not have a body');
+    }
+
     this.fetchBody.body = this.config.body();
   }
 
@@ -293,10 +303,9 @@ export class HTTPRequest {
   
       this.setupTimeout();
   
-      this.setupBody();
-  
+      
       this.wasUsed = true;
-        
+      
       // Create controls for interceptors
       const requestInterceptorControls = this.createRequestInterceptorControls();
       
@@ -308,6 +317,7 @@ export class HTTPRequest {
         interceptorResponse = await this.applyResponseTransformers(interceptorResponse);
         return this.wrapErrors ? { response: interceptorResponse } : interceptorResponse;
       }
+      this.setupBody();
       this.finalizedURL = this.composeURL();
 
       logger.debug('HttpRequestFactory : Fetch url to be called', this.finalizedURL);
@@ -514,9 +524,7 @@ export class HTTPRequest {
       },
 
       replaceURL: (newURL: string, newURLParams?: URLParams) => {
-        if (this.isFinalized()) {
-          throw new Error('URL has already been finalised; replaceURL() is not allowed');
-        }
+        this.throwIfFinalized();
         // Push new template (absolute or relative), placeholders allowed
         this.config.templateURLHistory.push(newURL);
         if (newURLParams) {
@@ -539,7 +547,15 @@ export class HTTPRequest {
           this.finalizedURL = this.composeURL();
         }
         return this.finalizedURL!;
-      }
+      },
+
+      replaceBody: (replacer: (body: any) => any) => {
+        this.throwIfFinalized();
+        const oldBody = this.config.body();
+        this.config.body = () => {
+          return replacer(oldBody);
+        }
+      },
     };
   }
 
@@ -645,7 +661,7 @@ export class HTTPRequest {
    * @param value The value of the URL parameter.
    * @returns The updated request instance.
    */
-  withURLParam(name: string, value: string) {
+  withURLParam(name: string, value: URLParamValue) {
     this.throwIfFinalized();
     this.config.urlParams[name] = value;
     return this;
@@ -657,7 +673,7 @@ export class HTTPRequest {
    * @param params The URL parameters to assign.
    * @returns The updated request instance.
    */
-  withURLParams(params: Record<string, QueryParameterValue>) {
+  withURLParams(params: Record<string, URLParamValue>) {
     this.throwIfFinalized();
     Object.assign(this.config.urlParams, params);
     return this;

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import HTTPError from "../src/HTTPError.ts";
-import { HTTPRequestFactory, RequestConfig } from "../src/index.ts";
+import { APIConfig, HTTPRequestFactory, RequestConfig } from "../src/index.ts";
 import requestHashFeature from "../src/features/request-hash.ts";
 
 const factory = new HTTPRequestFactory().withLogLevel("debug");
@@ -385,6 +385,28 @@ describe("http_tests", () => {
   });
 });
 
+it("test_request_interceptor_replace_body", async () => {
+  const factory = new HTTPRequestFactory().withLogLevel("debug");
+  const url = "https://httpbin.org/post";
+  const request = factory.createPOSTRequest(url);
+  request
+  .withRequestInterceptors(async (_, { replaceBody }) => {
+    replaceBody(body => {
+      return JSON.stringify({
+        message : 'wrapped body',
+        content: JSON.parse(body)
+      });
+    });
+  })
+  .withJSONBody({
+    foo: 'bar'
+  })
+  ;
+  const response = await request.execute();
+  expect(response).toBeDefined();
+  expect(response?.json?.content?.foo).toEqual('bar');
+});
+
 it("test_request_interceptor_from_api_config", async () => {
   const fixtures = {
     users: () => {
@@ -434,3 +456,57 @@ it("test_request_interceptor_from_api_config", async () => {
   expect(result.type).toBeUndefined();
 });
 
+it("test_request_interceptor_from_api_config", async () => {
+  const myAPI : APIConfig = {
+    name: 'default',
+    baseURL: 'https://httpbin.org',
+    endpoints : {
+      'register-user': {
+        target: '/post',
+        method: 'POST',
+        meta : {
+          useCaptcha: true
+        }
+      },
+      'some-other-endpoint': {
+        target: '/post',
+        method: 'POST'
+      }
+    }
+  };
+  const getCurrentCaptchaToken = () => 'asd5f4as6df6a5sd6fa4s6sd456sda';
+
+  const factory = new HTTPRequestFactory()
+    .withAPIConfig(myAPI)
+    .when((config) => config.meta.useCaptcha)
+      .withRequestInterceptors((_, { replaceBody }) => {
+        replaceBody(body => {
+         const out = JSON.stringify(Object.assign({}, JSON.parse(body), { 
+              captcha: getCurrentCaptchaToken() //your function to retrieve the local captcha token 
+          }));
+          return out;
+        });
+      })
+  
+  const response = await factory
+    .createAPIRequest('register-user')
+    .withJSONBody({
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      password: 'password'
+    })
+    .execute(); //captcha will be injected
+
+  const response2 = await factory
+    .createAPIRequest('some-other-endpoint')
+    .withJSONBody({
+      foo: 'bar'
+    })
+    .execute(); //captcha will be injected
+
+  expect(response?.json).toHaveProperty('captcha', getCurrentCaptchaToken());
+  expect(response?.json).toHaveProperty('captcha', getCurrentCaptchaToken());
+  expect(response2?.json).not.toHaveProperty('captcha');
+  expect(response2?.json).toHaveProperty('foo', 'bar');
+
+});

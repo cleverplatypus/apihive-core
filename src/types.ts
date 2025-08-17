@@ -98,6 +98,14 @@ export interface RequestInterceptorControls {
    * Get the provisional URL before finalisation
    */
   getProvisionalURL(): string;
+
+  /**
+   * Sets a last-minute body replacer
+   * 
+   * @remarks When a request has a JSON body, the received body is always a string.<br>This means the body would generally need parsing.
+   * @param replacer The function to be called with the current body as argument and returning the new body
+   */
+  replaceBody(replacer: (body: any) => any): void;
 }
 
 export type WrappedResponse = {
@@ -105,9 +113,11 @@ export type WrappedResponse = {
   error?: HTTPError;
 }
 
+export type URLParamValue = LiteralValue | MaybeGetterFunction<LiteralValue, [config: RequestConfig]>;
+
 export type URLParams = Record<
   string,
-  LiteralValue | MaybeGetterFunction<LiteralValue, [config: RequestConfig]>
+  URLParamValue
 >;
 
 /**
