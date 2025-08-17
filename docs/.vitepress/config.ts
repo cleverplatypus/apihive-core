@@ -11,6 +11,7 @@ export default withMermaid(
   defineConfig({
     title: 'APIHive',
     description: 'HTTP APIs made easy',
+    ignoreDeadLinks: true,
     appearance: false,
     vite: {
       server: {
