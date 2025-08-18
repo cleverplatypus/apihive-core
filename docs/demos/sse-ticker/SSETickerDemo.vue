@@ -64,26 +64,24 @@ controller.onDisconnect((message) => {
 .sse-ticker-demo {
   table {
     width: 100% !important;
-    table-layout: fixed; // ensures columns respect set widths and enables truncation reliably
+    table-layout: fixed;
 
-    // Let the first column take remaining space and allow it to shrink below content size
     th:first-child,
     td:first-child {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      max-width: 0; // critical for truncation in fixed-layout tables
-      min-width: 0; // allow shrinking below content size in some browsers
+      max-width: 0;
+      min-width: 0;
     }
 
-    // Keep the timestamp column compact so the first column can take remaining space
     th:nth-child(2),
     td:nth-child(2) {
-      width: 1% !important; // minimal width; content length won't expand table
+      width: 1% !important;
       white-space: nowrap;
     }
   }
-  // Helper for reliable truncation inside table cells
+
   .truncate {
     display: block;
     max-width: 100%;
