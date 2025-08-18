@@ -11,6 +11,7 @@ import type {
   QueryParameterValue,
   RequestConfig,
   RequestConfigBuilder,
+  RequestHashOptions,
   RequestInterceptor,
   RequestInterceptorControls,
   ResponseBodyTransformer,
@@ -514,9 +515,9 @@ export class HTTPRequest {
         }
       },
 
-      getHash: () => {
+      getHash: (options?: RequestHashOptions) => {
         this.factoryMethods.requireFeature('request-hash');
-        return this.getHash();
+        return this.getHash(options);
       }
     };
   }
@@ -527,7 +528,8 @@ export class HTTPRequest {
    */
   private createResponseControls(): ResponseInterceptorControls {
     return {
-      getLogger: () => this.getLogger()
+      getLogger: () => this.getLogger(),
+      getHash: (options?: RequestHashOptions) => this.getHash(options)
     };
   }
 
@@ -940,9 +942,9 @@ export class HTTPRequest {
    *
    * @returns {string} A unique hash-based identifier for this request
    */
-  getHash(): string {
+  getHash(options?: RequestHashOptions): string {
     this.factoryMethods.requireFeature('request-hash');
-    return this.featureDelegates.getHash(this);
+    return this.featureDelegates.getHash(this, options);
   }
 
   // ---------------------------------------------------------------------------

@@ -1,7 +1,9 @@
 import { HTTPRequest } from "../HTTPRequest.js";
 import { HTTPRequestFactory } from "../HTTPRequestFactory.js";
-import { Feature, FeatureRequestDelegates } from "../types.js";
+import { Feature, FeatureRequestDelegates, RequestHashOptions } from "../types.js";
 import { maybeFunction } from "../utils.js";
+
+type HashType = 'withBody' | 'withoutBody';
 
 function isTypedArray(v: any): boolean {
   return ArrayBuffer.isView(v) && !(v instanceof DataView);
@@ -86,14 +88,15 @@ function simpleHash(str: string): string {
 
 class RequestHashFeature implements Feature {
   readonly name = "request-hash" as const;
-  private hashes = new WeakMap<HTTPRequest, string>();
+  private hashes = new WeakMap<HTTPRequest, Partial<Record<HashType, string>>>();
 
   getDelegates(_factory?: HTTPRequestFactory) {
     return {
       request: {
-        getHash: (request: HTTPRequest) => {
-          if (this.hashes.has(request)) {
-            return this.hashes.get(request)!;
+        getHash: (request: HTTPRequest, options : RequestHashOptions = { includeBody: false }) => {
+          const hashType : HashType = options.includeBody ? 'withBody' : 'withoutBody';
+          if (this.hashes.has(request) && this.hashes.get(request)![hashType]) {
+            return this.hashes.get(request)![hashType];
           }
           const config = request.getReadOnlyConfig();
           const contentType = config.headers["content-type"];
@@ -125,7 +128,7 @@ class RequestHashFeature implements Feature {
           };
   
           // Include request body if present
-          if (bodyContent) {
+          if (bodyContent && options.includeBody) {
             // Handle FormData specially for consistent hashing
             if (bodyContent instanceof FormData) {
               const entries = Array.from(bodyContent.entries()).sort();
@@ -169,7 +172,8 @@ class RequestHashFeature implements Feature {
   
           // Generate a hash of the key string for efficiency and cache it
           const hash = simpleHash(keyString);
-          this.hashes.set(request, hash);
+          const existing = this.hashes.get(request) || {};
+          this.hashes.set(request, { ...existing, [hashType]: hash });
           return hash;
         }
       } as FeatureRequestDelegates

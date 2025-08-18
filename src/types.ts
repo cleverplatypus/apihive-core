@@ -41,7 +41,7 @@ export interface Feature {
 }
 
 export type FeatureRequestDelegates = {
-  getHash?: (request: HTTPRequest) => string;
+  getHash?: (request: HTTPRequest, options? : RequestHashOptions) => string;
   handleUploadProgress?: (info: ProgressInfo) => void;
   handleDownloadProgress?: (info : {
     response: Response, 
@@ -153,7 +153,7 @@ export interface RequestInterceptorControls {
    * 
    * @remarks This is an optional feature (request-hash) that must be enabled on the factory.
    */
-  getHash(): string;
+  getHash(options?: RequestHashOptions): string;
 }
 
 export type WrappedResponse = {
@@ -178,6 +178,7 @@ export type URLParams = Record<
  */
 export interface ResponseInterceptorControls {
   getLogger(): LoggerFacade;
+  getHash(options?: RequestHashOptions): string;
 }
 
 
@@ -193,6 +194,10 @@ export type HTTPMethod =
 export type SSEMethod = 'SSE';
 
 export type LiteralValue = string | number | boolean;
+
+export type RequestHashOptions = {
+    includeBody?: boolean;
+};
 
 export type RequestInterceptor = (
   config: RequestConfig,
@@ -230,7 +235,7 @@ export type ResponseInterceptor = (
   response: Response,
   config: RequestConfig,
   controls: ResponseInterceptorControls
-) => Promise<any>;
+) => Promise<any | undefined>;
 
 // Registration object for response interceptors that can control
 // whether returned values should skip response body transformers.

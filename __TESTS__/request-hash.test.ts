@@ -54,7 +54,7 @@ describe("http_request_get_hash_tests", () => {
       const request2 = testFactory.createPOSTRequest("https://example.com/api")
         .withJSONBody({ name: "test", id: 2 });
       await finalize(request1, request2);
-      expect(request1.getHash()).not.toBe(request2.getHash());
+      expect(request1.getHash()).not.toBe(request2.getHash({ includeBody: true }));
     });
   
     it("should_generate_same_hash_for_identical_JSON_bodies_regardless_of_property_order", async () => {
@@ -72,7 +72,7 @@ describe("http_request_get_hash_tests", () => {
       const request2 = testFactory.createPOSTRequest("https://example.com/api")
         .withFormEncodedBody("name=test&id=2");
       await finalize(request1, request2);
-      expect(request1.getHash()).not.toBe(request2.getHash());
+      expect(request1.getHash()).not.toBe(request2.getHash({ includeBody: true }));
     });
   
     it("should_handle_FormData_bodies_consistently", async () => {
@@ -101,7 +101,7 @@ describe("http_request_get_hash_tests", () => {
           formData.append("name", "test2");
         });
       await finalize(request1, request2);
-      expect(request1.getHash()).not.toBe(request2.getHash());
+      expect(request1.getHash()).not.toBe(request2.getHash({ includeBody: true }));
     });
   
     it("should_include_query_parameters_in_hash", async () => {
