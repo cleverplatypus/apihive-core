@@ -29,13 +29,14 @@ export type FeatureName =
   | 'download-progress'
   | 'request-hash'
   | 'upload-progress'
+  | 'sse-request'
 
 export interface Feature {
   name : FeatureName;
   apply?(target: HTTPRequestFactory, commands: FeatureCommands): void;
   getDelegates?(factory: HTTPRequestFactory): {
     request? : FeatureRequestDelegates,
-    factory? : FeatureFactoryDelegates
+    factory? : Partial<FeatureFactoryDelegates>
   }
 }
 
@@ -51,10 +52,50 @@ export type FeatureRequestDelegates = {
 }
 
 export type FeatureFactoryDelegates = {
-  withAdapter: (adapter: Adapter, options?: AdapterOptions) => Promise<HTTPRequestFactory>;
-  detachAdapter: (adapterName: string) => Promise<HTTPRequestFactory>;
-  getAttachedAdapters: () => string[];
-  hasAdapter: (name: string) => boolean;
+  withAdapter?: (adapter: Adapter, options?: AdapterOptions) => Promise<HTTPRequestFactory>;
+  detachAdapter?: (adapterName: string) => Promise<HTTPRequestFactory>;
+  getAttachedAdapters?: () => string[];
+  hasAdapter?: (name: string) => boolean;
+  /**
+   * Factory-level delegate to construct an SSERequest instance.
+   * Implementations should instantiate the request with factory defaults applied.
+   */
+  createSSERequest?: (url: string, args: {
+    defaultConfigBuilders: Array<(request: any) => void>;
+    wrapErrors: boolean;
+  }) => any;
+}
+
+export interface SSERequestType {
+  // Builders
+  withSSEListeners(...listeners: SSEListener[]): this;
+  withURLParam(name: string, value: URLParamValue): this;
+  withURLParams(params: Record<string, URLParamValue>): this;
+  withQueryParam(name: string, value: QueryParameterValue): this;
+  withQueryParams(params: Record<string, QueryParameterValue>): this;
+  withTimeout(ms: number): this;
+  withLogLevel(level: LogLevel): this;
+  withMeta(keyOrObj: string | Record<string, any>, val?: any): this;
+  withResponseBodyTransformers(...t: ResponseBodyTransformer[]): this;
+  /**
+   * Register request interceptors. The concrete interceptor signature is internal to the SSE implementation,
+   * so this method accepts any functions for typing convenience.
+   */
+  withRequestInterceptors(...i: any[]): this;
+  /** Add error interceptors; used in tests to assert abort behavior via interceptors. */
+  withErrorInterceptors(...i: Array<(error: HTTPError) => boolean | Promise<boolean>>): this;
+
+  /** Access to the underlying AbortController used for the connection. */
+  readonly abortController: AbortController;
+
+  /** Provide a custom logger implementation. */
+  withLogger(logger: LoggerFacade): this;
+
+  /**
+   * Establish the SSE connection. The promise resolves only after the connection is opened.
+   * When the factory is configured with wrapped errors and the initial connect fails, it resolves to `{ error }` instead.
+   */
+  execute(): Promise<SSESubscription | WrappedSSEResponse>;
 }
 
 export type FeatureCommands = {
@@ -113,6 +154,11 @@ export type WrappedResponse = {
   error?: HTTPError;
 }
 
+export type WrappedSSEResponse = {
+  subscription?: SSESubscription;
+  error?: HTTPError;
+}
+
 export type URLParamValue = LiteralValue | MaybeGetterFunction<LiteralValue, [config: RequestConfig]>;
 
 export type URLParams = Record<
@@ -136,6 +182,8 @@ export type HTTPMethod =
   | "PATCH"
   | "HEAD"
   | "TRACE";
+
+export type SSEMethod = 'SSE';
 
 export type LiteralValue = string | number | boolean;
 
@@ -189,6 +237,18 @@ export type ResponseInterceptorWithOptions = {
   skipTransformersOnReturn?: boolean;
 };
 
+export type SSEListener = (data : any) => void;
+
+/**
+ * Handle returned by SSE requests upon execute().
+ */
+export type SSESubscription = {
+  /** Closes the underlying SSE connection. */
+  close: () => void;
+  /** Optional accessor to the underlying EventSource for advanced scenarios. */
+  getEventSource?: () => EventSource | null;
+};
+
 export type ErrorInterceptor = (error: HTTPError) => boolean | Promise<boolean>;
 /**
  * Internal representation of a {@link HTTPRequest}'s configuration
@@ -232,7 +292,7 @@ export type Endpoint = {
   /**
    * The HTTP method of the endpoint. Defaults to `GET`
    */
-  method?: HTTPMethod;
+  method?: HTTPMethod | SSEMethod;
   /**
    * Any metadata that should be attached to the endpoint's requests for later reference
    */

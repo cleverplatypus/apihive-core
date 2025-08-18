@@ -24,6 +24,8 @@ import type {
 import { maybeFunction } from './utils.js';
 
 import { DEFAULT_JSON_MIME_TYPES, DEFAULT_TEXT_MIME_TYPES } from './constants.js';
+import { applyResponseBodyTransformers } from './response-utils.js';
+import { composeURL as composeURLUtil } from './url-utils.js';
 
 type SharedFactoryMethods = {
   requireFeature: (featureName: FeatureName) => void;
@@ -97,23 +99,6 @@ export class HTTPRequest {
 
     return await response.blob();
   };
-
-  /**
-   * Applies configured response body transformers to a value, in order.
-   * If there are no transformers, returns the value untouched.
-   * 
-   * @internal
-   * @param value the value to transform
-   * @returns a promise that resolves to the transformed value
-   */
-  private async applyResponseTransformers(value: any): Promise<any> {
-    if (!this.config.responseBodyTransformers?.length) return value;
-    let transformed = value;
-    for (const transformer of this.config.responseBodyTransformers) {
-      transformed = await transformer(transformed, this.getReadOnlyConfig());
-    }
-    return transformed;
-  }
 
   constructor({ 
       url,
@@ -233,39 +218,12 @@ export class HTTPRequest {
 
   // Build the final URL without mutating template or params
   private composeURL(): string {
-    // Start from the tip of the template history
-    const tip = this.config.templateURLHistory[this.config.templateURLHistory.length - 1];
-    let urlString = tip;
-
-    // Apply path params
-    for (const key in this.config.urlParams) {
-      const raw = this.config.urlParams[key];
-      const value = typeof raw === 'function' ? (raw as Function)(this.getReadOnlyConfig()) : raw;
-      urlString = urlString.replace(`{{${key}}}`, String(value));
-    }
-
-    // Apply query params
-    const url = new URL(urlString, urlString.startsWith('http') ? undefined : 'http://dummy');
-    // If template was relative, toString() would include dummy origin; strip it later.
-    for (const k of Object.keys(this.config.queryParams)) {
-      const qp = this.config.queryParams[k];
-      const evaluated = maybeFunction<any>(qp, this.getReadOnlyConfig());
-      if (evaluated == null) continue;
-      if (Array.isArray(evaluated)) {
-        for (const v of evaluated) url.searchParams.append(k, String(v));
-      } else {
-        url.searchParams.append(k, String(evaluated));
-      }
-    }
-
-    const composed = url.toString();
-    if (!urlString.startsWith('http')) {
-      // Remove dummy origin
-      const i = composed.indexOf('://');
-      const slash = composed.indexOf('/', i + 3);
-      return composed.slice(slash);
-    }
-    return composed;
+    return composeURLUtil({
+      templateURLHistory: this.config.templateURLHistory,
+      urlParams: this.config.urlParams,
+      queryParams: this.config.queryParams,
+      config: this.config
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -296,7 +254,6 @@ export class HTTPRequest {
     this.fetchBody!.signal = this._abortController.signal;
 
     
-    
     let response;
     try {
       this.setupHeaders();
@@ -314,7 +271,7 @@ export class HTTPRequest {
         if (interceptorResponse === undefined) {
           continue;
         }
-        interceptorResponse = await this.applyResponseTransformers(interceptorResponse);
+        interceptorResponse = await applyResponseBodyTransformers(interceptorResponse, this.getReadOnlyConfig());
         return this.wrapErrors ? { response: interceptorResponse } : interceptorResponse;
       }
       this.setupBody();
@@ -352,7 +309,7 @@ export class HTTPRequest {
           let interceptorResponse = await interceptor(response, this.getReadOnlyConfig(), responseControls);
           if (interceptorResponse !== undefined) {
             if (!skipTransformersOnReturn) {
-              interceptorResponse = await this.applyResponseTransformers(interceptorResponse);
+              interceptorResponse = await applyResponseBodyTransformers(interceptorResponse, this.getReadOnlyConfig());
             }
             return this.wrapErrors ? { response: interceptorResponse } : interceptorResponse;
           }
@@ -363,7 +320,7 @@ export class HTTPRequest {
           return this.wrapErrors ? { response: undefined } : undefined;
         }
         let body = await this.readResponse(response);
-        body = await this.applyResponseTransformers(body);
+        body = await applyResponseBodyTransformers(body, this.getReadOnlyConfig());
         return this.wrapErrors ? { response: body } : body;
       } else {
         const error = new HTTPError(response.status, response.statusText, await this.readResponse(response));
@@ -601,6 +558,8 @@ export class HTTPRequest {
     this.logger = logger;
     return this;
   }
+
+  // Note: SSE-specific builders have been moved to SSERequest
 
   /**
    * Sets the credentials policy for the HTTP request.
