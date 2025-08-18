@@ -100,8 +100,6 @@ export class HTTPRequest {
     return await response.blob();
   };
 
-  // Use shared transformer utility from response-utils
-
   constructor({ 
       url,
       method,
@@ -224,8 +222,7 @@ export class HTTPRequest {
       templateURLHistory: this.config.templateURLHistory,
       urlParams: this.config.urlParams,
       queryParams: this.config.queryParams,
-      evaluateParam: (v) => typeof v === 'function' ? (v as Function)(this.getReadOnlyConfig()) : v,
-      evaluateQuery: (v) => maybeFunction<any>(v, this.getReadOnlyConfig())
+      config: this.config
     });
   }
 
