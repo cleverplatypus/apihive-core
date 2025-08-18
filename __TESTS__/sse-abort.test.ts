@@ -47,14 +47,10 @@ describe('sse_abort_behavior', () => {
         return false;
       });
 
-    const sub = await sse.execute();
-
-    // Wait enough time for timeout to fire and abort listeners to run
-    await new Promise((r) => setTimeout(r, 30));
-
-    // Cleanup
-    sub.close();
-
+    // execute should reject on initial connect timeout
+    await expect(sse.execute()).rejects.toBeInstanceOf(Error);
+    // Give the microtasks a moment to run interceptors
+    await new Promise((r) => setTimeout(r, 10));
     expect(intercepted).toBe(true);
   });
 });

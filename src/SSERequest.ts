@@ -2,19 +2,16 @@ import { type LoggerFacade, type LogLevel, ConsoleLogger } from '@apihive/logger
 import HTTPError from './HTTPError.js';
 import { applyResponseBodyTransformers } from './response-utils.js';
 import type {
-    FeatureName,
-    QueryParameterValue,
-    ResponseBodyTransformer,
-    SSEListener,
-    SSERequestType,
-    SSESubscription,
-    URLParamValue
+  QueryParameterValue,
+  ResponseBodyTransformer,
+  SSEListener,
+  SSERequestType,
+  SSESubscription,
+  URLParamValue,
+  WrappedResponse,
+  WrappedSSEResponse
 } from './types.js';
 import { composeURL as composeURLUtil } from './url-utils.js';
-
-type SharedFactoryMethods = {
-  requireFeature: (featureName: FeatureName) => void;
-};
 
 export type SSERequestConfig = {
   templateURLHistory: string[];
@@ -243,7 +240,7 @@ export class SSERequest implements SSERequestType {
     };
   }
 
-  async execute(): Promise<SSESubscription> {
+  async execute(): Promise<SSESubscription | WrappedSSEResponse> {
     if (this.wasUsed) throw new Error('SSERequest cannot be reused. Create a new one each time.');
     this.wasUsed = true;
 
@@ -293,7 +290,8 @@ export class SSERequest implements SSERequestType {
     );
 
     // Create native EventSource directly (headers cannot be customized except Accept)
-    let es: EventSource | null = null;
+    let eventSource: EventSource | null = null;
+    let opened = false;
     let readyResolve!: () => void;
     let readyReject!: (err: any) => void;
     const ready = new Promise<void>((resolve, reject) => {
@@ -302,7 +300,7 @@ export class SSERequest implements SSERequestType {
     });
 
     try {
-      es = new (globalThis as any).EventSource(this.finalizedURL);
+      eventSource = new (globalThis as any).EventSource(this.finalizedURL);
     } catch (e) {
       // Initial construction failure
       clearTimeout(this.timeoutId);
@@ -317,6 +315,7 @@ export class SSERequest implements SSERequestType {
     }
 
     const handleOpen = () => {
+      opened = true;
       readyResolve();
     };
 
@@ -330,14 +329,14 @@ export class SSERequest implements SSERequestType {
       } catch {}
     };
 
-    const handleMessage = async (ev: MessageEvent) => {
-      const raw = ev.data;
+    const handleMessage = async (event: MessageEvent) => {
+      const raw = event.data;
       let data: any = raw;
       if (typeof raw === 'string') {
         try {
           data = JSON.parse(raw);
         } catch {
-          /* leave as string */
+          this.getLogger().debug('SSERequest : received non-JSON data', raw);
         }
       }
       try {
@@ -356,39 +355,55 @@ export class SSERequest implements SSERequestType {
       }
     };
 
-    es.addEventListener('open', handleOpen as any);
-    es.addEventListener('error', handleError as any);
-    es.addEventListener('message', handleMessage as any);
+    eventSource.addEventListener('open', handleOpen as any);
+    eventSource.addEventListener('error', handleError as any);
+    eventSource.addEventListener('message', handleMessage as any);
 
-    // Wire abort -> close
+    // Wire abort -> close and reject initial open if not yet opened
     const abortListener = () => {
       try {
-        es?.close();
+        if (!opened) {
+          const err = new HTTPError(-1, 'Request aborted');
+          try { readyReject(err); } catch {}
+        }
+        eventSource?.close();
       } catch {}
     };
     this._abortController.signal.addEventListener('abort', abortListener, { once: true });
 
-    // Clear the timeout once the stream opens
-    ready
-      .then(() => {
-        clearTimeout(this.timeoutId);
-      })
-      .catch(() => {
-        clearTimeout(this.timeoutId);
-      });
+    // Wait for initial open before returning
+    try {
+      await ready;
+    } catch (err: any) {
+      clearTimeout(this.timeoutId);
+      // Ensure listeners are removed
+      try {
+        this._abortController.signal.removeEventListener('abort', abortListener as any);
+        eventSource?.removeEventListener('open', handleOpen as any);
+        eventSource?.removeEventListener('error', handleError as any);
+        eventSource?.removeEventListener('message', handleMessage as any);
+        eventSource?.close();
+      } catch {}
+      eventSource = null;
+      return this.wrapErrors ? ({ error: err } as any) : Promise.reject(err);
+    }
 
-    return {
-      ready,
+    clearTimeout(this.timeoutId);
+
+    const subscription: SSESubscription = {
       close: () => {
         try {
           this._abortController.signal.removeEventListener('abort', abortListener as any);
-          es?.removeEventListener('open', handleOpen as any);
-          es?.removeEventListener('error', handleError as any);
-          es?.removeEventListener('message', handleMessage as any);
-          es?.close();
+          eventSource?.removeEventListener('open', handleOpen as any);
+          eventSource?.removeEventListener('error', handleError as any);
+          eventSource?.removeEventListener('message', handleMessage as any);
+          eventSource?.close();
         } catch {}
-        es = null;
-      }
-    } as SSESubscription;
+        eventSource = null;
+      },
+      getEventSource: () => eventSource
+    } as any;
+
+    return this.wrapErrors ? ({ subscription } as any) : subscription;
   }
 }

@@ -91,8 +91,11 @@ export interface SSERequestType {
   /** Provide a custom logger implementation. */
   withLogger(logger: LoggerFacade): this;
 
-  /** Establish the SSE connection; returns a subscription handle, or a wrapped error object when configured. */
-  execute(): Promise<any>;
+  /**
+   * Establish the SSE connection. The promise resolves only after the connection is opened.
+   * When the factory is configured with wrapped errors and the initial connect fails, it resolves to `{ error }` instead.
+   */
+  execute(): Promise<SSESubscription | WrappedSSEResponse>;
 }
 
 export type FeatureCommands = {
@@ -148,6 +151,11 @@ export interface RequestInterceptorControls {
 
 export type WrappedResponse = {
   response?: any;
+  error?: HTTPError;
+}
+
+export type WrappedSSEResponse = {
+  subscription?: SSESubscription;
   error?: HTTPError;
 }
 
@@ -237,8 +245,8 @@ export type SSEListener = (data : any) => void;
 export type SSESubscription = {
   /** Closes the underlying SSE connection. */
   close: () => void;
-  /** Resolves when the connection is opened. Rejects on initial connect failure. */
-  ready: Promise<void>;
+  /** Optional accessor to the underlying EventSource for advanced scenarios. */
+  getEventSource?: () => EventSource | null;
 };
 
 export type ErrorInterceptor = (error: HTTPError) => boolean | Promise<boolean>;

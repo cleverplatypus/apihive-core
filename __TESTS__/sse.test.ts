@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import sseFeature from '../src/features/sse-request.ts';
-import { HTTPRequestFactory } from '../src/index.ts';
+import { HTTPRequestFactory, WrappedSSEResponse } from '../src/index.ts';
 
 let hasEventSource = typeof (globalThis as any).EventSource === 'function';
 async function ensureEventSource() {
@@ -37,16 +37,46 @@ describe('sse_feature', () => {
       })
       .execute();
 
-    await sub.ready;
-
     await enough;
 
-    sub.close();
+    // sub should be an SSESubscription here
+    if ('error' in (sub as any)) throw new Error('Unexpected error result during live test');
+    (sub as any).close();
 
     expect(received.length).toBeGreaterThanOrEqual(2);
     for (const ev of received) {
       expect(ev).toHaveProperty('timestamp');
       expect(ev).toHaveProperty('title');
     }
+  });
+
+  it('wraps_error_for_failed_connection', async () => {
+    if (!hasEventSource) return;
+
+    const factory = new HTTPRequestFactory()
+      .use(sseFeature)
+      .withWrappedResponseError();
+    const result = await factory
+      .createSSERequest(`https://dummy.com`)
+      .execute();
+
+    expect('error' in (result as any)).toBe(true);
+    expect((result as any).error).toBeDefined();
+  });
+
+  it('wraps_response_when_connection_is_established', async () => {
+    if (!hasEventSource) return;
+
+    const factory = new HTTPRequestFactory()
+      .use(sseFeature)
+      .withWrappedResponseError();
+    const { subscription, error} = await factory
+      .createSSERequest(`https://stream.wikimedia.org/v2/stream/recentchange`)
+      .execute() as WrappedSSEResponse;
+    
+    
+    expect(subscription).toBeDefined();
+    expect(error).toBeUndefined();
+    expect(subscription).toHaveProperty('close');
   });
 });

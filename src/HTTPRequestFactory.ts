@@ -606,7 +606,7 @@ export class HTTPRequestFactory {
       defaultConfigBuilders: this.sseRequestDefaults,
       wrapErrors: this.wrapErrors
     });
-    return request as unknown as SSERequestType;
+    return request;
   }
 
   // ---------------------------------------------------------------------------
