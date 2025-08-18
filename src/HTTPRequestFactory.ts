@@ -45,7 +45,7 @@ export class HTTPRequestFactory {
   // ---------------------------------------------------------------------------
   private requestDefaults: RequestConfigBuilder[] = [];
   // SSE-only defaults applied to SSERequest instances (typed as any to avoid runtime import)
-  private sseRequestDefaults: Array<(request: any) => void> = [];
+  private sseRequestDefaults: Array<(request: SSERequestType) => void> = [];
   private apiConfigs: { [key: string]: APIConfig } = {};
   private _logger: LoggerFacade = new ConsoleLogger();
   private _logLevel: LogLevel = 'error';
