@@ -648,7 +648,7 @@ export class HTTPRequestFactory {
    */
   // Overloads:
   createAPIRequest(...args: [string, string] | [string]): HTTPRequest;
-  createAPIRequest<_T extends SSERequestType>(...args: [string, string] | [string]): SSERequestType;
+  createAPIRequest(...args: [string, string] | [string]): SSERequestType;
   createAPIRequest(
     ...args: [string, string] | [string]
   ): HTTPRequest | SSERequestType {

@@ -250,22 +250,9 @@ export class SSERequest implements SSERequestType {
       const ret = await i({ ...this.config }, controls);
       if (ret !== undefined) {
         // Return as immediate value to listeners after transformers
-        const data = await applyResponseBodyTransformers(ret, {
-          responseBodyTransformers: this.config.responseBodyTransformers
-        } as any);
-        const fanout = () =>
-          this.config.sseListeners.forEach((l) => {
-            try {
-              l(data);
-            } catch (e) {
-              this.getLogger().warn('SSE listener error', e as any);
-            }
-          });
-        // no connection; return a dummy subscription resolved immediately
-        return { ready: Promise.resolve().then(fanout as any), close() {} } as SSESubscription;
+        return {  close() {} } as SSESubscription;
       }
     }
-
     this.finalizedURL = this.composeURL();
 
     // Timeout applies to connection attempt only

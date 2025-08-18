@@ -70,7 +70,7 @@ describe('sse_feature', () => {
     const factory = new HTTPRequestFactory()
       .use(sseFeature)
       .withWrappedResponseError();
-    const { subscription, error} = await factory
+    const { subscription, error } = await factory
       .createSSERequest(`https://stream.wikimedia.org/v2/stream/recentchange`)
       .execute() as WrappedSSEResponse;
     
