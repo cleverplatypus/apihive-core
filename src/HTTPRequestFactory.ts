@@ -18,6 +18,7 @@ import {
   RequestConfigBuilder,
   RequestInterceptor,
   ResponseBodyTransformer,
+  ResponseInterceptor,
   SSEListener,
   SSERequestType,
   URLParamValue
@@ -55,6 +56,7 @@ export class HTTPRequestFactory {
    * @internal Keeps a mapping of defaults for interceptors to allow removing them
    */
   private interceptorsToRequestDefaults: Map<RequestInterceptor, RequestConfigBuilder> = new Map();
+  private interceptorsToResponseDefaults: Map<ResponseInterceptor, RequestConfigBuilder> = new Map();
   private requestDelegates: FeatureRequestDelegates = {} as FeatureRequestDelegates;
   private factoryDelegates: FeatureFactoryDelegates = {} as FeatureFactoryDelegates;
   private wrapErrors: boolean = false;
@@ -336,6 +338,24 @@ export class HTTPRequestFactory {
   }
 
   /**
+   * Adds the provided response interceptors to the factory defaults.
+   * See [Response Interceptors](http://cleverplatypus.github.io/apihive-core/guide/response-interceptors.html) in the documentation
+   *
+   * @param interceptors the interceptors to add
+   * @returns the factory instance
+   */
+  withResponseInterceptors(...interceptors: ResponseInterceptor[]) {
+    for (const interceptor of interceptors) {
+      const defaultFn = function (request: HTTPRequest) {
+        request.withResponseInterceptors(interceptor);
+      };
+      this.requestDefaults.push(defaultFn);
+      this.interceptorsToResponseDefaults.set(interceptor, defaultFn);
+    }
+    return this;
+  }
+
+  /**
    * Adds the provided error interceptors to the factory defaults.
    * See [Error Interceptors](http://cleverplatypus.github.io/apihive-core/guide/error-interceptors.html) in the documentation
    *
@@ -492,6 +512,18 @@ export class HTTPRequestFactory {
   deleteRequestInterceptor(interceptor: RequestInterceptor) {
     const requestDefaults = this.interceptorsToRequestDefaults.get(interceptor);
     this.requestDefaults.splice(this.requestDefaults.indexOf(requestDefaults as any), 1);
+  }
+
+  /**
+   * Removes a response interceptor from the factory defaults.
+   *
+   * See [Response Interceptors](http://cleverplatypus.github.io/apihive-core/guide/response-interceptors.html) in the docs.
+   *
+   * @param interceptor the interceptor to remove
+   */
+  deleteResponseInterceptor(interceptor: ResponseInterceptor) {
+    const responseDefaults = this.interceptorsToResponseDefaults.get(interceptor);
+    this.requestDefaults.splice(this.requestDefaults.indexOf(responseDefaults as any), 1);
   }
 
   // ---------------------------------------------------------------------------
