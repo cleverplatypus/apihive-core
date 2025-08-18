@@ -287,7 +287,11 @@ export class SSERequest implements SSERequestType {
     });
 
     try {
-      eventSource = new (globalThis as any).EventSource(this.finalizedURL);
+      const EventSourceCtor = (globalThis as { EventSource?: typeof EventSource }).EventSource;
+      if (!EventSourceCtor) {
+        throw new Error('EventSource is not available in the current environment');
+      }
+      eventSource = new EventSourceCtor(this.finalizedURL);
     } catch (e) {
       // Initial construction failure
       clearTimeout(this.timeoutId);
