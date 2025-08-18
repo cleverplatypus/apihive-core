@@ -41,7 +41,7 @@ const config = reactive({
   }
   &.error {
     background-color: var(--pico-color-red-450);
-    color: var(--pico-color-white);
+    color: white;
   }
   &.warn {
     background-color: var(--pico-color-pumpkin-200);

@@ -13,7 +13,7 @@ import FileUploadProgress from './FileUploadProgress.vue'
 
 </ClientOnly>
 
-### Code
+## Code
 
 ::: code-group
 

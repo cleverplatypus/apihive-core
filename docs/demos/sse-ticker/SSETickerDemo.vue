@@ -1,19 +1,28 @@
 <template>
   <article class="sse-ticker-demo pico demo">
-    <button
-      v-if="['disconnected', 'connecting'].includes(model.connectionState)"
-      :disabled="model.connectionState === 'connecting'"
-      :aria-busy="model.connectionState === 'connecting'"
-      @click="controller.start"
-    >
-      Start Receiving Updates
-    </button>
-    <button v-if="model.connectionState === 'connected'" class="secondary" @click="controller.stop">Stop</button>
-    <hr />
-    <div>Status: {{ model.connectionState }}</div>
+    <div class="top-bar">
+      <div class="buttons">
+        <button
+          v-if="
+            ['disconnected', 'connecting'].includes(model.connectionState) ||
+            (!model.updates.length && model.connectionState === 'connected')
+          "
+          :disabled="model.connectionState !== 'disconnected'"
+          :aria-busy="
+            model.connectionState === 'connecting' || (model.connectionState === 'connected' && !model.updates.length)
+          "
+          @click="controller.start"
+        >
+          Start Receiving Updates
+        </button>
+        <button v-if="model.connectionState === 'connected'" class="secondary" @click="controller.stop">Stop</button>
+      </div>
+      <button class="outline secondary" disabled>Status: {{ model.connectionState }}</button>
+    </div>
+    <InlineMessage ref="inlineMessage" />
     <template v-if="model.updates.length">
       <hr />
-      <table class="striped">
+      <table v-if="model.updates.length" class="striped">
         <colgroup>
           <col style="width: auto" />
           <col style="width: 1%" />
@@ -38,8 +47,16 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import controller from './sse-ticker-controller';
 import model from './sse-ticker-model';
+import InlineMessage from '../common/InlineMessage.vue';
+
+const inlineMessage = ref<typeof InlineMessage | null>(null);
+
+controller.onDisconnect((message) => {
+  inlineMessage.value!.show('error', message);
+});
 </script>
 
 <style lang="scss" scoped>
@@ -74,9 +91,14 @@ import model from './sse-ticker-model';
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .flex-row {
+  .top-bar {
     display: flex;
+    align-items: center;
     justify-content: space-between;
+    .buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
   }
 }
 </style>
