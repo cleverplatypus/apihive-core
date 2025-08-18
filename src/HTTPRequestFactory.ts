@@ -168,6 +168,7 @@ export class HTTPRequestFactory {
   withLogger(logger: LoggerFacade) {
     this._logger = logger;
     this.requestDefaults.push((request: HTTPRequest) => request.withLogger(logger));
+    this.sseRequestDefaults.push((request: SSERequestType) => request.withLogger(logger));
     return this;
   }
 
@@ -180,6 +181,7 @@ export class HTTPRequestFactory {
   withLogLevel(level: LogLevel) {
     this._logLevel = level;
     this.requestDefaults.push((request: HTTPRequest) => request.withLogLevel(level));
+    this.sseRequestDefaults.push((request: SSERequestType) => request.withLogLevel(level));
     return this;
   }
 
@@ -208,6 +210,7 @@ export class HTTPRequestFactory {
    */
   withQueryParams(params : Record<string, QueryParameterValue>) {
     this.requestDefaults.push((request: HTTPRequest) => request.withQueryParams(params));
+    this.sseRequestDefaults.push((request: SSERequestType) => request.withQueryParams(params));
     return this;
   }
 
@@ -223,6 +226,7 @@ export class HTTPRequestFactory {
    */
   withQueryParam(key: string, value: QueryParameterValue) {
     this.requestDefaults.push((request: HTTPRequest) => request.withQueryParam(key, value));
+    this.sseRequestDefaults.push((request: SSERequestType) => request.withQueryParam(key, value));
     return this;
   }
 
@@ -238,6 +242,7 @@ export class HTTPRequestFactory {
    */
   withURLParams(params: Record<string, URLParamValue>) {
     this.requestDefaults.push((request: HTTPRequest) => request.withURLParams(params));
+    this.sseRequestDefaults.push((request: SSERequestType) => request.withURLParams(params));
     return this;
   }
 
@@ -254,6 +259,7 @@ export class HTTPRequestFactory {
    */
   withURLParam(key: string, value: URLParamValue) {
     this.requestDefaults.push((request: HTTPRequest) => request.withURLParam(key, value));
+    this.sseRequestDefaults.push((request: SSERequestType) => request.withURLParam(key, value));
     return this;
   }
   
@@ -338,6 +344,9 @@ export class HTTPRequestFactory {
    */
   withErrorInterceptors(...interceptors: ErrorInterceptor[]) {
     this.requestDefaults.push((request) => {
+      request.withErrorInterceptors(...interceptors);
+    });
+    this.sseRequestDefaults.push((request) => {
       request.withErrorInterceptors(...interceptors);
     });
     return this;
