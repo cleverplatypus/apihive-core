@@ -62,7 +62,7 @@ export type FeatureFactoryDelegates = {
    */
   createSSERequest?: (url: string, args: {
     defaultConfigBuilders: Array<(request: any) => void>;
-    factoryMethods: { requireFeature: (featureName: FeatureName) => void };
+    wrapErrors: boolean;
   }) => any;
 }
 
@@ -91,8 +91,8 @@ export interface SSERequestType {
   /** Provide a custom logger implementation. */
   withLogger(logger: LoggerFacade): this;
 
-  /** Establish the SSE connection and return a subscription handle. */
-  execute(): Promise<SSESubscription>;
+  /** Establish the SSE connection; returns a subscription handle, or a wrapped error object when configured. */
+  execute(): Promise<any>;
 }
 
 export type FeatureCommands = {

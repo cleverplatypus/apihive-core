@@ -604,7 +604,7 @@ export class HTTPRequestFactory {
     // Delegate creation to feature for tree-shaking
     const request = this.factoryDelegates.createSSERequest(computedURL, {
       defaultConfigBuilders: this.sseRequestDefaults,
-      factoryMethods: { requireFeature: this.requireFeature.bind(this) }
+      wrapErrors: this.wrapErrors
     });
     return request as unknown as SSERequestType;
   }
