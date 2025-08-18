@@ -18,6 +18,8 @@ import {
   RequestConfigBuilder,
   RequestInterceptor,
   ResponseBodyTransformer,
+  SSEListener,
+  SSERequestType,
   URLParamValue
 } from './types.js';
 
@@ -42,6 +44,8 @@ export class HTTPRequestFactory {
   // Private fields
   // ---------------------------------------------------------------------------
   private requestDefaults: RequestConfigBuilder[] = [];
+  // SSE-only defaults applied to SSERequest instances (typed as any to avoid runtime import)
+  private sseRequestDefaults: Array<(request: any) => void> = [];
   private apiConfigs: { [key: string]: APIConfig } = {};
   private _logger: LoggerFacade = new ConsoleLogger();
   private _logLevel: LogLevel = 'error';
@@ -594,6 +598,17 @@ export class HTTPRequestFactory {
     return this.createRequest(url, 'TRACE');
   }
 
+  createSSERequest(url: string): SSERequestType {
+    this.requireFeature('sse-request');
+    const computedURL = this.computeURL(url);
+    // Delegate creation to feature for tree-shaking
+    const request = this.factoryDelegates.createSSERequest(computedURL, {
+      defaultConfigBuilders: this.sseRequestDefaults,
+      factoryMethods: { requireFeature: this.requireFeature.bind(this) }
+    });
+    return request as unknown as SSERequestType;
+  }
+
   // ---------------------------------------------------------------------------
   // API config and API request helpers
   // ---------------------------------------------------------------------------
@@ -631,7 +646,12 @@ export class HTTPRequestFactory {
    * @param args Either [apiName, endpointName] or [endpointName] for default API.
    * @returns The created request.
    */
-  createAPIRequest(...args: [string, string] | [string]): HTTPRequest {
+  // Overloads:
+  createAPIRequest(...args: [string, string] | [string]): HTTPRequest;
+  createAPIRequest<_T extends SSERequestType>(...args: [string, string] | [string]): SSERequestType;
+  createAPIRequest(
+    ...args: [string, string] | [string]
+  ): HTTPRequest | SSERequestType {
     const [apiName, endpointName] = args.length === 1 ? ['default', args[0]] : args;
     this._logger.withMinimumLevel(this._logLevel).trace('Creating API request', apiName, endpointName);
     const api = this.apiConfigs[apiName];
@@ -642,13 +662,18 @@ export class HTTPRequestFactory {
 
     const url = this.getEndpointURL(endpoint, api);
     const meta = this.constructMeta(api, endpointName, endpoint);
-    const request = this.createRequest(url, endpoint.method)
+    if (endpoint.method === 'SSE') {
+      const sseReq = this.createSSERequest(url)
+        .withMeta(meta);
+      return sseReq as SSERequestType;
+    }
+    const request = this.createRequest(url, (endpoint.method as HTTPMethod) || 'GET')
       .withMeta(meta)
       .withHeaders(api.headers || {});
 
     this.applyAPIDefaultsToRequest(api, request);
 
-    return request;
+    return request as HTTPRequest;
   }
 
   // ---------------------------------------------------------------------------
@@ -668,6 +693,12 @@ export class HTTPRequestFactory {
   async withAdapter(adapter: Adapter, options?: AdapterOptions): Promise<HTTPRequestFactory> {
     this.requireFeature('adapters');
     return this.factoryDelegates.withAdapter(adapter, options);
+  }
+
+  withSSEListeners(...listeners:SSEListener[]) {
+    this.requireFeature('sse-request');
+    this.sseRequestDefaults.push((request: any) => request.withSSEListeners(...listeners));
+    return this;
   }
 
   /**
