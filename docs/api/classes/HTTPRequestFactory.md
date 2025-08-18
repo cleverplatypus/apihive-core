@@ -1030,9 +1030,9 @@ The updated request instance.
 
 ***
 
-### withWrappeResponseError()
+### withWrappedResponseError()
 
-> **withWrappeResponseError**(): `HTTPRequestFactory`
+> **withWrappedResponseError**(): `HTTPRequestFactory`
 
 Defined in: [HTTPRequestFactory.ts:153](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L153)
 
@@ -1050,7 +1050,7 @@ the factory instance
 
 ```typescript
 const factory = new HTTPRequestFactory()
-  .withWrappeResponseError();
+  .withWrappedResponseError();
 
 const {response, error} = await factory
   .createGETRequest('https://httpbin.org/json')

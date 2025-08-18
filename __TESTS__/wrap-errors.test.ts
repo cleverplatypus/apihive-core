@@ -5,7 +5,7 @@ import { HTTPRequestFactory } from '../src/index.ts';
 describe('wrap_errors_behavior', () => {
   it('wrap_successful_request_returns_response_property', async () => {
     const factory = new HTTPRequestFactory()
-        .withWrappeResponseError();
+        .withWrappedResponseError();
 
     const {response, error} = await factory
       .createGETRequest('https://httpbin.org/json')
@@ -18,7 +18,7 @@ describe('wrap_errors_behavior', () => {
 
   it('wrap_http_error_returns_error_property', async () => {
     const factory = new HTTPRequestFactory()
-        .withWrappeResponseError();
+        .withWrappedResponseError();
 
     const {response, error} = await factory
       .createGETRequest('https://httpbin.org/status/404')
@@ -32,7 +32,7 @@ describe('wrap_errors_behavior', () => {
 
   it('wrap_abort_error_returns_error_code_minus_one_and_calls_error_interceptor', async () => {
     const factory = new HTTPRequestFactory()
-        .withWrappeResponseError();
+        .withWrappedResponseError();
 
     const calls: boolean[] = [];
 
@@ -58,7 +58,7 @@ describe('wrap_errors_behavior', () => {
 
   it('wrap_request_interceptor_early_return', async () => {
     const factory = new HTTPRequestFactory()
-        .withWrappeResponseError();
+        .withWrappedResponseError();
 
     const {response, error} = await factory
       .withRequestInterceptors(async () => {
@@ -75,7 +75,7 @@ describe('wrap_errors_behavior', () => {
 
   it('wrap_response_interceptor_early_return', async () => {
     const factory = new HTTPRequestFactory()
-        .withWrappeResponseError();
+        .withWrappedResponseError();
 
     const {response, error} = await factory
       .createGETRequest('https://httpbin.org/anything')
