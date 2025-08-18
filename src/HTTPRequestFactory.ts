@@ -697,7 +697,7 @@ export class HTTPRequestFactory {
 
   withSSEListeners(...listeners:SSEListener[]) {
     this.requireFeature('sse-request');
-    this.sseRequestDefaults.push((request: any) => request.withSSEListeners(...listeners));
+    this.sseRequestDefaults.push((request: SSERequestType) => request.withSSEListeners(...listeners));
     return this;
   }
 
