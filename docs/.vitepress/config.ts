@@ -42,7 +42,7 @@ export default withMermaid(
             { text: 'API Invocation', link: '/guide/api-invocation' },
             { text: 'API Configuration', link: '/guide/api-configuration' },
             { text: 'Progress Handlers', link: '/guide/progress-handlers' },
-            { text: 'Features', link: '/guide/features' },
+            { text: 'Server Side Events 🧪', link: '/guide/server-side-events' },
             { text: 'Request Interceptors', link: '/guide/request-interceptors' },
             { text: 'Response Interceptors', link: '/guide/response-interceptors' },
             { text: 'Response Body Transformers', link: '/guide/response-body-transformers' },
