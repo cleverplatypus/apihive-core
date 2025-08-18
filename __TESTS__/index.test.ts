@@ -1,7 +1,6 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { describe, expect, it } from "vitest";
 import HTTPError from "../src/HTTPError.ts";
 import { APIConfig, HTTPRequestFactory, RequestConfig } from "../src/index.ts";
-import requestHashFeature from "../src/features/request-hash.ts";
 
 const factory = new HTTPRequestFactory().withLogLevel("debug");
 
@@ -9,8 +8,8 @@ factory
   .withAPIConfig({
     name: "simple-api",
     baseURL: "https://httpbin.org",
-    responseBodyTransformers: (body, request) => {
-      if (request.meta?.api?.endpointName === "get-products") {
+    responseBodyTransformers: (body, config) => {
+      if (config.meta?.api?.endpointName === "get-products") {
         body.json.data = Object.keys(body.json.data).map((key) => ({
           id: key,
           ...body.data[key],

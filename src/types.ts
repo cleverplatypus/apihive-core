@@ -472,6 +472,6 @@ export type APIConfig<TApiConfig extends BaseAPIInterface = DefaultAPIConfig> =
         }
       ? { [P in Extract<K, string>]: Endpoint }
       : { [endpointName: string]: Endpoint };
-
+    SSEListeners?: SSEListener | SSEListener[];
     progressHandlers?: ProgressHandlerConfig | ProgressHandlerConfig[];
   };

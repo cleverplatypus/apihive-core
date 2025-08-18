@@ -8,7 +8,6 @@ import type {
   SSERequestType,
   SSESubscription,
   URLParamValue,
-  WrappedResponse,
   WrappedSSEResponse
 } from './types.js';
 import { composeURL as composeURLUtil } from './url-utils.js';

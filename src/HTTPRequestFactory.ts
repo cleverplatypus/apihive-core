@@ -632,6 +632,30 @@ export class HTTPRequestFactory {
     return this;
   }
 
+  private computeAPIRequestCommons(...args: [string, string] | [string]) {
+    const [apiName, endpointName] = args.length === 1 ? ['default', args[0]] : args;
+    this._logger.withMinimumLevel(this._logLevel).trace('Creating API request', apiName, endpointName);
+    const api = this.apiConfigs[apiName];
+    const endpoint: Endpoint = api?.endpoints[endpointName];
+    if (!endpoint) {
+      throw new Error(`Endpoint ${endpointName} not found in API ${apiName}`);
+    }
+
+    const url = this.getEndpointURL(endpoint, api);
+    const meta = this.constructMeta(api, endpointName, endpoint);
+    return { url, meta, api, endpoint };
+  }
+
+  createSSEAPIRequest(...args: [string, string] | [string]): SSERequestType {
+    this.requireFeature('sse-request');
+    const { url, meta, api } = this.computeAPIRequestCommons(... args);
+    const sseReq = this.createSSERequest(url)
+    .withMeta(meta);
+    
+    this.applyAPIDefaultsToRequest(api, sseReq);
+    return sseReq as SSERequestType;
+  }
+
   /**
    * Creates a {@link HTTPRequest} with configuration based on the given {@link APIConfig}'s name and endpoint name.
    * If invoked with one argument (endpoint name), it will use the default API.
@@ -646,27 +670,10 @@ export class HTTPRequestFactory {
    * @param args Either [apiName, endpointName] or [endpointName] for default API.
    * @returns The created request.
    */
-  // Overloads:
-  createAPIRequest(...args: [string, string] | [string]): HTTPRequest;
-  createAPIRequest(...args: [string, string] | [string]): SSERequestType;
   createAPIRequest(
     ...args: [string, string] | [string]
-  ): HTTPRequest | SSERequestType {
-    const [apiName, endpointName] = args.length === 1 ? ['default', args[0]] : args;
-    this._logger.withMinimumLevel(this._logLevel).trace('Creating API request', apiName, endpointName);
-    const api = this.apiConfigs[apiName];
-    const endpoint: Endpoint = api?.endpoints[endpointName];
-    if (!endpoint) {
-      throw new Error(`Endpoint ${endpointName} not found in API ${apiName}`);
-    }
-
-    const url = this.getEndpointURL(endpoint, api);
-    const meta = this.constructMeta(api, endpointName, endpoint);
-    if (endpoint.method === 'SSE') {
-      const sseReq = this.createSSERequest(url)
-        .withMeta(meta);
-      return sseReq as SSERequestType;
-    }
+  ): HTTPRequest {
+    const { url, meta, api, endpoint } = this.computeAPIRequestCommons(...args);
     const request = this.createRequest(url, (endpoint.method as HTTPMethod) || 'GET')
       .withMeta(meta)
       .withHeaders(api.headers || {});
@@ -760,20 +767,22 @@ export class HTTPRequestFactory {
   /**
    * @internal
    */
-  private applyAPIDefaultsToRequest(api: APIConfig, request: HTTPRequest): void {
-    const apiArrayProps: ReadonlyArray<keyof APIConfig> = [
+  private applyAPIDefaultsToRequest(api: APIConfig, request: HTTPRequest | SSERequestType): void {
+    const apiArrayProps: ReadonlyArray<keyof APIConfig | 'SSEListeners'> = [
       'responseBodyTransformers',
       'requestInterceptors',
       'responseInterceptors',
       'errorInterceptors',
-      'progressHandlers'
+      'progressHandlers',
+      'SSEListeners'
     ] as const;
 
     for (const key of apiArrayProps) {
       const value = (api as any)[key];
       if (!value) continue;
       const arr = Array.isArray(value) ? value : [value];
-      const method = ('with' + key.charAt(0).toUpperCase() + key.slice(1)) as keyof HTTPRequest;
+      const method = ('with' + key.charAt(0).toUpperCase() + key.slice(1));
+      if(!request[method]) continue; //some methods are not in common
       (request as any)[method](...arr);
     }
   }
