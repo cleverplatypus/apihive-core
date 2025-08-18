@@ -1,9 +1,12 @@
+import { SSERequestConfig } from "./SSERequest.js";
+import { RequestConfig } from "./types.js";
+import { maybeFunction } from "./utils.js";
+
 type ComposeURLArgs = {
   templateURLHistory: string[],
   urlParams: Record<string, any>,
   queryParams: Record<string, any>,
-  evaluateParam: (v: any) => any,
-  evaluateQuery: (v: any) => any
+  config: RequestConfig | SSERequestConfig
 }
 
 /**
@@ -15,8 +18,7 @@ export function composeURL({
   templateURLHistory,
   urlParams,
   queryParams,
-  evaluateParam,
-  evaluateQuery
+  config
 } : ComposeURLArgs): string {
   const tip = templateURLHistory[templateURLHistory.length - 1];
   let urlString = tip;
@@ -24,7 +26,7 @@ export function composeURL({
   // Path params replacement
   for (const key in urlParams) {
     const raw = urlParams[key];
-    const value = evaluateParam(raw);
+    const value = maybeFunction<any>(raw, config as any);
     urlString = urlString.replace(`{{${key}}}`, String(value));
   }
 
@@ -34,7 +36,7 @@ export function composeURL({
   // Query params (supports arrays and functions)
   for (const k of Object.keys(queryParams)) {
     const qp = queryParams[k];
-    const evaluated = evaluateQuery(qp);
+    const evaluated = maybeFunction<any>(qp, config as any);
     if (evaluated == null) continue;
     if (Array.isArray(evaluated)) {
       for (const v of evaluated) url.searchParams.append(k, String(v));

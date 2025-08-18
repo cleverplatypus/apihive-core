@@ -695,6 +695,15 @@ export class HTTPRequestFactory {
     return this.factoryDelegates.withAdapter(adapter, options);
   }
 
+  /**
+   * Adds the provided SSE listeners to the factory defaults.
+   * They're only applied to SSERequest objects.
+   *
+   * See [SSE Listeners](http://cleverplatypus.github.io/apihive-core/guide/sse-listeners.html) in the docs.
+   *
+   * @param listeners the listeners to add
+   * @returns the factory instance
+   */
   withSSEListeners(...listeners:SSEListener[]) {
     this.requireFeature('sse-request');
     this.sseRequestDefaults.push((request: SSERequestType) => request.withSSEListeners(...listeners));

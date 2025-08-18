@@ -1,16 +1,15 @@
 import { type LoggerFacade, type LogLevel, ConsoleLogger } from '@apihive/logger-facade';
 import HTTPError from './HTTPError.js';
-import type {
-  FeatureName,
-  QueryParameterValue,
-  ResponseBodyTransformer,
-  SSEListener,
-  SSERequestType,
-  SSESubscription,
-  URLParamValue,
-} from './types.js';
-import { maybeFunction } from './utils.js';
 import { applyResponseBodyTransformers } from './response-utils.js';
+import type {
+    FeatureName,
+    QueryParameterValue,
+    ResponseBodyTransformer,
+    SSEListener,
+    SSERequestType,
+    SSESubscription,
+    URLParamValue
+} from './types.js';
 import { composeURL as composeURLUtil } from './url-utils.js';
 
 type SharedFactoryMethods = {
@@ -66,57 +65,181 @@ export class SSERequest implements SSERequestType {
       meta: {},
       responseBodyTransformers: [],
       sseListeners: [],
-      errorInterceptors: [],
+      errorInterceptors: []
     };
     this.factoryMethods = args.factoryMethods;
     args.defaultConfigBuilders?.forEach((fn) => fn(this));
   }
 
   // Builders
-  withSSEListeners(...listeners: SSEListener[]) { this.config.sseListeners.push(...listeners); return this; }
-  withURLParam(name: string, value: URLParamValue) { this.config.urlParams[name] = value; return this; }
-  withURLParams(params: Record<string, URLParamValue>) { Object.assign(this.config.urlParams, params); return this; }
-  withQueryParam(name: string, value: QueryParameterValue) { this.config.queryParams[name] = value; return this; }
-  withQueryParams(params: Record<string, QueryParameterValue>) { Object.assign(this.config.queryParams, params); return this; }
-  withTimeout(ms: number) { this.config.timeout = ms; return this; }
-  withLogLevel(level: LogLevel) { this.config.logLevel = level; return this; }
-  withMeta(keyOrObj: string | Record<string, any>, val?: any) {
-    if (typeof keyOrObj === 'string') this.config.meta[keyOrObj] = val; else Object.assign(this.config.meta, keyOrObj);
+  /**
+   * Adds the provided SSE listeners to the request.
+   *
+   * See [SSE Listeners](http://cleverplatypus.github.io/apihive-core/guide/sse-listeners.html) in the docs.
+   *
+   * @param listeners the listeners to add
+   * @returns the request instance
+   */
+  withSSEListeners(...listeners: SSEListener[]) {
+    this.config.sseListeners.push(...listeners);
     return this;
   }
-  withResponseBodyTransformers(...t: ResponseBodyTransformer[]) { this.config.responseBodyTransformers.push(...t); return this; }
-  withRequestInterceptors(...i: SSERequestInterceptor[]) { this.interceptors.push(...i); return this; }
-  withErrorInterceptors(...i: Array<(error: HTTPError) => boolean | Promise<boolean>>) { this.config.errorInterceptors.push(...i); return this; }
-  get abortController() { return this._abortController; }
+  /**
+   * Adds the provided URL parameters to the request.
+   *
+   * See [URL Parameters](http://cleverplatypus.github.io/apihive-core/guide/url-parameters.html) in the docs.
+   *
+   * @param listeners the listeners to add
+   * @returns the request instance
+   */
+  withURLParam(name: string, value: URLParamValue) {
+    this.config.urlParams[name] = value;
+    return this;
+  }
+  /**
+   * Adds the provided URL parameters to the request.
+   *
+   * See [URL Parameters](http://cleverplatypus.github.io/apihive-core/guide/url-parameters.html) in the docs.
+   *
+   * @param listeners the listeners to add
+   * @returns the request instance
+   */
+  withURLParams(params: Record<string, URLParamValue>) {
+    Object.assign(this.config.urlParams, params);
+    return this;
+  }
+  /**
+   * Adds the provided query parameters to the request.
+   *
+   * See [Query Parameters](http://cleverplatypus.github.io/apihive-core/guide/query-parameters.html) in the docs.
+   *
+   * @param listeners the listeners to add
+   * @returns the request instance
+   */
+  withQueryParam(name: string, value: QueryParameterValue) {
+    this.config.queryParams[name] = value;
+    return this;
+  }
+  /**
+   * Adds the provided query parameters to the request.
+   *
+   * See [Query Parameters](http://cleverplatypus.github.io/apihive-core/guide/query-parameters.html) in the docs.
+   *
+   * @param listeners the listeners to add
+   * @returns the request instance
+   */
+  withQueryParams(params: Record<string, QueryParameterValue>) {
+    Object.assign(this.config.queryParams, params);
+    return this;
+  }
+  /**
+   * Sets the timeout for the SSE connection attempt.
+   *
+   * See [Timeout](http://cleverplatypus.github.io/apihive-core/guide/timeout.html) in the docs.
+   *
+   * @param listeners the listeners to add
+   * @returns the request instance
+   */
+  withTimeout(ms: number) {
+    this.config.timeout = ms;
+    return this;
+  }
+  /**
+   * Sets the log level for the request.
+   * @param level the log level
+   * @returns the request instance
+   */
+  withLogLevel(level: LogLevel) {
+    this.config.logLevel = level;
+    return this;
+  }
+  /**
+   * Adds metadata to the request.
+   * @param keyOrObj the key or object of metadata
+   * @param val the value of metadata
+   * @returns the request instance
+   */
+  withMeta(keyOrObj: string | Record<string, any>, val?: any) {
+    if (typeof keyOrObj === 'string') this.config.meta[keyOrObj] = val;
+    else Object.assign(this.config.meta, keyOrObj);
+    return this;
+  }
+  /**
+   * Adds response body transformers to the request.
+   * @param transformers the transformers to add
+   * @returns the request instance
+   */
+  withResponseBodyTransformers(...transformers: ResponseBodyTransformer[]) {
+    this.config.responseBodyTransformers.push(...transformers);
+    return this;
+  }
+  /**
+   * Adds request interceptors to the request.
+   * @param interceptors the interceptors to add
+   * @returns the request instance
+   */
+  withRequestInterceptors(...interceptors: SSERequestInterceptor[]) {
+    this.interceptors.push(...interceptors);
+    return this;
+  }
+  /**
+   * Adds error interceptors to the request.
+   * @param interceptors the interceptors to add
+   * @returns the request instance
+   */
+  withErrorInterceptors(...interceptors: Array<(error: HTTPError) => boolean | Promise<boolean>>) {
+    this.config.errorInterceptors.push(...interceptors);
+    return this;
+  }
 
-  private isFinalized() { return typeof this.finalizedURL === 'string'; }
+  /**
+   * Returns the AbortController associated with the request.
+   * @returns the AbortController
+   */
+  get abortController() {
+    return this._abortController;
+  }
+
+  private isFinalized() {
+    return typeof this.finalizedURL === 'string';
+  }
 
   private composeURL(): string {
     return composeURLUtil({
       templateURLHistory: this.config.templateURLHistory,
       urlParams: this.config.urlParams,
       queryParams: this.config.queryParams,
-      evaluateParam: (v) => typeof v === 'function' ? (v as Function)(this.config) : v,
-      evaluateQuery: (v) => maybeFunction<any>(v, this.config as any)
+      config: this.config
     });
   }
 
-  private getLogger() { return this.logger.withMinimumLevel(this.config.logLevel); }
-  withLogger(logger: LoggerFacade) { this.logger = logger; return this; }
+  private getLogger() {
+    return this.logger.withMinimumLevel(this.config.logLevel);
+  }
+  withLogger(logger: LoggerFacade) {
+    this.logger = logger;
+    return this;
+  }
 
   private createInterceptorControls(): SSEInterceptorControls {
     return {
-      abort: () => { clearTimeout(this.timeoutId); this._abortController.abort(); },
+      abort: () => {
+        clearTimeout(this.timeoutId);
+        this._abortController.abort();
+      },
       replaceURL: (newURL: string, newURLParams?: Record<string, URLParamValue>) => {
         if (this.isFinalized()) throw new Error('The request has already been finalised.');
         this.config.templateURLHistory.push(newURL);
         if (newURLParams) this.config.urlParams = newURLParams;
       },
       getProvisionalURL: () => this.composeURL(),
-      finaliseURL: () => { if (!this.isFinalized()) this.finalizedURL = this.composeURL(); return this.finalizedURL!; },
+      finaliseURL: () => {
+        if (!this.isFinalized()) this.finalizedURL = this.composeURL();
+        return this.finalizedURL!;
+      },
       updateQueryParams: (params: Record<string, QueryParameterValue>) => {
         Object.assign(this.config.queryParams, params);
-      },
+      }
     };
   }
 
@@ -132,8 +255,17 @@ export class SSERequest implements SSERequestType {
       const ret = await i({ ...this.config }, controls);
       if (ret !== undefined) {
         // Return as immediate value to listeners after transformers
-        const data = await applyResponseBodyTransformers(ret, { responseBodyTransformers: this.config.responseBodyTransformers } as any);
-        const fanout = () => this.config.sseListeners.forEach((l) => { try { l(data); } catch (e) { this.getLogger().warn('SSE listener error', e as any); } });
+        const data = await applyResponseBodyTransformers(ret, {
+          responseBodyTransformers: this.config.responseBodyTransformers
+        } as any);
+        const fanout = () =>
+          this.config.sseListeners.forEach((l) => {
+            try {
+              l(data);
+            } catch (e) {
+              this.getLogger().warn('SSE listener error', e as any);
+            }
+          });
         // no connection; return a dummy subscription resolved immediately
         return { ready: Promise.resolve().then(fanout as any), close() {} } as SSESubscription;
       }
@@ -144,22 +276,32 @@ export class SSERequest implements SSERequestType {
     // Timeout applies to connection attempt only
     if (this.config.timeout) {
       this.timeoutId = setTimeout(() => {
-        this.getLogger().debug('SSERequest : connection timeout', `Timeout after ${this.config.timeout} ms`);
+        this.getLogger()
+          .debug('SSERequest : connection timeout', `Timeout after ${this.config.timeout} ms`);
         this._abortController.abort();
       }, this.config.timeout);
     }
 
     // Wire abort -> error interceptors mapping
-    this._abortController.signal.addEventListener('abort', async () => {
-      const abortError = new HTTPError(-1, 'Request aborted');
-      for (const e of this.config.errorInterceptors) { if (await e(abortError)) break; }
-    }, { once: true });
+    this._abortController.signal.addEventListener(
+      'abort',
+      async () => {
+        const abortError = new HTTPError(-1, 'Request aborted');
+        for (const e of this.config.errorInterceptors) {
+          if (await e(abortError)) break;
+        }
+      },
+      { once: true }
+    );
 
     // Create native EventSource directly (headers cannot be customized except Accept)
     let es: EventSource | null = null;
     let readyResolve!: () => void;
     let readyReject!: (err: any) => void;
-    const ready = new Promise<void>((resolve, reject) => { readyResolve = resolve; readyReject = reject; });
+    const ready = new Promise<void>((resolve, reject) => {
+      readyResolve = resolve;
+      readyReject = reject;
+    });
 
     try {
       es = new (globalThis as any).EventSource(this.finalizedURL);
@@ -175,19 +317,35 @@ export class SSERequest implements SSERequestType {
 
     const handleError = async (ev: MessageEvent | Event) => {
       const err = new HTTPError(-1, 'SSE connection error', ev as any);
-      for (const e of this.config.errorInterceptors) { if (await e(err)) break; }
-      try { readyReject(err); } catch {}
+      for (const e of this.config.errorInterceptors) {
+        if (await e(err)) break;
+      }
+      try {
+        readyReject(err);
+      } catch {}
     };
 
     const handleMessage = async (ev: MessageEvent) => {
       const raw = ev.data;
       let data: any = raw;
       if (typeof raw === 'string') {
-        try { data = JSON.parse(raw); } catch { /* leave as string */ }
+        try {
+          data = JSON.parse(raw);
+        } catch {
+          /* leave as string */
+        }
       }
       try {
-        const transformed = await applyResponseBodyTransformers(data, { responseBodyTransformers: this.config.responseBodyTransformers } as any);
-        for (const l of this.config.sseListeners) { try { l(transformed); } catch (e) { this.getLogger().warn('SSE listener error', e as any); } }
+        const transformed = await applyResponseBodyTransformers(data, {
+          responseBodyTransformers: this.config.responseBodyTransformers
+        } as any);
+        for (const l of this.config.sseListeners) {
+          try {
+            l(transformed);
+          } catch (e) {
+            this.getLogger().warn('SSE listener error', e as any);
+          }
+        }
       } catch (e) {
         this.getLogger().warn('SSERequest : transformer error', e as any);
       }
@@ -198,11 +356,21 @@ export class SSERequest implements SSERequestType {
     es.addEventListener('message', handleMessage as any);
 
     // Wire abort -> close
-    const abortListener = () => { try { es?.close(); } catch {} };
+    const abortListener = () => {
+      try {
+        es?.close();
+      } catch {}
+    };
     this._abortController.signal.addEventListener('abort', abortListener, { once: true });
 
     // Clear the timeout once the stream opens
-    ready.then(() => { clearTimeout(this.timeoutId); }).catch(() => { clearTimeout(this.timeoutId); });
+    ready
+      .then(() => {
+        clearTimeout(this.timeoutId);
+      })
+      .catch(() => {
+        clearTimeout(this.timeoutId);
+      });
 
     return {
       ready,
