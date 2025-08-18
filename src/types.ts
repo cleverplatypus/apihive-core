@@ -147,6 +147,13 @@ export interface RequestInterceptorControls {
    * @param replacer The function to be called with the current body as argument and returning the new body
    */
   replaceBody(replacer: (body: any) => any): void;
+
+  /**
+   * Returns a hash string that can be used to uniquely identify the request.
+   * 
+   * @remarks This is an optional feature (request-hash) that must be enabled on the factory.
+   */
+  getHash(): string;
 }
 
 export type WrappedResponse = {

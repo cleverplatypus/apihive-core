@@ -513,6 +513,11 @@ export class HTTPRequest {
           return replacer(oldBody);
         }
       },
+
+      getHash: () => {
+        this.factoryMethods.requireFeature('request-hash');
+        return this.getHash();
+      }
     };
   }
 
