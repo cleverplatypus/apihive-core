@@ -133,7 +133,7 @@ export class HTTPRequestFactory {
    * @example
    * ```typescript
    * const factory = new HTTPRequestFactory()
-   *   .withWrappeResponseError();
+   *   .withWrappedResponseError();
    * 
    * const {response, error} = await factory
    *   .createGETRequest('https://httpbin.org/json')
@@ -150,7 +150,7 @@ export class HTTPRequestFactory {
    * 
    * @returns the factory instance
    */
-  withWrappeResponseError() {
+  withWrappedResponseError() {
     this.wrapErrors = true;
     return this;
   }  
