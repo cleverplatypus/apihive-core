@@ -8,9 +8,8 @@ class SSERequestFeature implements Feature {
   getDelegates(_factory: HTTPRequestFactory): { factory?: FeatureFactoryDelegates } {
     return {
       factory: {
-        createSSERequest: (url: string, { defaultConfigBuilders, factoryMethods }) => {
-          const req = new SSERequest({ url, factoryMethods, defaultConfigBuilders });
-          return req;
+        createSSERequest: (url: string, { defaultConfigBuilders, wrapErrors }) => {
+          return new SSERequest({ url, defaultConfigBuilders, wrapErrors });
         }
       }
     }

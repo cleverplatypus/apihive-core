@@ -45,16 +45,16 @@ export class SSERequest implements SSERequestType {
   private config: SSERequestConfig;
   private _abortController = new AbortController();
   private logger: LoggerFacade = new ConsoleLogger();
-  private factoryMethods: SharedFactoryMethods;
   private finalizedURL?: string;
   private wasUsed = false;
   private timeoutId?: any;
   private interceptors: SSERequestInterceptor[] = [];
+  private wrapErrors: boolean = false;
 
   constructor(args: {
     url: string;
-    factoryMethods: SharedFactoryMethods;
     defaultConfigBuilders?: Array<(req: SSERequest) => void>;
+    wrapErrors?: boolean;
   }) {
     this.config = {
       templateURLHistory: [args.url],
@@ -67,7 +67,7 @@ export class SSERequest implements SSERequestType {
       sseListeners: [],
       errorInterceptors: []
     };
-    this.factoryMethods = args.factoryMethods;
+    this.wrapErrors = !!args.wrapErrors;
     args.defaultConfigBuilders?.forEach((fn) => fn(this));
   }
 
@@ -247,8 +247,6 @@ export class SSERequest implements SSERequestType {
     if (this.wasUsed) throw new Error('SSERequest cannot be reused. Create a new one each time.');
     this.wasUsed = true;
 
-    this.factoryMethods.requireFeature('sse-request');
-
     // Interceptors (short-circuit allowed)
     const controls = this.createInterceptorControls();
     for (const i of this.interceptors) {
@@ -308,7 +306,14 @@ export class SSERequest implements SSERequestType {
     } catch (e) {
       // Initial construction failure
       clearTimeout(this.timeoutId);
-      throw new HTTPError(-1, 'Failed to open SSE connection', e as any);
+      const err = new HTTPError(-1, 'Failed to open SSE connection', e as any);
+      // Run error interceptors
+      for (const itc of this.config.errorInterceptors) {
+        try {
+          if (await itc(err)) break;
+        } catch {}
+      }
+      return this.wrapErrors ? ({ error: err } as any) : Promise.reject(err);
     }
 
     const handleOpen = () => {
