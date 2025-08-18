@@ -55,7 +55,8 @@ export default withMermaid(
           collapsed: true,
           items: [
             { text: 'File Upload', link: '/demos/file-upload' },
-            { text: 'Captcha Integration', link: '/demos/captcha-requests' }
+            { text: 'Captcha Integration', link: '/demos/captcha-requests' },
+            { text: 'SSE Ticker', link: '/demos/sse-ticker' }
           ]
         },
         { text: 'Community', collapsed: true, items: [{ text: 'Adapters', link: '/community-adapters' }] }

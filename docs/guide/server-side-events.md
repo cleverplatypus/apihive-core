@@ -38,6 +38,12 @@ const subscription = await factory
 subscription.close();
 ```
 
+::: info
+<a href="../demos/sse-ticker/"><img src="/images/apihive-demo-button.png" alt="Demo" class="demo-button" /></a> 
+<p>See <a href="../demos/sse-ticker/">here</a> for a live demo of SSE used to implement a simple update ticker.</p>
+:::
+
+
 ## Factory Default Configuration
 
 [EventSource](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) supports a limited set of options compared to fetch API requests. Namely, it doesn't support custom headers so `withHeaders` called on the factory won't have effect on SSE connections.
