@@ -34,6 +34,7 @@ export default withMermaid(
         { text: 'Getting Started', link: '/guide/getting-started' },
         { text: 'Core Concepts', link: '/guide/core-concepts' },
         { text: 'API Docs', link: '/api/globals' },
+        { text: 'Optional Features', link: '/guide/optional-features' },
         {
           text: 'Guide',
           collapsed: true,
@@ -46,6 +47,7 @@ export default withMermaid(
             { text: 'Request Interceptors', link: '/guide/request-interceptors' },
             { text: 'Response Interceptors', link: '/guide/response-interceptors' },
             { text: 'Response Body Transformers', link: '/guide/response-body-transformers' },
+            { text: 'Request Hash', link: '/guide/request-hash' },
             { text: 'Abort Listeners', link: '/guide/abort-listeners' },
             { text: 'Adapters', link: '/guide/adapters' }
           ]
@@ -56,7 +58,8 @@ export default withMermaid(
           items: [
             { text: 'File Upload', link: '/demos/file-upload' },
             { text: 'Captcha Integration', link: '/demos/captcha-requests' },
-            { text: 'SSE Ticker', link: '/demos/sse-ticker' }
+            { text: 'SSE Ticker', link: '/demos/sse-ticker' },
+            { text: 'Simple Interceptors Cache', link: '/demos/simple-interceptors-cache' }
           ]
         },
         { text: 'Community', collapsed: true, items: [{ text: 'Adapters', link: '/community-adapters' }] }
