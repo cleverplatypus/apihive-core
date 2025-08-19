@@ -52,8 +52,8 @@ export type FeatureRequestDelegates = {
 }
 
 export type FeatureFactoryDelegates = {
-  withAdapter?: (adapter: Adapter, options?: AdapterOptions) => Promise<HTTPRequestFactory>;
-  detachAdapter?: (adapterName: string) => Promise<HTTPRequestFactory>;
+  withAdapter?: (adapter: Adapter, options?: AdapterOptions) => HTTPRequestFactory;
+  detachAdapter?: (adapterName: string) => HTTPRequestFactory;
   getAttachedAdapters?: () => string[];
   hasAdapter?: (name: string) => boolean;
   /**

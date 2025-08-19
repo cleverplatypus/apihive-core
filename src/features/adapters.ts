@@ -181,7 +181,7 @@ class AdaptersFeature implements Feature {
     const delegates: FeatureFactoryDelegates =
       {} as FeatureFactoryDelegates;
 
-    delegates.withAdapter = async (
+    delegates.withAdapter = (
       adapter: Adapter,
       options?: AdapterOptions
     ) => {
@@ -216,7 +216,7 @@ class AdaptersFeature implements Feature {
         attached: false,
       };
 
-      await adapter.onAttach?.(factory);
+      adapter.onAttach?.(factory);
 
       this.registerAdapterInterceptors(adapter, finalPriority, instanceInfo);
 
@@ -233,7 +233,7 @@ class AdaptersFeature implements Feature {
       return factory;
     };
 
-    delegates.detachAdapter = async (adapterName: string) => {
+    delegates.detachAdapter = (adapterName: string) => {
       const instanceInfo = this.factoriesInstanceInfo.get(factory)!;
       const entry = instanceInfo.adapters.get(adapterName);
       if (!entry) {
@@ -247,7 +247,7 @@ class AdaptersFeature implements Feature {
         instanceInfo.addedFactoryDefaults.delete(adapterName);
       }
 
-      await entry.adapter.onDetach?.(factory);
+      entry.adapter.onDetach?.(factory);
 
       instanceInfo.adapters.delete(adapterName);
 

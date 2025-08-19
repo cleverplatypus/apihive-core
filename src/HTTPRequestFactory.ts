@@ -742,7 +742,7 @@ export class HTTPRequestFactory {
    * @param options Optional. The options for the adapter.
    * @returns The factory instance.
    */
-  async withAdapter(adapter: Adapter, options?: AdapterOptions): Promise<HTTPRequestFactory> {
+  withAdapter(adapter: Adapter, options?: AdapterOptions): HTTPRequestFactory {
     this.requireFeature('adapters');
     return this.factoryDelegates.withAdapter(adapter, options);
   }

@@ -25,15 +25,15 @@ export interface Adapter {
   
   /** Default priority for this adapter's interceptors */
   readonly priority?: AdapterPriority;
-  
+
   /** Features required by this adapter. The adapters feature will auto-enable them on attach. */
   readonly use?: Feature[];
   
   /** Called when adapter is attached to a factory */
-  onAttach?(factory: HTTPRequestFactory): void | Promise<void>;
+  onAttach?(factory: HTTPRequestFactory): void;
   
   /** Called when adapter is detached from a factory */
-  onDetach?(factory: HTTPRequestFactory): void | Promise<void>;
+  onDetach?(factory: HTTPRequestFactory): void;
   
   /** Returns request interceptors this adapter provides */
   getRequestInterceptors?(): RequestInterceptor[];

@@ -110,7 +110,7 @@ describe("adapter_system", () => {
     it("should_attach_adapter_successfully", async () => {
       const adapter = new TestRequestAdapter();
       
-      await factory.withAdapter(adapter);
+      factory.withAdapter(adapter);
       
       expect(factory.hasAdapter("test-request")).toBe(true);
       expect(factory.getAttachedAdapters()).toContain("test-request");
@@ -120,7 +120,7 @@ describe("adapter_system", () => {
     it("should_detach_adapter_successfully", async () => {
       const adapter = new TestRequestAdapter();
       
-      await factory.withAdapter(adapter);
+      factory.withAdapter(adapter);
       await factory.detachAdapter("test-request");
       
       expect(factory.hasAdapter("test-request")).toBe(false);
@@ -131,10 +131,10 @@ describe("adapter_system", () => {
     it("should_prevent_duplicate_adapter_attachment", async () => {
       const adapter = new TestRequestAdapter();
       
-      await factory.withAdapter(adapter);
+      factory.withAdapter(adapter);
       
-      await expect(factory.withAdapter(adapter))
-        .rejects.toThrow("Adapter 'test-request' is already attached");
+      expect(() => factory.withAdapter(adapter))
+        .toThrow("Adapter 'test-request' is already attached");
     });
 
     it("should_handle_detaching_non-existent_adapter", async () => {
@@ -147,7 +147,7 @@ describe("adapter_system", () => {
       
       expect(factory.hasAdapter("test-request")).toBe(false);
       
-      await factory.withAdapter(adapter);
+      factory.withAdapter(adapter);
       expect(factory.hasAdapter("test-request")).toBe(true);
       
       await factory.detachAdapter("test-request");
@@ -158,7 +158,7 @@ describe("adapter_system", () => {
   describe("request_interceptors", () => {
     it("should_execute_request_interceptors_with_correct_config_access", async () => {
       const adapter = new TestRequestAdapter();
-      await factory.withAdapter(adapter);
+      factory.withAdapter(adapter);
 
       const request = factory.createPOSTRequest("https://httpbin.org/post")
         .withJSONBody({ test: "data" });
@@ -186,8 +186,8 @@ describe("adapter_system", () => {
       const lowPriorityAdapter = new TestRequestAdapter(); // priority 100
       const highPriorityAdapter = new TestPriorityAdapter(); // priority 50
 
-      await factory.withAdapter(lowPriorityAdapter);
-      await factory.withAdapter(highPriorityAdapter);
+      factory.withAdapter(lowPriorityAdapter);
+      factory.withAdapter(highPriorityAdapter);
 
       const request = factory.createGETRequest("https://httpbin.org/get");
       const executeSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response('{"success": true}', { 
@@ -209,7 +209,7 @@ describe("adapter_system", () => {
   describe("response_interceptors", () => {
     it("should_execute_response_interceptors_with_correct_config_access", async () => {
       const adapter = new TestResponseAdapter();
-      await factory.withAdapter(adapter);
+      factory.withAdapter(adapter);
 
       const request = factory.createGETRequest("https://httpbin.org/get");
 
@@ -249,7 +249,7 @@ describe("adapter_system", () => {
         }]
       };
       
-      await factory.withAdapter(configCapturingAdapter);
+      factory.withAdapter(configCapturingAdapter);
       
       const request = factory.createGETRequest("https://httpbin.org/get");
       
@@ -271,7 +271,7 @@ describe("adapter_system", () => {
     it("should_respect_adapter_priority_overrides", async () => {
       const adapter = new TestRequestAdapter();
       
-      await factory.withAdapter(adapter, { 
+      factory.withAdapter(adapter, { 
         priority: { requestInterceptor: 1000 } // Very low priority
       });
 
@@ -284,8 +284,8 @@ describe("adapter_system", () => {
       const adapter1 = new TestRequestAdapter(); // priority 100
       const adapter2 = new TestPriorityAdapter(); // priority 50
 
-      await factory.withAdapter(adapter1);
-      await factory.withAdapter(adapter2);
+      factory.withAdapter(adapter1);
+      factory.withAdapter(adapter2);
 
       expect(factory.getAttachedAdapters()).toHaveLength(2);
       expect(factory.getAttachedAdapters()).toContain("test-request");
@@ -296,7 +296,7 @@ describe("adapter_system", () => {
   describe("error_interceptors", () => {
     it("should_execute_error_interceptors", async () => {
       const adapter = new TestErrorAdapter();
-      await factory.withAdapter(adapter);
+      factory.withAdapter(adapter);
 
       const request = factory.createGETRequest("https://invalid-url-that-will-fail.test");
 
@@ -325,10 +325,10 @@ describe("adapter_system", () => {
         }]
       };
 
-      await factory.withAdapter(requestAdapter);
-      await factory.withAdapter(responseAdapter);
-      await factory.withAdapter(factoryAdapter);
-      await factory.withAdapter(configCapturingAdapter);
+      factory.withAdapter(requestAdapter);
+      factory.withAdapter(responseAdapter);
+      factory.withAdapter(factoryAdapter);
+      factory.withAdapter(configCapturingAdapter);
 
       expect(factory.getAttachedAdapters()).toHaveLength(4);
 
@@ -358,7 +358,7 @@ describe("adapter_system", () => {
     it("should_clean_up_interceptors_when_adapter_is_detached", async () => {
       const adapter = new TestRequestAdapter();
       
-      await factory.withAdapter(adapter);
+      factory.withAdapter(adapter);
       expect(factory.hasAdapter("test-request")).toBe(true);
 
       await factory.detachAdapter("test-request");
@@ -392,7 +392,7 @@ describe("adapter_system", () => {
       });
 
       const adapter = new TestRequestAdapter();
-      await factory.withAdapter(adapter);
+      factory.withAdapter(adapter);
 
       const request = factory.createAPIRequest("test-api", "get-user")
         .withURLParam("id", "1");
