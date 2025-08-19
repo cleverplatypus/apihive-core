@@ -94,6 +94,10 @@ export class HTTPRequestFactory {
    * @returns the factory instance
    */
   use(feature: Feature) {
+    if (this.enabledFeatures.has(feature.name)) {
+      this._logger.info(`Feature "${feature.name}" already enabled`);
+      return this;
+    }
     this.enabledFeatures.set(feature.name, feature);
     feature.apply?.(this, {
       addRequestDefaults: (...args: RequestConfigBuilder[]) => {
@@ -831,20 +835,16 @@ export class HTTPRequestFactory {
   private computeURL(url: string): string {
     const isAbsolute = (u: string) => /^(https?:)?\/\//.test(u);
 
-    // If the provided url is absolute (http/https or protocol-relative), always use it
     if (isAbsolute(url)) return url;
 
-    // If no baseURL, use the url as provided (HTTPRequest will compose params later)
     if (!this.baseURL) return url;
 
     const base = this.baseURL;
 
-    // If base is absolute/protocol-relative, delegate to URL resolution
     if (isAbsolute(base)) {
       return new URL(url, base).toString();
     }
 
-    // Both are relative (including root-relative base like '/api') -> concatenate cleanly
     const stripTrailing = base.replace(/\/+$/, '');
     const stripLeading = url.replace(/^\/+/, '');
     return `${stripTrailing}/${stripLeading}`;
@@ -858,6 +858,7 @@ export class HTTPRequestFactory {
       api: {
         name: api.name,
         baseURL: api.baseURL,
+        apiMeta: api.meta || {},
         endpoint,
         endpointName
       }
