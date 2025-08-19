@@ -45,25 +45,23 @@ class AdaptersFeature implements Feature {
   > = new WeakMap();
 
   private updateAdapterInterceptorApplier(instanceInfo: FactoryInstanceInfo) {
-    // Remove existing applier if it exists
+    
     if (instanceInfo.adapterInterceptorApplier) {
       instanceInfo.factoryCommands.removeRequestDefaults(
         instanceInfo.adapterInterceptorApplier
       );
     }
 
-    // Create new applier that applies all current adapter interceptors
+    
     instanceInfo.adapterInterceptorApplier = (request: HTTPRequest) => {
-      // Apply request interceptors in priority order
+      
       const sortedRequestInterceptors = instanceInfo.adapterRequestInterceptors
         .map((entry) => entry.interceptor);
 
-      // Apply response interceptors in priority order
       const sortedResponseInterceptors =
         instanceInfo.adapterResponseInterceptors
           .map((entry) => entry.entry);
 
-      // Apply error interceptors in priority order
       const sortedErrorInterceptors = instanceInfo.adapterErrorInterceptors
         .map((entry) => entry.interceptor);
 
@@ -77,7 +75,7 @@ class AdaptersFeature implements Feature {
         request.withErrorInterceptors(...sortedErrorInterceptors);
       }
     };
-    // Add the new applier to requestDefaults
+    
     if (
       instanceInfo.adapterRequestInterceptors.length > 0 ||
       instanceInfo.adapterResponseInterceptors.length > 0 ||
@@ -106,7 +104,6 @@ class AdaptersFeature implements Feature {
       (a, b) => a.priority - b.priority
     );
 
-    // Register response interceptors (functions or registrations)
     const responseInterceptors = adapter.getResponseInterceptors?.() || [];
     for (const entry of responseInterceptors) {
       instanceInfo.adapterResponseInterceptors.push({
@@ -118,7 +115,6 @@ class AdaptersFeature implements Feature {
       (a, b) => a.priority - b.priority
     );
 
-    // Register error interceptors
     const errorInterceptors = adapter.getErrorInterceptors?.() || [];
     for (const interceptor of errorInterceptors) {
       instanceInfo.adapterErrorInterceptors.push({
@@ -130,7 +126,6 @@ class AdaptersFeature implements Feature {
       (a, b) => a.priority - b.priority
     );
 
-    // Update the central adapter interceptor applier
     this.updateAdapterInterceptorApplier(instanceInfo);
   }
 
@@ -142,12 +137,10 @@ class AdaptersFeature implements Feature {
     const responseInterceptors = adapter.getResponseInterceptors?.() || [];
     const errorInterceptors = adapter.getErrorInterceptors?.() || [];
 
-    // Remove from adapter interceptor arrays
     instanceInfo.adapterRequestInterceptors =
       instanceInfo.adapterRequestInterceptors.filter(
         (entry) => !requestInterceptors.includes(entry.interceptor)
       );
-    // Build a set of function references for comparison
     const responseFns = new Set(
       responseInterceptors.map((e) =>
         typeof e === "function"
@@ -168,7 +161,6 @@ class AdaptersFeature implements Feature {
         (entry) => !errorInterceptors.includes(entry.interceptor)
       );
 
-    // Update the central applier
     this.updateAdapterInterceptorApplier(instanceInfo);
   }
 
@@ -198,7 +190,15 @@ class AdaptersFeature implements Feature {
         throw new Error(`Adapter '${adapter.name}' is already attached`);
       }
 
-      // Merge priorities with defaults
+      if ((adapter as any).use && Array.isArray((adapter as any).use) && (adapter as any).use.length) {
+        for (const feature of (adapter as any).use) {
+          factory.use(feature);
+          factory.logger
+            .withMinimumLevel(factory.logLevel)
+            .info(`Feature '${(feature as any).name}' auto-enabled by adapter '${adapter.name}'`);
+        }
+      }
+
       const defaultPriority: AdapterPriority = {
         requestInterceptor: 500,
         responseInterceptor: 500,
@@ -210,25 +210,19 @@ class AdaptersFeature implements Feature {
         ...options?.priority,
       };
 
-      // Create adapter entry
       const entry: AdapterEntry = {
         adapter,
         priority: finalPriority,
         attached: false,
       };
 
-      // Attach the adapter
       await adapter.onAttach?.(factory);
 
-      // Register interceptors with priority
       this.registerAdapterInterceptors(adapter, finalPriority, instanceInfo);
 
-      // Add factory defaults if provided
       const factoryDefaults = adapter.getFactoryDefaults?.() || [];
       instanceInfo.factoryCommands.addRequestDefaults(...factoryDefaults);
       instanceInfo.addedFactoryDefaults.set(adapter.name, factoryDefaults);
-
-      // Mark as attached and store
       entry.attached = true;
       instanceInfo.adapters.set(adapter.name, entry);
 

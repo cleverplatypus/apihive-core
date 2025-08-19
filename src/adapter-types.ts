@@ -1,5 +1,5 @@
 import { HTTPRequestFactory } from "./HTTPRequestFactory.js";
-import { ErrorInterceptor, RequestConfigBuilder, RequestInterceptor, ResponseInterceptor, ResponseInterceptorWithOptions } from "./types.js";
+import { ErrorInterceptor, Feature, RequestConfigBuilder, RequestInterceptor, ResponseInterceptor, ResponseInterceptorWithOptions } from "./types.js";
 
 /**
  * Priority configuration for adapter interceptors.
@@ -19,11 +19,15 @@ export interface AdapterPriority {
  * Adapters extend the factory's functionality through interceptors and hooks.
  */
 export interface Adapter {
+  
   /** Unique identifier for this adapter */
   readonly name: string;
   
   /** Default priority for this adapter's interceptors */
   readonly priority?: AdapterPriority;
+  
+  /** Features required by this adapter. The adapters feature will auto-enable them on attach. */
+  readonly use?: Feature[];
   
   /** Called when adapter is attached to a factory */
   onAttach?(factory: HTTPRequestFactory): void | Promise<void>;
