@@ -154,6 +154,11 @@ export interface RequestInterceptorControls {
    * @remarks This is an optional feature (request-hash) that must be enabled on the factory.
    */
   getHash(options?: RequestHashOptions): string;
+
+  /**
+   * Returns the logger used by the factory
+   */
+  getLogger() : LoggerFacade
 }
 
 export type WrappedResponse = {

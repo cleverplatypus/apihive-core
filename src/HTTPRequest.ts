@@ -518,7 +518,9 @@ export class HTTPRequest {
       getHash: (options?: RequestHashOptions) => {
         this.factoryMethods.requireFeature('request-hash');
         return this.getHash(options);
-      }
+      },
+
+      getLogger: () => this.getLogger()
     };
   }
 
