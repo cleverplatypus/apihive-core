@@ -38,7 +38,8 @@ import { ref, watch } from 'vue';
 import CaptchaElement from './CaptchaElement.vue';
 import captchaModel from './captcha-model';
 import controller from './captcha-requests-controller';
-import InlineMessage from '../common/InlineMessage.vue';
+import InlineMessage from 'apihive-common-docs-assets/components/InlineMessage.vue';
+
 
 const userInlineMessage = ref<typeof InlineMessage | null>(null);
 const somethingElseInlineMessage = ref<typeof InlineMessage | null>(null);
@@ -58,7 +59,6 @@ watch(() => controller.model.results.doSomethingElse, () => {
 </script>
 
 <style lang="scss" scoped>
-@import '@/common/styles.scss';
 .captcha-request-demo {
   pre {
     background-color: var(--pico-color-azure-100);

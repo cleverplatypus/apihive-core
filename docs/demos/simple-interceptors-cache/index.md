@@ -9,6 +9,7 @@ You can verify in the network tab of your browser's devtools that requests after
 Of course this is a very limited cache implementation. For a production-ready cache, you should use a ready made adapter like the [`@apihive/adapter-simple-cache`](https://npmjs.com/package/@apihive/adapter-simple-cache).
 
 <script setup>
+import 'apihive-common-docs-assets/style/styles.scss';
 import SimpleInterceptorsCacheDemo from './SimpleInterceptorsCacheDemo.vue';
 </script>
 

@@ -1378,6 +1378,10 @@ algoliasearch@^5.14.2:
     "@algolia/requester-fetch" "5.35.0"
     "@algolia/requester-node-http" "5.35.0"
 
+"apihive-common-docs-assets@git+https://github.com/cleverplatypus/apihive-common-docs-assets.git":
+  version "0.0.1"
+  resolved "git+https://github.com/cleverplatypus/apihive-common-docs-assets.git#589726ee5a8a1b98f580d5e9ab9b286829aedc33"
+
 argparse@^2.0.1:
   version "2.0.1"
   resolved "https://registry.npmjs.org/argparse/-/argparse-2.0.1.tgz"

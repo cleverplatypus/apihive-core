@@ -50,7 +50,7 @@
 import { ref } from 'vue';
 import controller from './sse-ticker-controller';
 import model from './sse-ticker-model';
-import InlineMessage from '../common/InlineMessage.vue';
+import InlineMessage from 'apihive-common-docs-assets/components/InlineMessage.vue';
 
 const inlineMessage = ref<typeof InlineMessage | null>(null);
 
@@ -60,7 +60,6 @@ controller.onDisconnect((message) => {
 </script>
 
 <style lang="scss" scoped>
-@import '@/common/styles.scss';
 .sse-ticker-demo {
   table {
     width: 100% !important;

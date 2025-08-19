@@ -4,6 +4,7 @@ This demo shows how to upload a file using APIHive and tracking it's progress.
 
 
 <script setup>
+import 'apihive-common-docs-assets/style/styles.scss';
 import FileUploadProgress from './FileUploadProgress.vue'
 </script>
 

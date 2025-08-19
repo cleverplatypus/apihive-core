@@ -36,7 +36,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import InlineMessage from '../common/InlineMessage.vue';
+import InlineMessage from 'apihive-common-docs-assets/components/InlineMessage.vue';
+
 import controller, { Aborter } from './file-upload-controller';
 import model from './file-upload-model';
 
@@ -62,5 +63,4 @@ const uploadFile = () => {
 };
 </script>
 <style>
-@import '@/common/styles.scss';
 </style>

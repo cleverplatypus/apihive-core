@@ -1,6 +1,9 @@
 <template>
 <div class="simple-interceptors-cache-demo demo pico">
-    <button @click="callService">Call API</button>
+    <div class="justify-between">
+        <button @click="callService">Call API</button>
+        <button class="secondary" @click="cache.clear()">Clear Cache</button>
+    </div>
     <pre>{{ fetchedData }}</pre>
     <article v-if="source === 'cache'">Response from cache</article>
     <article v-if="source === 'network'">Response from network</article>
@@ -47,7 +50,6 @@ const callService = async () => {
 </script>
 
 <style lang="scss" scoped>
-@import "@/common/styles.scss";
 .simple-interceptors-cache-demo {
     pre {
         background-color: var(--pico-color-azure-100);
@@ -56,6 +58,10 @@ const callService = async () => {
         &:empty {
             display: none;
         }
+    }
+    .justify-between {
+        display: flex;
+        justify-content: space-between;
     }
 }
 </style>

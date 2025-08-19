@@ -3,6 +3,7 @@ import { h } from 'vue'
 import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
 import './style.css'
+import syncPicoTheme from 'apihive-common-docs-assets/scripts/pico-vitest-theme-sync';
 
 export default {
   extends: DefaultTheme,
@@ -12,5 +13,6 @@ export default {
     })
   },
   enhanceApp({ app }) {
+    syncPicoTheme();
   }
 } satisfies Theme

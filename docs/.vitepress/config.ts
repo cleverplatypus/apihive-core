@@ -13,7 +13,6 @@ export default withMermaid(
     description: 'HTTP APIs made easy',
     base: '/apihive-core/',
     ignoreDeadLinks: true,
-    appearance: false,
     vite: {
       server: {
         host: '0.0.0.0', // or specifically allow your hostname

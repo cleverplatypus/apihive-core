@@ -9,6 +9,7 @@ In real life it would probably be simpler just to have the conditional captcha i
 :::
 
 <script setup>
+import 'apihive-common-docs-assets/style/styles.scss';
 import CaptchaRequestDemo from './CaptchaRequestDemo.vue'
 </script>
 
