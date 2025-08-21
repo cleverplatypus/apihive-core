@@ -554,6 +554,7 @@ export class HTTPRequestFactory {
       method,
       defaultConfigBuilders: this.requestDefaults,
       featureDelegates,
+      factory: this,
       factoryMethods: {
         requireFeature: this.requireFeature.bind(this)
       },

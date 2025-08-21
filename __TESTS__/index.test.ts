@@ -64,8 +64,8 @@ factory
       .createAPIRequest("transform-on-return", "post")
       .withJSONBody(payload)
       // Plain function => skipTransformersOnReturn defaults to false; transformers should run
-      .withResponseInterceptors(async (resp) => {
-        const data = await resp.json();
+      .withResponseInterceptors(async ({response}) => {
+        const data = await response.json();
         return { wrapped: data.json };
       })
       .execute();
@@ -84,8 +84,8 @@ factory
         }
         return body?.json ?? body;
       },
-      responseInterceptors: async (resp, _config, controls :ResponseInterceptorControls) => {
-          const data = await resp.json();
+      responseInterceptors: async ({response, controls}) => {
+          const data = await response.json();
           controls.skipBodyTransformers();
           return { wrapped: data.json };
         },
@@ -204,8 +204,8 @@ describe("http_tests", () => {
     const result = await factory
       .createAPIRequest("simple-api", "get-product-by-id")
       .withURLParam("productId", "123")
-      .withResponseInterceptors(async (fetchResponse, _config, controls) => {
-        const data = await fetchResponse.json();
+      .withResponseInterceptors(async ({response, controls}) => {
+        const data = await response.json();
         controls.skipBodyTransformers();
         return {
           wrapped: data,
@@ -340,7 +340,7 @@ describe("http_tests", () => {
     const factory = new HTTPRequestFactory().withLogLevel("debug");
     const url = "https://jsonplaceholder.typicode.com/users/2";
     const request = factory
-      .withRequestInterceptors(async (_, { replaceURL }) => {
+      .withRequestInterceptors(async ({controls : { replaceURL }}) => {
         replaceURL("https://jsonplaceholder.typicode.com/users/1");
       })
       .createGETRequest(url);
@@ -388,7 +388,7 @@ it("test_request_interceptor_replace_body", async () => {
   const url = "https://httpbin.org/post";
   const request = factory.createPOSTRequest(url);
   request
-  .withRequestInterceptors(async (_, { replaceBody }) => {
+  .withRequestInterceptors(async ({controls : { replaceBody }}) => {
     replaceBody(body => {
       return JSON.stringify({
         message : 'wrapped body',
@@ -421,7 +421,7 @@ it("test_request_interceptor_from_api_config", async () => {
   const factory = new HTTPRequestFactory().withLogLevel("debug").withAPIConfig({
     name: "default",
     requestInterceptors: [
-      (config: RequestConfig) => {
+      ({config}) => {
         const entity = config.meta.api.endpoint.target
           .replace(/^\//, "")
           .replace(/\/\d+/, "");
@@ -477,7 +477,7 @@ it("test_request_interceptor_from_api_config", async () => {
   const factory = new HTTPRequestFactory()
     .withAPIConfig(myAPI)
     .when((config) => config.meta.useCaptcha)
-      .withRequestInterceptors((_, { replaceBody }) => {
+      .withRequestInterceptors(({controls: { replaceBody }}) => {
         replaceBody(body => {
          const out = JSON.stringify(Object.assign({}, JSON.parse(body), { 
               captcha: getCurrentCaptchaToken() //your function to retrieve the local captcha token 

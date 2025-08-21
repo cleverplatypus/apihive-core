@@ -228,10 +228,11 @@ export type RequestHashOptions = {
     includeBody?: boolean;
 };
 
-export type RequestInterceptor = (
-  config: RequestConfig,
-  controls: RequestInterceptorControls
-) => Promise<any | undefined>;
+export type RequestInterceptor = ( params : {
+  config: RequestConfig;
+  controls: RequestInterceptorControls;
+  factory : HTTPRequestFactory;
+}) => Promise<any | undefined>;
 
 export type RequestConfigBuilder = (
   request: HTTPRequest,
@@ -260,11 +261,12 @@ export type ResponseHandler = (
   requestObj: HTTPRequest
 ) => Promise<any>;
 
-export type ResponseInterceptor = (
-  response: Response,
-  config: RequestConfig,
-  controls: ResponseInterceptorControls
-) => Promise<any | undefined>;
+export type ResponseInterceptor = (params : {
+  response: Response;
+  config: RequestConfig;
+  controls: ResponseInterceptorControls;
+  factory : HTTPRequestFactory;
+}) => Promise<any | undefined>;
 
 export type SSEListener = (data : any) => void;
 

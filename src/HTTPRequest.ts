@@ -26,6 +26,7 @@ import { maybeFunction } from './utils.js';
 import { DEFAULT_JSON_MIME_TYPES, DEFAULT_TEXT_MIME_TYPES } from './constants.js';
 import { applyResponseBodyTransformers } from './response-utils.js';
 import { composeURL as composeURLUtil } from './url-utils.js';
+import { HTTPRequestFactory } from './HTTPRequestFactory.js';
 
 type SharedFactoryMethods = {
   requireFeature: (featureName: FeatureName) => void;
@@ -38,6 +39,7 @@ type RequestConstructorArgs = {
   featureDelegates: FeatureRequestDelegates;
   factoryMethods: SharedFactoryMethods;
   wrapErrors: boolean;
+  factory : HTTPRequestFactory;
 };
 /**
  * @remarks This class shouldn't be instanciated directly.<br>Use {@link HTTPRequestFactory} createXXXRequest() instead
@@ -60,6 +62,7 @@ export class HTTPRequest {
   private factoryMethods: SharedFactoryMethods;
   private abortListeners: ((event: Event) => void)[] = [];
   private wrapErrors: boolean = false;
+  private factory : HTTPRequestFactory;
 
   // ---------------------------------------------------------------------------
   // Public getters
@@ -106,13 +109,15 @@ export class HTTPRequest {
       defaultConfigBuilders,
       featureDelegates,
       factoryMethods,
+      factory,
       wrapErrors = false }: RequestConstructorArgs) {
     this.configBuilders = defaultConfigBuilders;
     this.wasUsed = false;
     this.config = this.createConfigObject(url, method);
     this.featureDelegates = featureDelegates;
+    this.factory = factory;
     this.factoryMethods = factoryMethods;
-    this.wrapErrors = wrapErrors;
+      this.wrapErrors = wrapErrors;
   }
 
   // ---------------------------------------------------------------------------
@@ -268,11 +273,15 @@ export class HTTPRequest {
       
       for (const interceptor of this.config.requestInterceptors || []) {
         let skipBodyTransformers = false;
-        let interceptorResponse = await interceptor(this.getReadOnlyConfig(), {
+        let interceptorResponse = await interceptor({
+          config: this.getReadOnlyConfig(), 
+          controls : {
           ...requestInterceptorControls,
           skipBodyTransformers: () => {
             skipBodyTransformers = true;
-          }
+          }, 
+        },
+        factory : this.factory
         });
         if (interceptorResponse === undefined) {
           continue;
@@ -305,11 +314,16 @@ export class HTTPRequest {
         for (const interceptor of this.config.responseInterceptors) {
           let skipBodyTransformers = false;
 
-          let interceptorResponse = await interceptor(response, this.getReadOnlyConfig(), {
-            ...responseControls,
-            skipBodyTransformers: () => {
-              skipBodyTransformers = true;
-            }
+          let interceptorResponse = await interceptor({
+            response,
+            config: this.getReadOnlyConfig(),
+            controls: {
+              ...responseControls,
+              skipBodyTransformers: () => {
+                skipBodyTransformers = true;
+              }
+            },
+            factory: this.factory
           });
           if (interceptorResponse !== undefined) {
             if (!skipBodyTransformers) {

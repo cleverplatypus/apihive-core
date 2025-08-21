@@ -133,3 +133,4 @@ dist
 .pnp.*
 docs/.vitepress/cache/
 lib/
+docs/api

@@ -79,8 +79,8 @@ describe('wrap_errors_behavior', () => {
 
     const {response, error} = await factory
       .createGETRequest('https://httpbin.org/anything')
-      .withResponseInterceptors(async (resp) => {
-        const data = await resp.json();
+      .withResponseInterceptors(async ({response}) => {
+        const data = await response.json();
         return { wrapped: true, echo: data?.json ?? data } as any;
       })
       .execute();

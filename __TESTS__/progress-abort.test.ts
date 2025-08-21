@@ -75,8 +75,8 @@ describe('progress_handlers_download_abort_behavior', () => {
         throttleMs: 0,
       } as any);
     req.withTimeout(2000); // keep long to avoid timeout path; we'll abort via interceptor
-    req.withRequestInterceptors(async (_, controls) => {
-      setTimeout(() => controls.abort(), 20);
+    req.withRequestInterceptors(async ({controls : {abort}}) => {
+      setTimeout(() => abort(), 20);
       return undefined;
     });
 

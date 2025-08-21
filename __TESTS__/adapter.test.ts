@@ -25,10 +25,10 @@ class TestRequestAdapter implements Adapter {
 
   getRequestInterceptors(): RequestInterceptor[] {
     return [
-      async (config: RequestConfig, commands : RequestInterceptorControls) => {
+      async ({config, controls}) => {
         this.interceptedRequests.push({
           method: config.method,
-          url: commands.finaliseURL(),
+          url: controls.finaliseURL(),
           body: config.body
         });
       }
@@ -44,7 +44,7 @@ class TestResponseAdapter implements Adapter {
 
   getResponseInterceptors(): ResponseInterceptor[] {
     return [
-      async (response: Response, config: RequestConfig) => {
+      async ({response,config}) => {
         this.interceptedResponses.push({
           status: response.status,
           url: config.finalURL || ""
@@ -244,7 +244,7 @@ describe("adapter_system", () => {
       const configCapturingAdapter = {
         name: "config-capturer",
         priority: { requestInterceptor: 1 },
-        getRequestInterceptors: () => [async (config: RequestConfig) => {
+        getRequestInterceptors: () => [async ({config}) => {
           capturedConfig = config;
         }]
       };
@@ -320,7 +320,7 @@ describe("adapter_system", () => {
       const configCapturingAdapter = {
         name: "config-capturer",
         priority: { requestInterceptor: 1 },
-        getRequestInterceptors: () => [async (config: RequestConfig) => {
+        getRequestInterceptors: () => [async ({config}) => {
           capturedConfig = config;
         }]
       };

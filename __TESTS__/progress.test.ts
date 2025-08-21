@@ -1,7 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
-import { HTTPRequestFactory } from '../src/index.ts';
-import type { FeatureName, RequestConfig } from '../src/types.ts';
+import { describe, expect, it, vi } from 'vitest';
 import downloadProgressFeature from '../src/features/download-progress.ts';
+import { HTTPRequestFactory } from '../src/index.ts';
+import type { FeatureName } from '../src/types.ts';
 
 // Helper to build a ReadableStream of Uint8Array chunks
 function makeStream(chunks: Uint8Array[]): ReadableStream<Uint8Array> {

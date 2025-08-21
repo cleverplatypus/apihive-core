@@ -2,10 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { HTTPRequestFactory, RequestConfig, RequestInterceptorControls } from '../src/index.ts';
 
 // Helper: finalize URL via request interceptor and return it as response
-const returnURL = async (
-  _: RequestConfig,
-  controls: RequestInterceptorControls
-) => {
+const returnURL = async ({controls}) => {
   const final = controls.getProvisionalURL();
   return final; // short-circuit request; execute() returns this value
 };
