@@ -9,7 +9,6 @@ body:
     attributes:
       value: |
         Thanks for contributing an adapter! Please fill out the fields below.
-        Maintainership note: apply one of the labels `status:accepted` or `status:rejected` after review.
   - type: input
     id: githubRepo
     attributes:
