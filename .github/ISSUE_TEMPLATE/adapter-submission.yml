@@ -33,7 +33,3 @@ body:
       placeholder: Adds typed Stripe Billing endpoints and webhooks for APIHive projects.
     validations:
       required: true
-  - type: markdown
-    attributes:
-      value: |
-        Parsing note: the issue body will contain headings "### githubRepo", "### descriptiveName", and "### shortDescription" followed by the submitted values.
