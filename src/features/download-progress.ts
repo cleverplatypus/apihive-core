@@ -87,7 +87,9 @@ class DownloadProgressFeature implements Feature {
           // Emit initial progress
           emitProgress(0, false);
 
-          const chunks: Uint8Array[] = [];
+          // Collect chunks as BlobPart[] to satisfy Blob constructor typing across environments.
+          // Use ArrayBuffer copies to avoid ArrayBufferLike/SharedArrayBuffer incompatibility.
+          const chunks: BlobPart[] = [];
           const signal = abortController.signal;
           let aborted = signal.aborted;
           const onAbort = () => {
@@ -112,7 +114,13 @@ class DownloadProgressFeature implements Feature {
               }
               if (done) break;
               if (value) {
-                chunks.push(value);
+                // Copy into a fresh ArrayBuffer (BlobPart) to satisfy DOM typings
+                // and avoid potential SharedArrayBuffer inference.
+                const safeBuffer = value.buffer.slice(
+                  value.byteOffset,
+                  value.byteOffset + value.byteLength
+                );
+                chunks.push(safeBuffer);
                 receivedSize += value.byteLength;
 
                 // Throttle if configured

@@ -71,10 +71,10 @@
     "typescript": "^5.1.6",
     "vitepress": "^1.6.3",
     "vitepress-plugin-mermaid": "^2.0.17",
+    "apihive-common-docs-assets": "git+https://github.com/cleverplatypus/apihive-common-docs-assets.git",
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@apihive/logger-facade": "^1.0.0",
-    "apihive-common-docs-assets": "git+https://github.com/cleverplatypus/apihive-common-docs-assets.git"
+    "@apihive/logger-facade": "^1.0.0"
   }
 }
