@@ -20,16 +20,10 @@ hero:
 features:
   - title: 🏗️ Config-Based Architecture
     details: Minimize boilerplate code by using a config-first approach consume HTTP APIs.
-  - title: ⚡ Just In Time Setup
-    details: Pre-configure requests passing functions to request builders (e.g. headers, body, queryParams, etc.)
   - title: 🔌 Adapters Ecosystem
     details: Extensible plugin architecture for caching, OpenAPI integration, logging, and more. Build once, use everywhere.
   - title: 🎯 TypeScript Support
     details: Built from the ground up with TypeScript. Full type safety, excellent IntelliSense, and zero runtime surprises. Still works with plain JavaScript.
-  - title: 🌐 Runtime Agnostic
-    details: Works seamlessly in browsers, Node.js, Deno, and edge runtimes. One API, everywhere.
-  - title: 🔄 Conditional Builder Pattern
-    details: Powerful .when() API for applying interceptors and configuration conditionally based on request properties.
 ---
 
 ## Why APIHive?
@@ -42,79 +36,18 @@ Official [adapters](adapters) are in the works to address common use cases, such
 
 If you're familiar with Axios, [read here](why-not-axios.md) for a comparison with APIHive.
 
-### Installation
-
-::: code-group
-```bash [yarn]
-yarn add @apihive/core
-```
-```bash [npm]
-npm install @apihive/core
-```
-```bash [jsr]
-jsr add @apihive/apihive-core
-```
-:::
-
-### Basic Usage
-
-```typescript
-import { HTTPRequestFactory } from '@apihive/core';
-
-const factory = new HTTPRequestFactory(); //reusable factory instance
-
-const response = await factory
-  .createGETRequest('https://api.github.com/users/octocat')
-  .withHeader('Accept', 'application/vnd.github.v3+json')
-  .execute();
-
-console.log(response.login); // 'octocat'
-```
-
-
-### API Configuration
-
-::: code-group
-```typescript [request-factory.ts]
-import { HTTPRequestFactory } from '@apihive/core';
-
-export default new HTTPRequestFactory()
-  .withAPIConfig({
-    name: 'api',
-    baseURL: 'https://jsonplaceholder.typicode.com',
-    headers: {
-      'Authentication': (config) => config.url.includes('/admin/') && mySessionObject.isAuthenticated() ? `Bearer ${mySessionObject.getAccessToken()}` : undefined
-    },
-    endpoints: {
-      'get-posts': {
-        target: '/posts'
-      },
-      'post-edit': {
-        target: '/admin/posts/:id',
-        method: 'PUT'
-      }
-    }
-  }, /* other APIS */);
-```
-
-```typescript [consumers.ts]
-import requestFactory from './request-factory.ts';
-
-//Execute a GET request from the API
-const posts = await requestFactory.createAPIRequest('get-posts')
-  .execute();
-
-//Execute a PUT request from the API that automatically adds authentication headers
-const post = await requestFactory.createAPIRequest('post-edit')
-  .withJSONBody({
-    title: 'foo',
-    body: 'bar'
-  })
-  .execute();
-```
+::: tip Impatient?
+Jump to the [Getting Started](guide/getting-started.md) or [Core Concepts page](guide/core-concepts.md).
 :::
 
 
+## Committed to Simplicity
+
+APIHive is built with simplicity in mind and follows progressive disclosure principles. Only expose the features you need and hide the rest. You can always opt-in later, right?
+
+Looking ahead, the roadmap is to consolidate the core, simplify if possible and make the codebase more robust and adapted to the shifting web platform.
+
+Any big new piece of functionality is likely to be added as an adapter, to keep the core as simple as possible. The community can help shape the APIHive ecosystem by [submitting adapters](./adapters-community/) for various use cases.
 
 ## Ready for Production
 

@@ -16,20 +16,62 @@ jsr add @apihive/apihive-core
 ```
 :::
 
-## Basic Usage
+### Basic Usage
 
-### Simple Request
 ```typescript
 import { HTTPRequestFactory } from '@apihive/core';
 
-const factory = new HTTPRequestFactory();
+const factory = new HTTPRequestFactory(); //reusable factory instance
 
 const response = await factory
-  .createGETRequest('https://jsonplaceholder.typicode.com/users/1')
+  .createGETRequest('https://api.github.com/users/octocat')
+  .withHeader('Accept', 'application/vnd.github.v3+json')
   .execute();
 
-console.log(response.name); // "Leanne Graham"
+console.log(response.login); // 'octocat'
 ```
+
+### API Configuration
+
+::: code-group
+```typescript [request-factory.ts]
+import { HTTPRequestFactory } from '@apihive/core';
+
+export default new HTTPRequestFactory()
+  .withAPIConfig({
+    name: 'api',
+    baseURL: 'https://jsonplaceholder.typicode.com',
+    headers: {
+      'Authentication': (config) => config.url.includes('/admin/') && mySessionObject.isAuthenticated() ? `Bearer ${mySessionObject.getAccessToken()}` : undefined
+    },
+    endpoints: {
+      'get-posts': {
+        target: '/posts'
+      },
+      'post-edit': {
+        target: '/admin/posts/:id',
+        method: 'PUT'
+      }
+    }
+  }, /* other APIS */);
+```
+
+```typescript [consumers.ts]
+import requestFactory from './request-factory.ts';
+
+//Execute a GET request from the API
+const posts = await requestFactory.createAPIRequest('get-posts')
+  .execute();
+
+//Execute a PUT request from the API that automatically adds authentication headers
+const post = await requestFactory.createAPIRequest('post-edit')
+  .withJSONBody({
+    title: 'foo',
+    body: 'bar'
+  })
+  .execute();
+```
+:::
 
 ## Next Steps
 
