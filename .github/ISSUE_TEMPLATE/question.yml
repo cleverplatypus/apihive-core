@@ -1,0 +1,13 @@
+name: Question
+description: Ask a question or request clarification.
+title: "Question: <topic>"
+labels:
+  - question
+body:
+  - type: textarea
+    id: details
+    attributes:
+      label: Your question
+      description: Include context, code snippets, or links.
+    validations:
+      required: true
