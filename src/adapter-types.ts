@@ -1,5 +1,5 @@
 import { HTTPRequestFactory } from "./HTTPRequestFactory.js";
-import { ErrorInterceptor, Feature, RequestConfigBuilder, RequestInterceptor, ResponseInterceptor, ResponseInterceptorWithOptions } from "./types.js";
+import { ErrorInterceptor, Feature, RequestConfigBuilder, RequestInterceptor, ResponseInterceptor } from "./types.js";
 
 /**
  * Priority configuration for adapter interceptors.
@@ -39,7 +39,7 @@ export interface Adapter {
   getRequestInterceptors?(): RequestInterceptor[];
   
   /** Returns response interceptors this adapter provides */
-  getResponseInterceptors?(): Array<ResponseInterceptor | ResponseInterceptorWithOptions>;
+  getResponseInterceptors?(): Array<ResponseInterceptor>;
   
   /** Returns error interceptors this adapter provides */
   getErrorInterceptors?(): ErrorInterceptor[];

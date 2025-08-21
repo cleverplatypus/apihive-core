@@ -17,7 +17,6 @@ import type {
   ResponseBodyTransformer,
   ResponseInterceptor,
   ResponseInterceptorControls,
-  ResponseInterceptorWithOptions,
   URLParams,
   URLParamValue,
   WrappedResponse
@@ -268,11 +267,19 @@ export class HTTPRequest {
       const requestInterceptorControls = this.createRequestInterceptorControls();
       
       for (const interceptor of this.config.requestInterceptors || []) {
-        let interceptorResponse = await interceptor(this.getReadOnlyConfig(), requestInterceptorControls);
+        let skipBodyTransformers = false;
+        let interceptorResponse = await interceptor(this.getReadOnlyConfig(), {
+          ...requestInterceptorControls,
+          skipBodyTransformers: () => {
+            skipBodyTransformers = true;
+          }
+        });
         if (interceptorResponse === undefined) {
           continue;
         }
-        interceptorResponse = await applyResponseBodyTransformers(interceptorResponse, this.getReadOnlyConfig());
+        if(!skipBodyTransformers)
+          interceptorResponse = await applyResponseBodyTransformers(interceptorResponse, this.getReadOnlyConfig());
+
         return this.wrapErrors ? { response: interceptorResponse } : interceptorResponse;
       }
       this.setupBody();
@@ -295,21 +302,17 @@ export class HTTPRequest {
 
       if (this.config.responseInterceptors.length) {
         const responseControls = this.createResponseControls();
-        for (const entry of this.config.responseInterceptors) {
-          const { interceptor, skipTransformersOnReturn } =
-            typeof entry === 'function'
-              ? {
-                  interceptor: entry as ResponseInterceptor,
-                  skipTransformersOnReturn: false
-                }
-              : {
-                  interceptor: (entry as ResponseInterceptorWithOptions).interceptor,
-                  skipTransformersOnReturn: (entry as ResponseInterceptorWithOptions).skipTransformersOnReturn ?? false
-                };
+        for (const interceptor of this.config.responseInterceptors) {
+          let skipBodyTransformers = false;
 
-          let interceptorResponse = await interceptor(response, this.getReadOnlyConfig(), responseControls);
+          let interceptorResponse = await interceptor(response, this.getReadOnlyConfig(), {
+            ...responseControls,
+            skipBodyTransformers: () => {
+              skipBodyTransformers = true;
+            }
+          });
           if (interceptorResponse !== undefined) {
-            if (!skipTransformersOnReturn) {
+            if (!skipBodyTransformers) {
               interceptorResponse = await applyResponseBodyTransformers(interceptorResponse, this.getReadOnlyConfig());
             }
             return this.wrapErrors ? { response: interceptorResponse } : interceptorResponse;
@@ -481,14 +484,18 @@ export class HTTPRequest {
         this._abortController.abort();
       },
 
-      replaceURL: (newURL: string, newURLParams?: URLParams) => {
+      replaceURL: (newURL: string) => {
         this.throwIfFinalized();
         // Push new template (absolute or relative), placeholders allowed
-        this.config.templateURLHistory.push(newURL);
+        if(newURL)
+          this.config.templateURLHistory.push(newURL);
+      },
+
+      replaceURLParams: (newURLParams: URLParams) => {
+        this.throwIfFinalized();
         if (newURLParams) {
           this.config.urlParams = newURLParams;
         }
-        // Do not persist composed URL; it will be computed on demand.
       },
 
       getProvisionalURL: () => {
@@ -496,6 +503,7 @@ export class HTTPRequest {
       },
 
       updateHeaders: (headers: Record<string, string | null>) => {
+        this.throwIfFinalized();
         Object.assign(this.config.headers, headers);
         this.setupHeaders();
       },
@@ -520,7 +528,13 @@ export class HTTPRequest {
         return this.getHash(options);
       },
 
-      getLogger: () => this.getLogger()
+      getLogger: () => this.getLogger(),
+
+      /**
+       * Skips body transformers for the response
+       */
+      skipBodyTransformers: () => null
+        
     };
   }
 
@@ -528,7 +542,7 @@ export class HTTPRequest {
    * Creates response controls for response interceptors.
    * @internal
    */
-  private createResponseControls(): ResponseInterceptorControls {
+  private createResponseControls(): Omit<ResponseInterceptorControls, 'skipBodyTransformers'> {
     return {
       getLogger: () => this.getLogger(),
       getHash: (options?: RequestHashOptions) => this.getHash(options)
@@ -926,7 +940,7 @@ export class HTTPRequest {
    * 
    * @returns The updated request instance.
    */
-  withResponseInterceptors(...interceptors: Array<ResponseInterceptor | ResponseInterceptorWithOptions>): HTTPRequest {
+  withResponseInterceptors(...interceptors: Array<ResponseInterceptor>): HTTPRequest {
     this.config.responseInterceptors.push(...interceptors);
     return this;
   }

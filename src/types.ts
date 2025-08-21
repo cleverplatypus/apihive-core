@@ -136,6 +136,11 @@ export interface RequestInterceptorControls {
   finaliseURL(): string;
 
   /**
+   * Replace the request URL params
+   */
+  replaceURLParams(newURLParams: URLParams): void;
+
+  /**
    * Get the provisional URL before finalisation
    */
   getProvisionalURL(): string;
@@ -159,6 +164,11 @@ export interface RequestInterceptorControls {
    * Returns the logger used by the factory
    */
   getLogger() : LoggerFacade
+
+  /**
+   * Skip body transformers for the response
+   */
+  skipBodyTransformers(): void;
 }
 
 export type WrappedResponse = {
@@ -182,7 +192,21 @@ export type URLParams = Record<
  * Control APIs available to response interceptors.
  */
 export interface ResponseInterceptorControls {
+  /**
+   * Returns the logger used by the factory
+   */
   getLogger(): LoggerFacade;
+  
+  /**
+   * Skip body transformers for the response
+   */
+  skipBodyTransformers(): void;
+
+  /**
+   * Returns a hash string that can be used to uniquely identify the request.
+   * 
+   * @remarks This is an optional feature (request-hash) that must be enabled on the factory.
+   */
   getHash(options?: RequestHashOptions): string;
 }
 
@@ -242,18 +266,6 @@ export type ResponseInterceptor = (
   controls: ResponseInterceptorControls
 ) => Promise<any | undefined>;
 
-// Registration object for response interceptors that can control
-// whether returned values should skip response body transformers.
-export type ResponseInterceptorWithOptions = {
-  interceptor: ResponseInterceptor;
-  /**
-   * If true, any non-undefined value returned by this interceptor
-   * will be returned as-is, without passing through responseBodyTransformers.
-   * Defaults to false (transformers are applied).
-   */
-  skipTransformersOnReturn?: boolean;
-};
-
 export type SSEListener = (data : any) => void;
 
 /**
@@ -293,7 +305,7 @@ export type RequestConfig = {
   corsMode: RequestMode;
   urlParams: URLParams;
   requestInterceptors: RequestInterceptor[];
-  responseInterceptors: Array<ResponseInterceptor | ResponseInterceptorWithOptions>;
+  responseInterceptors: Array<ResponseInterceptor>;
   errorInterceptors: ErrorInterceptor[];
   progressHandlers?: ProgressHandlerConfig[];
 };
@@ -465,8 +477,7 @@ export type APIConfig<TApiConfig extends BaseAPIInterface = DefaultAPIConfig> =
      */
     responseInterceptors?:
       | ResponseInterceptor
-      | ResponseInterceptorWithOptions
-      | Array<ResponseInterceptor | ResponseInterceptorWithOptions>;
+      | Array<ResponseInterceptor>;
     requestInterceptors?: RequestInterceptor | Array<RequestInterceptor>;
     errorInterceptors?: ErrorInterceptor | Array<ErrorInterceptor>;
 

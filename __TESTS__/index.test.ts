@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import HTTPError from "../src/HTTPError.ts";
-import { APIConfig, HTTPRequestFactory, RequestConfig } from "../src/index.ts";
+import { APIConfig, HTTPRequestFactory, RequestConfig, ResponseInterceptorControls } from "../src/index.ts";
 
 const factory = new HTTPRequestFactory().withLogLevel("debug");
 
@@ -84,13 +84,11 @@ factory
         }
         return body?.json ?? body;
       },
-      responseInterceptors: {
-        interceptor: async (resp) => {
+      responseInterceptors: async (resp, _config, controls :ResponseInterceptorControls) => {
           const data = await resp.json();
+          controls.skipBodyTransformers();
           return { wrapped: data.json };
         },
-        skipTransformersOnReturn: true,
-      },
       endpoints: {
         post: { target: "/anything", method: "POST" },
       },
@@ -206,12 +204,13 @@ describe("http_tests", () => {
     const result = await factory
       .createAPIRequest("simple-api", "get-product-by-id")
       .withURLParam("productId", "123")
-      .withResponseInterceptors({interceptor: async (fetchResponse) => {
+      .withResponseInterceptors(async (fetchResponse, _config, controls) => {
         const data = await fetchResponse.json();
+        controls.skipBodyTransformers();
         return {
           wrapped: data,
         };
-      }, skipTransformersOnReturn: true})
+      })
       .execute();
     expect(result).toHaveProperty("wrapped");
   });

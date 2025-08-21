@@ -14,7 +14,6 @@ import {
   RequestConfigBuilder,
   RequestInterceptor,
   ResponseInterceptor,
-  ResponseInterceptorWithOptions,
 } from "../types.js";
 
 type FactoryInstanceInfo = {
@@ -26,7 +25,7 @@ type FactoryInstanceInfo = {
     priority: number;
   }>;
   adapterResponseInterceptors: Array<{
-    entry: ResponseInterceptor | ResponseInterceptorWithOptions;
+    entry: ResponseInterceptor;
     priority: number;
   }>;
   adapterErrorInterceptors: Array<{
@@ -141,20 +140,10 @@ class AdaptersFeature implements Feature {
       instanceInfo.adapterRequestInterceptors.filter(
         (entry) => !requestInterceptors.includes(entry.interceptor)
       );
-    const responseFns = new Set(
-      responseInterceptors.map((e) =>
-        typeof e === "function"
-          ? (e as ResponseInterceptor)
-          : (e as ResponseInterceptorWithOptions).interceptor
-      )
-    );
+    const responseFns = new Set(responseInterceptors);
     instanceInfo.adapterResponseInterceptors =
       instanceInfo.adapterResponseInterceptors.filter((stored) => {
-        const fn =
-          typeof stored.entry === "function"
-            ? (stored.entry as ResponseInterceptor)
-            : (stored.entry as ResponseInterceptorWithOptions).interceptor;
-        return !responseFns.has(fn);
+        return !responseFns.has(stored.entry);
       });
     instanceInfo.adapterErrorInterceptors =
       instanceInfo.adapterErrorInterceptors.filter(
