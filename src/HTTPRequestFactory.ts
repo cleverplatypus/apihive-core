@@ -60,7 +60,7 @@ export class HTTPRequestFactory {
   private requestDelegates: FeatureRequestDelegates = {} as FeatureRequestDelegates;
   private factoryDelegates: FeatureFactoryDelegates = {} as FeatureFactoryDelegates;
   private wrapErrors: boolean = false;
-  private baseURL: string | null = null;
+  private baseURL?: string;
 
   // ---------------------------------------------------------------------------
   // Public getters
@@ -889,11 +889,10 @@ export class HTTPRequestFactory {
     if (/^(https?:)?\/\//.test(endpoint.target)) {
       return endpoint.target;
     }
-    let base: string | null = null;
-    if (api.baseURL) {
-      base = typeof api.baseURL === 'function' ? api.baseURL(endpoint) : api.baseURL;
-    }
+    if(!api.baseURL) return endpoint.target;
 
-    return base ? `${base}${endpoint.target}` : endpoint.target;
+    const base = api.baseURL.replace(/\/+$/, '');
+    const target = endpoint.target.replace(/^\/+/, '');
+    return `${base}/${target}`;
   }
 }

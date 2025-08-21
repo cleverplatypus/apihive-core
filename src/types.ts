@@ -447,7 +447,7 @@ export type APIConfig<TApiConfig extends BaseAPIInterface = DefaultAPIConfig> =
     /**
      * The base to be used as base URL for this API. If omitted, the value provided in each endpoint's `target` will be used.
      */
-    baseURL?: string | ((endpoint: Endpoint) => string);
+    baseURL?: string;
     /**
      * The name of the API to be referenced in {@link HTTPRequestFactory.createAPIRequest}
      * If the name is 'default' it will be used as the default API when calling {@link HTTPRequestFactory.createAPIRequest}
