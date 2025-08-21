@@ -13,6 +13,7 @@ import {
   FeatureFactoryDelegates,
   RequestConfigBuilder,
   RequestInterceptor,
+  ResponseBodyTransformer,
   ResponseInterceptor,
 } from "../types.js";
 
@@ -30,6 +31,10 @@ type FactoryInstanceInfo = {
   }>;
   adapterErrorInterceptors: Array<{
     interceptor: ErrorInterceptor;
+    priority: number;
+  }>;
+  adapterResponseBodyTransformers: Array<{
+    transformer: ResponseBodyTransformer;
     priority: number;
   }>;
   addedFactoryDefaults: Map<string, RequestConfigBuilder[]>;
@@ -64,11 +69,20 @@ class AdaptersFeature implements Feature {
       const sortedErrorInterceptors = instanceInfo.adapterErrorInterceptors
         .map((entry) => entry.interceptor);
 
+      const sortedResponseBodyTransformers =
+        instanceInfo.adapterResponseBodyTransformers
+          .map((entry) => entry.transformer);
+
       if (sortedRequestInterceptors.length > 0) {
         request.withRequestInterceptors(...sortedRequestInterceptors);
       }
       if (sortedResponseInterceptors.length > 0) {
         request.withResponseInterceptors(...sortedResponseInterceptors);
+      }
+      if (sortedResponseBodyTransformers.length > 0) {
+        request.withResponseBodyTransformers(
+          ...sortedResponseBodyTransformers
+        );
       }
       if (sortedErrorInterceptors.length > 0) {
         request.withErrorInterceptors(...sortedErrorInterceptors);
@@ -78,6 +92,7 @@ class AdaptersFeature implements Feature {
     if (
       instanceInfo.adapterRequestInterceptors.length > 0 ||
       instanceInfo.adapterResponseInterceptors.length > 0 ||
+      instanceInfo.adapterResponseBodyTransformers.length > 0 ||
       instanceInfo.adapterErrorInterceptors.length > 0
     ) {
       instanceInfo.factoryCommands.addRequestDefaults(
@@ -114,6 +129,17 @@ class AdaptersFeature implements Feature {
       (a, b) => a.priority - b.priority
     );
 
+    const responseBodyTransformers = adapter.getResponseBodyTransformers?.() || [];
+    for (const transformer of responseBodyTransformers) {
+      instanceInfo.adapterResponseBodyTransformers.push({
+        transformer,
+        priority: priority.responseBodyTransformer!,
+      });
+    }
+    instanceInfo.adapterResponseBodyTransformers.sort(
+      (a, b) => a.priority - b.priority
+    );
+
     const errorInterceptors = adapter.getErrorInterceptors?.() || [];
     for (const interceptor of errorInterceptors) {
       instanceInfo.adapterErrorInterceptors.push({
@@ -134,6 +160,7 @@ class AdaptersFeature implements Feature {
   ) {
     const requestInterceptors = adapter.getRequestInterceptors?.() || [];
     const responseInterceptors = adapter.getResponseInterceptors?.() || [];
+    const responseBodyTransformers = adapter.getResponseBodyTransformers?.() || [];
     const errorInterceptors = adapter.getErrorInterceptors?.() || [];
 
     instanceInfo.adapterRequestInterceptors =
@@ -144,6 +171,11 @@ class AdaptersFeature implements Feature {
     instanceInfo.adapterResponseInterceptors =
       instanceInfo.adapterResponseInterceptors.filter((stored) => {
         return !responseFns.has(stored.entry);
+      });
+    const transformerSet = new Set(responseBodyTransformers);
+    instanceInfo.adapterResponseBodyTransformers =
+      instanceInfo.adapterResponseBodyTransformers.filter((stored) => {
+        return !transformerSet.has(stored.transformer);
       });
     instanceInfo.adapterErrorInterceptors =
       instanceInfo.adapterErrorInterceptors.filter(
@@ -160,6 +192,7 @@ class AdaptersFeature implements Feature {
       adapterInterceptorApplier: null,
       adapterRequestInterceptors: [],
       adapterResponseInterceptors: [],
+      adapterResponseBodyTransformers: [],
       adapterErrorInterceptors: [],
       addedFactoryDefaults: new Map<string, RequestConfigBuilder[]>(),
     };
@@ -191,6 +224,7 @@ class AdaptersFeature implements Feature {
       const defaultPriority: AdapterPriority = {
         requestInterceptor: 500,
         responseInterceptor: 500,
+        responseBodyTransformer: 500,
         errorInterceptor: 500,
       };
       const finalPriority = {
