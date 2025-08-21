@@ -1,0 +1,33 @@
+name: Bug report
+description: Report a problem with @apihive/core.
+title: "Bug: <short description>"
+labels:
+  - bug
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Include error messages and screenshots if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to ...
+        2. Run ...
+        3. See error ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: apihive/core version
+      placeholder: e.g., 0.3.2
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: OS, Node version, package manager, etc.
