@@ -5,7 +5,7 @@ import DefaultTheme from 'vitepress/theme'
 import 'apihive-common-docs-assets/style/vp-styles.scss';
 import syncPicoTheme from 'apihive-common-docs-assets/scripts/pico-vitest-theme-sync';
 import { OhVueIcon, addIcons } from "oh-vue-icons";
-import { IoCodeDownloadOutline, IoCheckmark, IoClose } from "oh-vue-icons/icons";
+import { IoCodeDownloadOutline, IoCheckmark, IoClose } from "oh-vue-icons/icons/io";
 
 addIcons(IoCodeDownloadOutline, IoCheckmark, IoClose);
 
