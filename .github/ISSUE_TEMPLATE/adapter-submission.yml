@@ -1,0 +1,40 @@
+name: Adapter submission
+description: Submit a community adapter to be considered for the curated list in @apihive/core documentation.
+title: "Adapter: <DescriptiveName>"
+labels:
+  - type:adapter-submission
+  - status:pending
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for contributing an adapter! Please fill out the fields below.
+        Maintainership note: apply one of the labels `status:accepted` or `status:rejected` after review.
+  - type: input
+    id: githubRepo
+    attributes:
+      label: githubRepo
+      description: Link to the adapter's GitHub repository (public).
+      placeholder: https://github.com/owner/repo
+    validations:
+      required: true
+  - type: input
+    id: descriptiveName
+    attributes:
+      label: descriptiveName
+      description: Human-friendly name for the adapter.
+      placeholder: Stripe Billing Adapter
+    validations:
+      required: true
+  - type: textarea
+    id: shortDescription
+    attributes:
+      label: shortDescription
+      description: One- or two-sentence description.
+      placeholder: Adds typed Stripe Billing endpoints and webhooks for APIHive projects.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Parsing note: the issue body will contain headings "### githubRepo", "### descriptiveName", and "### shortDescription" followed by the submitted values.
