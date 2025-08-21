@@ -6,9 +6,11 @@ It's an evolution of the [http-request-factory](https://www.npmjs.com/package/ht
 
 The library is reasonably stable and in its final phase before official release.
 
-Extensive documentation will be available soon.
+The API is subject to change before the final release. Don't use in mission-critical applications until the final release.
 
-## Installation
+Extensive, yet incomplete documentation can be found [here](https://cleverplatypus.github.io/apihive-core/).
+
+## Installation (until final release)
 
 ```bash
 npm install @apihive/core@beta
