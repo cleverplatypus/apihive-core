@@ -1,6 +1,6 @@
 # Request Hash
 
-::: tip Optional
+::: tip Optional Feature
 This feature is [optional](/guide/optional-features) and must be enabled to use it.
 :::
 
@@ -26,18 +26,24 @@ The following example shows how to implement a rudimentary cache using request a
 ```typescript
 const factory = new HTTPRequestFactory()
     .use('request-hash')
-    .withRequestInterceptors((request, controls) => {
-        controls.finalizeURL();
+    .withRequestInterceptors(({ controls }) => {
+        controls.finaliseURL();
         const hash = controls.getHash({ includeBody: true });
         const cachedResponse = cache.get(hash);
         if (cachedResponse) {
             return cachedResponse;
         }
     })
-    .withResponseInterceptors((response, config, controls) => {
+    .withResponseInterceptors(async ({ response, controls }) => {
         const hash = controls.getHash({ includeBody: true });
-        cache.set(hash, response);
-        return response;
+        try {
+            const body = await response.clone().json();
+            cache.set(hash, body);
+            return body;
+        } catch {
+            // Non-JSON bodies: let default parsing handle it
+            return undefined;
+        }
     });
 
 const data = await factory

@@ -6,9 +6,9 @@
 
 # Type Alias: ResponseInterceptor()
 
-> **ResponseInterceptor** = (`response`, `config`, `controls`) => `Promise`\<`any`\>
+> **ResponseInterceptor** = (`response`, `config`, `controls`) => `Promise`\<`any` \| `undefined`\>
 
-Defined in: [types.ts:174](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L174)
+Defined in: [types.ts:244](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L244)
 
 ## Parameters
 
@@ -26,4 +26,4 @@ Defined in: [types.ts:174](https://github.com/cleverplatypus/apihive-core/blob/4
 
 ## Returns
 
-`Promise`\<`any`\>
+`Promise`\<`any` \| `undefined`\>

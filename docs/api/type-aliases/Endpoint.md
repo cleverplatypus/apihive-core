@@ -8,7 +8,7 @@
 
 > **Endpoint** = `object`
 
-Defined in: [types.ts:227](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L227)
+Defined in: [types.ts:309](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L309)
 
 The definition of an API endpoint to be listed in the [APIConfig.endpoints](APIConfig.md#endpoints) map
 
@@ -18,7 +18,7 @@ The definition of an API endpoint to be listed in the [APIConfig.endpoints](APIC
 
 > `optional` **meta**: `Record`\<`string`, `any`\>
 
-Defined in: [types.ts:239](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L239)
+Defined in: [types.ts:321](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L321)
 
 Any metadata that should be attached to the endpoint's requests for later reference
 
@@ -26,9 +26,9 @@ Any metadata that should be attached to the endpoint's requests for later refere
 
 ### method?
 
-> `optional` **method**: [`HTTPMethod`](HTTPMethod.md)
+> `optional` **method**: [`HTTPMethod`](HTTPMethod.md) \| [`SSEMethod`](SSEMethod.md)
 
-Defined in: [types.ts:235](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L235)
+Defined in: [types.ts:317](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L317)
 
 The HTTP method of the endpoint. Defaults to `GET`
 
@@ -38,6 +38,6 @@ The HTTP method of the endpoint. Defaults to `GET`
 
 > **target**: `string`
 
-Defined in: [types.ts:231](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L231)
+Defined in: [types.ts:313](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L313)
 
 The path of the endpoint relative to the API [APIConfig.baseURL](APIConfig.md#baseurl)

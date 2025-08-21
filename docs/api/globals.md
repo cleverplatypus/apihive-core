@@ -18,6 +18,7 @@
 - [Feature](interfaces/Feature.md)
 - [RequestInterceptorControls](interfaces/RequestInterceptorControls.md)
 - [ResponseInterceptorControls](interfaces/ResponseInterceptorControls.md)
+- [SSERequestType](interfaces/SSERequestType.md)
 
 ## Type Aliases
 
@@ -48,11 +49,16 @@
 - [QueryParameterValue](type-aliases/QueryParameterValue.md)
 - [RequestConfig](type-aliases/RequestConfig.md)
 - [RequestConfigBuilder](type-aliases/RequestConfigBuilder.md)
+- [RequestHashOptions](type-aliases/RequestHashOptions.md)
 - [RequestInterceptor](type-aliases/RequestInterceptor.md)
 - [ResponseBodyTransformer](type-aliases/ResponseBodyTransformer.md)
 - [ResponseHandler](type-aliases/ResponseHandler.md)
 - [ResponseInterceptor](type-aliases/ResponseInterceptor.md)
 - [ResponseInterceptorWithOptions](type-aliases/ResponseInterceptorWithOptions.md)
+- [SSEListener](type-aliases/SSEListener.md)
+- [SSEMethod](type-aliases/SSEMethod.md)
+- [SSESubscription](type-aliases/SSESubscription.md)
 - [URLParams](type-aliases/URLParams.md)
 - [URLParamValue](type-aliases/URLParamValue.md)
 - [WrappedResponse](type-aliases/WrappedResponse.md)
+- [WrappedSSEResponse](type-aliases/WrappedSSEResponse.md)

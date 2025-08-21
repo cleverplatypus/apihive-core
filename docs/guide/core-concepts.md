@@ -55,7 +55,9 @@ The below configuration is a simple API configuration with a default API.
 - `endpoints` is a map of endpoint names to endpoint configurations
 - `headers` is a map of header names to header values. Header values can be functions that receive the request config as a parameter and return a header value or `undefined` to skip the header.
 
-> See [APIConfig type](/api/type-aliases/APIConfig.md) for full API configuration options reference.
+::: tip More Info
+See [APIConfig type](/api/type-aliases/APIConfig.md) for full API configuration options reference.
+:::
 
 We are configuring a conditional 'Authorization' header that will be set only if the endpoint requires authentication. We're also putting a guard to throw an error if no token is found when needed.
 

@@ -8,7 +8,7 @@
 
 > **BaseAPIInterface** = `object`
 
-Defined in: [types.ts:298](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L298)
+Defined in: [types.ts:380](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L380)
 
 Base type for API configurations where endpoints are defined as functions
 with single-object parameters. This enables type-safe code generation.
@@ -34,7 +34,7 @@ type GitHubAPI = BaseAPIInterface & {
 
 > `optional` **endpoints**: `Record`\<`string`, (`params`) => `Promise`\<`any`\>\>
 
-Defined in: [types.ts:299](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L299)
+Defined in: [types.ts:381](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L381)
 
 ***
 
@@ -42,4 +42,4 @@ Defined in: [types.ts:299](https://github.com/cleverplatypus/apihive-core/blob/4
 
 > `optional` **meta**: `Record`\<`string`, `any`\>
 
-Defined in: [types.ts:300](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L300)
+Defined in: [types.ts:382](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L382)

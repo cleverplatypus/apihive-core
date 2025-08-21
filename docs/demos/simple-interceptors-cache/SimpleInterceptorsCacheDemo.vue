@@ -22,7 +22,7 @@ const source = ref<'cache' | 'network' | ''>('');
 const factory = new HTTPRequestFactory()
     .use(requestHashFeature)
     .withBaseURL('https://jsonplaceholder.typicode.com')
-    .withRequestInterceptors( (config, controls) => {
+    .withRequestInterceptors(({ controls }) => {
         controls.finaliseURL();
         const hash = controls.getHash();
         const cachedBody = cache.get(hash);
@@ -32,7 +32,7 @@ const factory = new HTTPRequestFactory()
             return cachedBody;
         }
     })
-    .withResponseInterceptors(async (response, config, controls) => {
+    .withResponseInterceptors(async ({ response, controls }) => {
         const hash = controls.getHash();
         try {
             const body = await response.clone().json();

@@ -6,7 +6,7 @@
 
 # Interface: AdapterEntry
 
-Defined in: [adapter-types.ts:59](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/adapter-types.ts#L59)
+Defined in: [adapter-types.ts:63](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/adapter-types.ts#L63)
 
 **`Internal`**
 
@@ -18,7 +18,7 @@ Internal adapter registry entry
 
 > **adapter**: [`Adapter`](Adapter.md)
 
-Defined in: [adapter-types.ts:60](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/adapter-types.ts#L60)
+Defined in: [adapter-types.ts:64](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/adapter-types.ts#L64)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [adapter-types.ts:60](https://github.com/cleverplatypus/apihive-core
 
 > **attached**: `boolean`
 
-Defined in: [adapter-types.ts:62](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/adapter-types.ts#L62)
+Defined in: [adapter-types.ts:66](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/adapter-types.ts#L66)
 
 ***
 
@@ -34,4 +34,4 @@ Defined in: [adapter-types.ts:62](https://github.com/cleverplatypus/apihive-core
 
 > **priority**: [`AdapterPriority`](AdapterPriority.md)
 
-Defined in: [adapter-types.ts:61](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/adapter-types.ts#L61)
+Defined in: [adapter-types.ts:65](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/adapter-types.ts#L65)

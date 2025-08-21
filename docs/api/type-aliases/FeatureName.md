@@ -6,6 +6,6 @@
 
 # Type Alias: FeatureName
 
-> **FeatureName** = `"adapters"` \| `"download-progress"` \| `"request-hash"` \| `"upload-progress"`
+> **FeatureName** = `"adapters"` \| `"download-progress"` \| `"request-hash"` \| `"upload-progress"` \| `"sse-request"`
 
-Defined in: [types.ts:27](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L27)
+Defined in: [types.ts:27](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L27)

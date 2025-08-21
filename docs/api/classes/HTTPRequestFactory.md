@@ -6,7 +6,7 @@
 
 # Class: HTTPRequestFactory
 
-Defined in: [HTTPRequestFactory.ts:40](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L40)
+Defined in: [HTTPRequestFactory.ts:43](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L43)
 
 HTTPRequestFactory is the entry point of @APIHive/core.
 Instantiate this class to create HTTP requests
@@ -41,7 +41,7 @@ request caching, logging, transformation, auto-api generation etc.
 
 > **get** **logger**(): `LoggerFacade`
 
-Defined in: [HTTPRequestFactory.ts:62](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L62)
+Defined in: [HTTPRequestFactory.ts:68](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L68)
 
 ##### Returns
 
@@ -55,7 +55,7 @@ Defined in: [HTTPRequestFactory.ts:62](https://github.com/cleverplatypus/apihive
 
 > **get** **logLevel**(): `LogLevel`
 
-Defined in: [HTTPRequestFactory.ts:66](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L66)
+Defined in: [HTTPRequestFactory.ts:72](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L72)
 
 ##### Returns
 
@@ -67,7 +67,7 @@ Defined in: [HTTPRequestFactory.ts:66](https://github.com/cleverplatypus/apihive
 
 > **always**(): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:433](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L433)
+Defined in: [HTTPRequestFactory.ts:470](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L470)
 
 Call this to reset any conditions in the method chain set by [when](#when)
 
@@ -83,7 +83,7 @@ See [Conditional Building](http://cleverplatypus.github.io/apihive-core/guide/co
 
 > **createAPIRequest**(...`args`): [`HTTPRequest`](HTTPRequest.md)
 
-Defined in: [HTTPRequestFactory.ts:634](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L634)
+Defined in: [HTTPRequestFactory.ts:718](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L718)
 
 Creates a [HTTPRequest](HTTPRequest.md) with configuration based on the given [APIConfig](../type-aliases/APIConfig.md)'s name and endpoint name.
 If invoked with one argument (endpoint name), it will use the default API.
@@ -115,7 +115,7 @@ The created request.
 
 > **createDELETERequest**(`url`): [`HTTPRequest`](HTTPRequest.md)
 
-Defined in: [HTTPRequestFactory.ts:560](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L560)
+Defined in: [HTTPRequestFactory.ts:609](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L609)
 
 Creates a DELETE request with the factory defaults applied.
 
@@ -141,7 +141,7 @@ the created HTTPRequest object
 
 > **createGETRequest**(`url`): [`HTTPRequest`](HTTPRequest.md)
 
-Defined in: [HTTPRequestFactory.ts:527](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L527)
+Defined in: [HTTPRequestFactory.ts:576](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L576)
 
 Creates a GET request with the factory defaults applied.
 
@@ -167,7 +167,7 @@ the created HTTPRequest object
 
 > **createHEADRequest**(`url`): [`HTTPRequest`](HTTPRequest.md)
 
-Defined in: [HTTPRequestFactory.ts:582](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L582)
+Defined in: [HTTPRequestFactory.ts:631](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L631)
 
 Creates a HEAD request with the factory defaults applied.
 
@@ -193,7 +193,7 @@ the created HTTPRequest object
 
 > **createPATCHRequest**(`url`): [`HTTPRequest`](HTTPRequest.md)
 
-Defined in: [HTTPRequestFactory.ts:571](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L571)
+Defined in: [HTTPRequestFactory.ts:620](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L620)
 
 Creates a PATCH request with the factory defaults applied.
 
@@ -219,7 +219,7 @@ the created HTTPRequest object
 
 > **createPOSTRequest**(`url`): [`HTTPRequest`](HTTPRequest.md)
 
-Defined in: [HTTPRequestFactory.ts:538](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L538)
+Defined in: [HTTPRequestFactory.ts:587](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L587)
 
 Creates a POST request with the factory defaults applied.
 
@@ -245,7 +245,7 @@ the created HTTPRequest object
 
 > **createPUTRequest**(`url`): [`HTTPRequest`](HTTPRequest.md)
 
-Defined in: [HTTPRequestFactory.ts:549](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L549)
+Defined in: [HTTPRequestFactory.ts:598](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L598)
 
 Creates a PUT request with the factory defaults applied.
 
@@ -271,7 +271,7 @@ the created HTTPRequest object
 
 > **createRequest**(`url`, `method`): [`HTTPRequest`](HTTPRequest.md)
 
-Defined in: [HTTPRequestFactory.ts:500](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L500)
+Defined in: [HTTPRequestFactory.ts:549](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L549)
 
 Creates a HTTPRequest object with the factory defaults applied.
 
@@ -303,11 +303,47 @@ the created HTTPRequest object
 
 ***
 
+### createSSEAPIRequest()
+
+> **createSSEAPIRequest**(...`args`): [`SSERequestType`](../interfaces/SSERequestType.md)
+
+Defined in: [HTTPRequestFactory.ts:694](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L694)
+
+#### Parameters
+
+##### args
+
+\[`string`, `string`\] | \[`string`\]
+
+#### Returns
+
+[`SSERequestType`](../interfaces/SSERequestType.md)
+
+***
+
+### createSSERequest()
+
+> **createSSERequest**(`url`): [`SSERequestType`](../interfaces/SSERequestType.md)
+
+Defined in: [HTTPRequestFactory.ts:646](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L646)
+
+#### Parameters
+
+##### url
+
+`string`
+
+#### Returns
+
+[`SSERequestType`](../interfaces/SSERequestType.md)
+
+***
+
 ### createTRACERequest()
 
 > **createTRACERequest**(`url`): [`HTTPRequest`](HTTPRequest.md)
 
-Defined in: [HTTPRequestFactory.ts:593](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L593)
+Defined in: [HTTPRequestFactory.ts:642](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L642)
 
 Creates a TRACE request with the factory defaults applied.
 
@@ -333,7 +369,7 @@ the created HTTPRequest object
 
 > **deleteRequestInterceptor**(`interceptor`): `void`
 
-Defined in: [HTTPRequestFactory.ts:479](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L479)
+Defined in: [HTTPRequestFactory.ts:516](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L516)
 
 Removes a request interceptor from the factory defaults.
 
@@ -353,11 +389,35 @@ the interceptor to remove
 
 ***
 
+### deleteResponseInterceptor()
+
+> **deleteResponseInterceptor**(`interceptor`): `void`
+
+Defined in: [HTTPRequestFactory.ts:528](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L528)
+
+Removes a response interceptor from the factory defaults.
+
+See [Response Interceptors](http://cleverplatypus.github.io/apihive-core/guide/response-interceptors.html) in the docs.
+
+#### Parameters
+
+##### interceptor
+
+[`ResponseInterceptor`](../type-aliases/ResponseInterceptor.md)
+
+the interceptor to remove
+
+#### Returns
+
+`void`
+
+***
+
 ### detachAdapter()
 
 > **detachAdapter**(`adapterName`): `Promise`\<`HTTPRequestFactory`\>
 
-Defined in: [HTTPRequestFactory.ts:683](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L683)
+Defined in: [HTTPRequestFactory.ts:775](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L775)
 
 Detaches an adapter from the factory.
 
@@ -387,7 +447,7 @@ It requires the "adapters" feature to be enabled.
 
 > **getAttachedAdapters**(): `string`[]
 
-Defined in: [HTTPRequestFactory.ts:697](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L697)
+Defined in: [HTTPRequestFactory.ts:789](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L789)
 
 Returns the names of the adapters attached to the factory.
 
@@ -409,7 +469,7 @@ It requires the "adapters" feature to be enabled.
 
 > **hasAdapter**(`adapterName`): `boolean`
 
-Defined in: [HTTPRequestFactory.ts:712](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L712)
+Defined in: [HTTPRequestFactory.ts:804](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L804)
 
 Returns true if the factory has an adapter attached with the given name.
 
@@ -439,7 +499,7 @@ It requires the "adapters" feature to be enabled.
 
 > **use**(`feature`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:90](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L90)
+Defined in: [HTTPRequestFactory.ts:96](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L96)
 
 Enables a feature in the factory.
 
@@ -473,7 +533,7 @@ the factory instance
 
 > **when**(`condition`): `any`
 
-Defined in: [HTTPRequestFactory.ts:442](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L442)
+Defined in: [HTTPRequestFactory.ts:479](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L479)
 
 Adds a condition for the application of method-chain settings. It can be reset by calling [always](#always)
 
@@ -495,7 +555,7 @@ See [Conditional Building](http://cleverplatypus.github.io/apihive-core/guide/co
 
 > **withAbortListener**(`listener`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:418](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L418)
+Defined in: [HTTPRequestFactory.ts:455](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L455)
 
 Adds the provided abort listener to the factory defaults.
 See [Abort Listeners](http://cleverplatypus.github.io/apihive-core/guide/abort-listeners.html) in the documentation
@@ -520,7 +580,7 @@ the factory instance
 
 > **withAccept**(...`mimeTypes`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:188](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L188)
+Defined in: [HTTPRequestFactory.ts:200](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L200)
 
 Sets the default accept header to the factory defaults.
 
@@ -542,9 +602,9 @@ the factory instance
 
 ### withAdapter()
 
-> **withAdapter**(`adapter`, `options?`): `Promise`\<`HTTPRequestFactory`\>
+> **withAdapter**(`adapter`, `options?`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:668](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L668)
+Defined in: [HTTPRequestFactory.ts:745](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L745)
 
 Attaches an adapter to the factory.
 
@@ -566,7 +626,7 @@ Optional. The options for the adapter.
 
 #### Returns
 
-`Promise`\<`HTTPRequestFactory`\>
+`HTTPRequestFactory`
 
 The factory instance.
 
@@ -580,7 +640,7 @@ It requires the "adapters" feature to be enabled.
 
 > **withAPIConfig**(...`apis`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:613](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L613)
+Defined in: [HTTPRequestFactory.ts:673](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L673)
 
 Adds API configurations ([APIConfig](../type-aliases/APIConfig.md)) to the factory.
 
@@ -611,7 +671,7 @@ the factory instance
 
 > **withBaseURL**(`baseURL`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:300](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L300)
+Defined in: [HTTPRequestFactory.ts:316](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L316)
 
 Sets the default base URL for requests created with a relative URL.
 
@@ -635,7 +695,7 @@ the factory instance
 
 > **withCredentialsPolicy**(`config`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:289](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L289)
+Defined in: [HTTPRequestFactory.ts:305](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L305)
 
 Sets the default credentials policy to the factory defaults.
 
@@ -659,7 +719,7 @@ the factory instance
 
 > **withErrorInterceptors**(...`interceptors`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:335](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L335)
+Defined in: [HTTPRequestFactory.ts:369](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L369)
 
 Adds the provided error interceptors to the factory defaults.
 See [Error Interceptors](http://cleverplatypus.github.io/apihive-core/guide/error-interceptors.html) in the documentation
@@ -684,7 +744,7 @@ the factory instance
 
 > **withHeader**(`key`, `value`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:263](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L263)
+Defined in: [HTTPRequestFactory.ts:279](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L279)
 
 Sets the default [value] for the header [key] to the factory defaults.
 
@@ -714,7 +774,7 @@ the factory instance
 
 > **withHeaders**(`headers`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:274](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L274)
+Defined in: [HTTPRequestFactory.ts:290](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L290)
 
 Sets the value for the passed key/value pairs of headers to the factory defaults.
 
@@ -738,7 +798,7 @@ the factory instance
 
 > **withJSONMimeTypes**(...`mimeTypes`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:367](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L367)
+Defined in: [HTTPRequestFactory.ts:404](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L404)
 
 Instructs the factory to treat response mime types that match
 the provided regexp as JSON when the library's default
@@ -764,7 +824,7 @@ the factory instance
 
 > **withLogger**(`logger`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:164](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L164)
+Defined in: [HTTPRequestFactory.ts:174](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L174)
 
 Sets the logger adapter for the factory.
 
@@ -788,7 +848,7 @@ the factory instance
 
 > **withLogLevel**(`level`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:176](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L176)
+Defined in: [HTTPRequestFactory.ts:187](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L187)
 
 Sets the log level for the factory.
 
@@ -812,7 +872,7 @@ the factory instance
 
 > **withProgressHandlers**(...`handlers`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:400](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L400)
+Defined in: [HTTPRequestFactory.ts:437](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L437)
 
 Adds the provided progress handlers to the factory defaults.
 See [Progress Handlers](http://cleverplatypus.github.io/apihive-core/guide/progress-handlers.html) in the documentation
@@ -837,7 +897,7 @@ the factory instance
 
 > **withQueryParam**(`key`, `value`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:220](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L220)
+Defined in: [HTTPRequestFactory.ts:233](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L233)
 
 Adds a query parameter to the factory defaults.
 
@@ -868,7 +928,7 @@ The updated request instance.
 
 > **withQueryParams**(`params`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:205](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L205)
+Defined in: [HTTPRequestFactory.ts:217](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L217)
 
 Adds multiple query parameters to the factory defaults.
 
@@ -898,7 +958,7 @@ The updated request instance.
 
 > **withRequestInterceptors**(...`interceptors`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:317](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L317)
+Defined in: [HTTPRequestFactory.ts:333](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L333)
 
 Adds the provided request interceptors to the factory defaults.
 See [Request Interceptors](http://cleverplatypus.github.io/apihive-core/guide/request-interceptors.html) in the documentation
@@ -923,7 +983,7 @@ the factory instance
 
 > **withResponseBodyTransformers**(...`transformers`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:349](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L349)
+Defined in: [HTTPRequestFactory.ts:386](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L386)
 
 Adds the provided response body transformers to the factory defaults.
 See [Response Body Transformers](http://cleverplatypus.github.io/apihive-core/guide/response-body-transformers.html) in the documentation
@@ -944,11 +1004,63 @@ the factory instance
 
 ***
 
+### withResponseInterceptors()
+
+> **withResponseInterceptors**(...`interceptors`): `HTTPRequestFactory`
+
+Defined in: [HTTPRequestFactory.ts:351](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L351)
+
+Adds the provided response interceptors to the factory defaults.
+See [Response Interceptors](http://cleverplatypus.github.io/apihive-core/guide/response-interceptors.html) in the documentation
+
+#### Parameters
+
+##### interceptors
+
+...[`ResponseInterceptor`](../type-aliases/ResponseInterceptor.md)[]
+
+the interceptors to add
+
+#### Returns
+
+`HTTPRequestFactory`
+
+the factory instance
+
+***
+
+### withSSEListeners()
+
+> **withSSEListeners**(...`listeners`): `HTTPRequestFactory`
+
+Defined in: [HTTPRequestFactory.ts:759](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L759)
+
+Adds the provided SSE listeners to the factory defaults.
+They're only applied to SSERequest objects.
+
+See [SSE Listeners](http://cleverplatypus.github.io/apihive-core/guide/sse-listeners.html) in the docs.
+
+#### Parameters
+
+##### listeners
+
+...[`SSEListener`](../type-aliases/SSEListener.md)[]
+
+the listeners to add
+
+#### Returns
+
+`HTTPRequestFactory`
+
+the factory instance
+
+***
+
 ### withTextMimeTypes()
 
 > **withTextMimeTypes**(...`mimeTypes`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:382](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L382)
+Defined in: [HTTPRequestFactory.ts:419](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L419)
 
 Instructs the factory to treat response mime types that match
 the provided regexp as text when the library's default
@@ -974,7 +1086,7 @@ the factory instance
 
 > **withURLParam**(`key`, `value`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:251](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L251)
+Defined in: [HTTPRequestFactory.ts:266](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L266)
 
 Adds a URL parameter to the factory defaults.
 
@@ -1006,7 +1118,7 @@ The updated request instance.
 
 > **withURLParams**(`params`): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:235](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L235)
+Defined in: [HTTPRequestFactory.ts:249](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L249)
 
 Adds multiple URL parameters to the factory defaults.
 
@@ -1034,7 +1146,7 @@ The updated request instance.
 
 > **withWrappedResponseError**(): `HTTPRequestFactory`
 
-Defined in: [HTTPRequestFactory.ts:153](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/HTTPRequestFactory.ts#L153)
+Defined in: [HTTPRequestFactory.ts:163](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/HTTPRequestFactory.ts#L163)
 
 Enables factory-wide wrapping of results into a `{ response? , error? }` object.
 

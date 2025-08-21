@@ -1,6 +1,6 @@
 # Server Side Events
-::: warning Experimental 🧪
-This feature is [optional](/guide/optional-features) and is experimental. API and behavior may change in the future.
+::: tip Optional Feature
+This feature is [optional](/guide/optional-features) and must be enabled.
 :::
 
 Server Side Events (SSE) are a way to receive real-time updates from the server over HTTP (not WebSockets). They are a simple way to implement a push-based architecture.

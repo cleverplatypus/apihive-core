@@ -8,7 +8,7 @@
 
 > **FeatureCommands** = `object`
 
-Defined in: [types.ts:60](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L60)
+Defined in: [types.ts:101](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L101)
 
 ## Properties
 
@@ -16,7 +16,7 @@ Defined in: [types.ts:60](https://github.com/cleverplatypus/apihive-core/blob/41
 
 > **addRequestDefaults**: (...`args`) => `void`
 
-Defined in: [types.ts:61](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L61)
+Defined in: [types.ts:102](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L102)
 
 #### Parameters
 
@@ -34,7 +34,7 @@ Defined in: [types.ts:61](https://github.com/cleverplatypus/apihive-core/blob/41
 
 > **afterRequestCreated**: (`hook`) => `void` \| [`FeatureRequestDelegates`](FeatureRequestDelegates.md)
 
-Defined in: [types.ts:63](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L63)
+Defined in: [types.ts:104](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L104)
 
 #### Parameters
 
@@ -52,7 +52,7 @@ Defined in: [types.ts:63](https://github.com/cleverplatypus/apihive-core/blob/41
 
 > **beforeFetch**: (`hook`) => `void`
 
-Defined in: [types.ts:64](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L64)
+Defined in: [types.ts:105](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L105)
 
 #### Parameters
 
@@ -70,7 +70,7 @@ Defined in: [types.ts:64](https://github.com/cleverplatypus/apihive-core/blob/41
 
 > **removeRequestDefaults**: (...`args`) => `void`
 
-Defined in: [types.ts:62](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L62)
+Defined in: [types.ts:103](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L103)
 
 #### Parameters
 

@@ -8,7 +8,7 @@
 
 > **ProgressHandlerConfig** = `object`
 
-Defined in: [types.ts:22](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L22)
+Defined in: [types.ts:22](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L22)
 
 ## Properties
 
@@ -16,7 +16,7 @@ Defined in: [types.ts:22](https://github.com/cleverplatypus/apihive-core/blob/41
 
 > `optional` **download**: [`ProgressHandler`](ProgressHandler.md)
 
-Defined in: [types.ts:24](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L24)
+Defined in: [types.ts:24](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L24)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [types.ts:24](https://github.com/cleverplatypus/apihive-core/blob/41
 
 > `optional` **throttleMs**: `number`
 
-Defined in: [types.ts:25](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L25)
+Defined in: [types.ts:25](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L25)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [types.ts:25](https://github.com/cleverplatypus/apihive-core/blob/41
 
 > `optional` **upload**: [`ProgressHandler`](ProgressHandler.md)
 
-Defined in: [types.ts:23](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L23)
+Defined in: [types.ts:23](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L23)

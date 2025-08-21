@@ -8,15 +8,46 @@
 
 > **FeatureFactoryDelegates** = `object`
 
-Defined in: [types.ts:53](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L53)
+Defined in: [types.ts:54](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L54)
 
 ## Properties
 
-### detachAdapter()
+### createSSERequest()?
 
-> **detachAdapter**: (`adapterName`) => `Promise`\<[`HTTPRequestFactory`](../classes/HTTPRequestFactory.md)\>
+> `optional` **createSSERequest**: (`url`, `args`) => `any`
 
-Defined in: [types.ts:55](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L55)
+Defined in: [types.ts:63](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L63)
+
+Factory-level delegate to construct an SSERequest instance.
+Implementations should instantiate the request with factory defaults applied.
+
+#### Parameters
+
+##### url
+
+`string`
+
+##### args
+
+###### defaultConfigBuilders
+
+(`request`) => `void`[]
+
+###### wrapErrors
+
+`boolean`
+
+#### Returns
+
+`any`
+
+***
+
+### detachAdapter()?
+
+> `optional` **detachAdapter**: (`adapterName`) => [`HTTPRequestFactory`](../classes/HTTPRequestFactory.md)
+
+Defined in: [types.ts:56](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L56)
 
 #### Parameters
 
@@ -26,15 +57,15 @@ Defined in: [types.ts:55](https://github.com/cleverplatypus/apihive-core/blob/41
 
 #### Returns
 
-`Promise`\<[`HTTPRequestFactory`](../classes/HTTPRequestFactory.md)\>
+[`HTTPRequestFactory`](../classes/HTTPRequestFactory.md)
 
 ***
 
-### getAttachedAdapters()
+### getAttachedAdapters()?
 
-> **getAttachedAdapters**: () => `string`[]
+> `optional` **getAttachedAdapters**: () => `string`[]
 
-Defined in: [types.ts:56](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L56)
+Defined in: [types.ts:57](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L57)
 
 #### Returns
 
@@ -42,11 +73,11 @@ Defined in: [types.ts:56](https://github.com/cleverplatypus/apihive-core/blob/41
 
 ***
 
-### hasAdapter()
+### hasAdapter()?
 
-> **hasAdapter**: (`name`) => `boolean`
+> `optional` **hasAdapter**: (`name`) => `boolean`
 
-Defined in: [types.ts:57](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L57)
+Defined in: [types.ts:58](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L58)
 
 #### Parameters
 
@@ -60,11 +91,11 @@ Defined in: [types.ts:57](https://github.com/cleverplatypus/apihive-core/blob/41
 
 ***
 
-### withAdapter()
+### withAdapter()?
 
-> **withAdapter**: (`adapter`, `options?`) => `Promise`\<[`HTTPRequestFactory`](../classes/HTTPRequestFactory.md)\>
+> `optional` **withAdapter**: (`adapter`, `options?`) => [`HTTPRequestFactory`](../classes/HTTPRequestFactory.md)
 
-Defined in: [types.ts:54](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L54)
+Defined in: [types.ts:55](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L55)
 
 #### Parameters
 
@@ -78,4 +109,4 @@ Defined in: [types.ts:54](https://github.com/cleverplatypus/apihive-core/blob/41
 
 #### Returns
 
-`Promise`\<[`HTTPRequestFactory`](../classes/HTTPRequestFactory.md)\>
+[`HTTPRequestFactory`](../classes/HTTPRequestFactory.md)

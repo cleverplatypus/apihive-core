@@ -24,8 +24,8 @@ const myAPI: APIConfig = {
 export default new HTTPRequestFactory()
   .withAPIConfig(myAPI)
   .when((config) => config.meta.useCaptcha)
-  .withRequestInterceptors((_, { replaceBody }) => {
-    replaceBody((body) =>
+  .withRequestInterceptors(({ controls }) => {
+    controls.replaceBody((body) =>
       JSON.stringify(
         Object.assign({}, JSON.parse(body), {
           captcha: captchaModel.token //your function to retrieve the local captcha token

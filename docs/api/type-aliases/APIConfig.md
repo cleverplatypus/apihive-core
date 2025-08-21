@@ -8,7 +8,7 @@
 
 > **APIConfig**\<`TApiConfig`\> = `object`
 
-Defined in: [types.ts:354](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L354)
+Defined in: [types.ts:436](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L436)
 
 Configuration for an API to be added with [HTTPRequestFactory.withAPIConfig](../classes/HTTPRequestFactory.md#withapiconfig)
 
@@ -69,7 +69,7 @@ Configuration interface that constrains meta and endpoints.
 
 > `optional` **baseURL**: `string` \| (`endpoint`) => `string`
 
-Defined in: [types.ts:359](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L359)
+Defined in: [types.ts:441](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L441)
 
 The base to be used as base URL for this API. If omitted, the value provided in each endpoint's `target` will be used.
 
@@ -79,7 +79,7 @@ The base to be used as base URL for this API. If omitted, the value provided in 
 
 > **endpoints**: `TApiConfig` *extends* `object` ? `never` : `TApiConfig` *extends* `object` ? `{ [P in Extract<K, string>]: Endpoint }` : `object`
 
-Defined in: [types.ts:408](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L408)
+Defined in: [types.ts:490](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L490)
 
 A map of [Endpoint](Endpoint.md) for the API.
 Can be constrained or forbidden by the TApiConfig generic parameter.
@@ -102,7 +102,7 @@ Can be constrained or forbidden by the TApiConfig generic parameter.
 
 > `optional` **errorInterceptors**: [`ErrorInterceptor`](ErrorInterceptor.md) \| [`ErrorInterceptor`](ErrorInterceptor.md)[]
 
-Defined in: [types.ts:394](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L394)
+Defined in: [types.ts:476](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L476)
 
 ***
 
@@ -110,7 +110,7 @@ Defined in: [types.ts:394](https://github.com/cleverplatypus/apihive-core/blob/4
 
 > `optional` **headers**: `Record`\<`string`, [`HeaderValue`](HeaderValue.md)\>
 
-Defined in: [types.ts:377](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L377)
+Defined in: [types.ts:459](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L459)
 
 Any headers that should be applied to each request.
 Notice that if a header value is  [DynamicHeaderValue](DynamicHeaderValue.md),
@@ -123,7 +123,7 @@ so conditional logic can be applied to generate the value.
 
 > `optional` **meta**: `TApiConfig` *extends* `object` ? `TMeta` : `any`
 
-Defined in: [types.ts:370](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L370)
+Defined in: [types.ts:452](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L452)
 
 Any metadata that should be attached to the API for later reference.
 The structure is constrained by the TApiConfig generic parameter.
@@ -134,7 +134,7 @@ The structure is constrained by the TApiConfig generic parameter.
 
 > **name**: `string` \| `"default"`
 
-Defined in: [types.ts:365](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L365)
+Defined in: [types.ts:447](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L447)
 
 The name of the API to be referenced in [HTTPRequestFactory.createAPIRequest](../classes/HTTPRequestFactory.md#createapirequest)
 If the name is 'default' it will be used as the default API when calling [HTTPRequestFactory.createAPIRequest](../classes/HTTPRequestFactory.md#createapirequest)
@@ -146,7 +146,7 @@ with one argument (the name of the endpoint).
 
 > `optional` **progressHandlers**: [`ProgressHandlerConfig`](ProgressHandlerConfig.md) \| [`ProgressHandlerConfig`](ProgressHandlerConfig.md)[]
 
-Defined in: [types.ts:416](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L416)
+Defined in: [types.ts:498](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L498)
 
 ***
 
@@ -154,7 +154,7 @@ Defined in: [types.ts:416](https://github.com/cleverplatypus/apihive-core/blob/4
 
 > `optional` **requestInterceptors**: [`RequestInterceptor`](RequestInterceptor.md) \| [`RequestInterceptor`](RequestInterceptor.md)[]
 
-Defined in: [types.ts:393](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L393)
+Defined in: [types.ts:475](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L475)
 
 ***
 
@@ -162,7 +162,7 @@ Defined in: [types.ts:393](https://github.com/cleverplatypus/apihive-core/blob/4
 
 > `optional` **responseBodyTransformers**: [`ResponseBodyTransformer`](ResponseBodyTransformer.md) \| [`ResponseBodyTransformer`](ResponseBodyTransformer.md)[]
 
-Defined in: [types.ts:382](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L382)
+Defined in: [types.ts:464](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L464)
 
 An optional [ResponseBodyTransformer](ResponseBodyTransformer.md) function to be applied to all of
 the API's responses.
@@ -173,7 +173,15 @@ the API's responses.
 
 > `optional` **responseInterceptors**: [`ResponseInterceptor`](ResponseInterceptor.md) \| [`ResponseInterceptorWithOptions`](ResponseInterceptorWithOptions.md) \| ([`ResponseInterceptor`](ResponseInterceptor.md) \| [`ResponseInterceptorWithOptions`](ResponseInterceptorWithOptions.md))[]
 
-Defined in: [types.ts:389](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L389)
+Defined in: [types.ts:471](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L471)
 
 Optional response interceptors applied to all requests of this API.
 Interceptors can be functions or registrations that control transformer behavior.
+
+***
+
+### SSEListeners?
+
+> `optional` **SSEListeners**: [`SSEListener`](SSEListener.md) \| [`SSEListener`](SSEListener.md)[]
+
+Defined in: [types.ts:497](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L497)

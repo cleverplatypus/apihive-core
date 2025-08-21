@@ -8,7 +8,7 @@
 
 > **ResponseInterceptorWithOptions** = `object`
 
-Defined in: [types.ts:182](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L182)
+Defined in: [types.ts:252](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L252)
 
 ## Properties
 
@@ -16,7 +16,7 @@ Defined in: [types.ts:182](https://github.com/cleverplatypus/apihive-core/blob/4
 
 > **interceptor**: [`ResponseInterceptor`](ResponseInterceptor.md)
 
-Defined in: [types.ts:183](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L183)
+Defined in: [types.ts:253](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L253)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [types.ts:183](https://github.com/cleverplatypus/apihive-core/blob/4
 
 > `optional` **skipTransformersOnReturn**: `boolean`
 
-Defined in: [types.ts:189](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L189)
+Defined in: [types.ts:259](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L259)
 
 If true, any non-undefined value returned by this interceptor
 will be returned as-is, without passing through responseBodyTransformers.

@@ -8,7 +8,7 @@
 
 > **FeatureRequestDelegates** = `object`
 
-Defined in: [types.ts:42](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L42)
+Defined in: [types.ts:43](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L43)
 
 ## Properties
 
@@ -16,7 +16,7 @@ Defined in: [types.ts:42](https://github.com/cleverplatypus/apihive-core/blob/41
 
 > `optional` **getFetchImpl**: (`config`) => [`FetchLike`](FetchLike.md)
 
-Defined in: [types.ts:50](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L50)
+Defined in: [types.ts:51](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L51)
 
 #### Parameters
 
@@ -32,15 +32,19 @@ Defined in: [types.ts:50](https://github.com/cleverplatypus/apihive-core/blob/41
 
 ### getHash()?
 
-> `optional` **getHash**: (`request`) => `string`
+> `optional` **getHash**: (`request`, `options?`) => `string`
 
-Defined in: [types.ts:43](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L43)
+Defined in: [types.ts:44](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L44)
 
 #### Parameters
 
 ##### request
 
 [`HTTPRequest`](../classes/HTTPRequest.md)
+
+##### options?
+
+[`RequestHashOptions`](RequestHashOptions.md)
 
 #### Returns
 
@@ -52,7 +56,7 @@ Defined in: [types.ts:43](https://github.com/cleverplatypus/apihive-core/blob/41
 
 > `optional` **handleDownloadProgress**: (`info`) => `Promise`\<`Blob`\>
 
-Defined in: [types.ts:45](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L45)
+Defined in: [types.ts:46](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L46)
 
 #### Parameters
 
@@ -80,7 +84,7 @@ Defined in: [types.ts:45](https://github.com/cleverplatypus/apihive-core/blob/41
 
 > `optional` **handleUploadProgress**: (`info`) => `void`
 
-Defined in: [types.ts:44](https://github.com/cleverplatypus/apihive-core/blob/41e3c1cea55590dc03062ff0c7aaa365f3b52362/src/types.ts#L44)
+Defined in: [types.ts:45](https://github.com/cleverplatypus/apihive-core/blob/07013091b03a0f47e51724fb271d78c36a50ebbd/src/types.ts#L45)
 
 #### Parameters
 

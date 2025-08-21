@@ -22,7 +22,7 @@ features:
     details: Minimize boilerplate code by using a config-first approach consume HTTP APIs.
   - title: ⚡ Just In Time Setup
     details: Pre-configure requests passing functions to request builders (e.g. headers, body, queryParams, etc.)
-  - title: 🔌 Adapter Ecosystem
+  - title: 🔌 Adapters Ecosystem
     details: Extensible plugin architecture for caching, OpenAPI integration, logging, and more. Build once, use everywhere.
   - title: 🎯 TypeScript Support
     details: Built from the ground up with TypeScript. Full type safety, excellent IntelliSense, and zero runtime surprises. Still works with plain JavaScript.
