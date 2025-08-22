@@ -12,5 +12,5 @@ import CommunityAdaptersList from './CommunityAdaptersList.vue';
 </ClientOnly>
 
 ::: info Add your adapter here
-If you have an adapter you'd like to be featured here, submit a submission request [here](https://github.com/cleverplatypus/apihive-core/issues/new?template=adapter-submission.yml).
+If you have an adapter you'd like to be featured here, submit a request [here](https://github.com/cleverplatypus/apihive-core/issues/new?template=adapter-submission.yml).
 :::
