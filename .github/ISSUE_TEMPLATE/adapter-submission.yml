@@ -22,7 +22,7 @@ body:
     attributes:
       label: descriptiveName
       description: Human-friendly name for the adapter.
-      placeholder: Stripe Billing Adapter
+      placeholder: Auditor
     validations:
       required: true
   - type: textarea
@@ -30,6 +30,6 @@ body:
     attributes:
       label: shortDescription
       description: One- or two-sentence description.
-      placeholder: Adds typed Stripe Billing endpoints and webhooks for APIHive projects.
+      placeholder: Adds auditing capabilities to APIHive requests with service X.
     validations:
       required: true
