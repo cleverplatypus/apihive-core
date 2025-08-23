@@ -8,7 +8,7 @@ The idea is to have a clear separation of concerns between the service layer and
 
 Typically controllers in a MVC application consume services, in this case by calling endpoints on a APIHive API and modifying the application state (Models).
 
-Controllers shouln't be aware of what the DTOs look like as they should only deal with the data as modeled by the front-end application.
+Controllers shouldn't be aware of what the DTOs look like as they should only deal with the data as modeled by the front-end application.
 
 That being said...
 

@@ -12,7 +12,7 @@ The type of data that can be sent is limited to plain text or JSON.
 It's very useful for implementing real-time features like in-app notifications, database synchronisation, live updates etc, without the need to poll the server or to implement WebSockets which are notoriously harder to implement.
 
 ::: tip Availability
-Server Side Events are supported by must modern browsers but there are limitations when communicating with a server that doesn't support HTTP/2.
+Server Side Events are supported by most modern browsers but there are limitations when communicating with a server that doesn't support HTTP/2.
 Refer to [this page](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) for details.
 :::
 
