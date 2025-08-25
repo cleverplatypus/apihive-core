@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { HTTPRequestFactory } from '../src/HTTPRequestFactory.js';
-import downloadProgressFeature from '../src/features/download-progress.ts';
+import { DownloadProgressFeature } from '../src/features/download-progress.ts';
+const downloadProgressFeature = new DownloadProgressFeature();
 
 describe('progress_handlers_download_abort_behavior', () => {
   it('aborts_mid_download_due_to_timeout_and_rejects_with_httperror_neg1', async () => {

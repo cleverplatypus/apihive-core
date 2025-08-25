@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { HTTPRequestFactory } from '../src/HTTPRequestFactory';
-import uploadProgressFeature from '../src/features/upload-progress';
+import { UploadProgressFeature } from '../src/features/upload-progress';
+
+const uploadProgressFeature = new UploadProgressFeature();
 
 type ProgressEventInitLite = {
   loaded: number;

@@ -107,7 +107,7 @@ function createXhrFetchFacade(config: RequestConfig, factory: HTTPRequestFactory
   };
 }
 
-class UploadProgressFeature implements Feature {
+export class UploadProgressFeature implements Feature {
     readonly name = "upload-progress" as const;
 
     getDelegates(factory: HTTPRequestFactory) {
@@ -118,5 +118,3 @@ class UploadProgressFeature implements Feature {
         }
     }
 }
-
-export default new UploadProgressFeature();

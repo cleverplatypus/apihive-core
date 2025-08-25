@@ -1,7 +1,7 @@
 import { HTTPRequestFactory } from "../HTTPRequestFactory.js";
 import { Feature, RequestConfig } from "../types.js";
 
-class DownloadProgressFeature implements Feature {
+export class DownloadProgressFeature implements Feature {
   readonly name = "download-progress" as const;
   getDelegates(_factory?: HTTPRequestFactory) {
     return {
@@ -146,5 +146,3 @@ class DownloadProgressFeature implements Feature {
     };
   }
 }
-
-export default new DownloadProgressFeature();

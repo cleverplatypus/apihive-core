@@ -86,7 +86,7 @@ function simpleHash(str: string): string {
   return (hash >>> 0).toString(16);
 }
 
-class RequestHashFeature implements Feature {
+export class RequestHashFeature implements Feature {
   readonly name = "request-hash" as const;
   private hashes = new WeakMap<HTTPRequest, Partial<Record<HashType, string>>>();
 
@@ -181,5 +181,3 @@ class RequestHashFeature implements Feature {
   }
 
 }
-
-export default new RequestHashFeature();

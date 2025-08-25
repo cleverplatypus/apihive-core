@@ -5,6 +5,7 @@ Some less common features are available as separate modules. This enables tree-s
 
 Available features:
 
+- `retry`: Enables retry logic for requests
 - `upload-progress`: Tracks upload progress of requests
 - `download-progress`: Tracks download progress of requests
 - `adapters`: enables the [adapters API](./adapters.md)

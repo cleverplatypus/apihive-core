@@ -49,6 +49,7 @@ export default withMermaid(
             { text: 'Response Interceptors', link: '/guide/response-interceptors' },
             { text: 'Response Body Transformers', link: '/guide/response-body-transformers' },
             { text: 'Adapters', link: '/guide/adapters' },
+            { text: 'Retrying', link: '/guide/retrying' },
             { text: 'Request Hash', link: '/guide/request-hash' },
             { text: 'Logging', link: '/guide/logging' },
             // { text: '⛔️ Abort Listeners', link: '/guide/abort-listeners' },

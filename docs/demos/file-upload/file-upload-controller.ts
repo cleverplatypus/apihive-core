@@ -1,13 +1,13 @@
 import model from './file-upload-model';
 import { HTTPRequestFactory, type ProgressInfo } from '../../../src';
-import uploadProgress from '../../../src/features/upload-progress';
+import { UploadProgressFeature} from '../../../src/features/upload-progress';
 
 export type Aborter = () => void;
 
 class FileUploadController {
     abortController: AbortController | null = null;
     requestFactory = new HTTPRequestFactory()
-        .use(uploadProgress);
+        .use(new UploadProgressFeature());
 
     onFileChange(file: File) {
         model.file = file;

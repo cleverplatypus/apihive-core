@@ -2838,6 +2838,11 @@ vitepress@^1.6.3:
     vite "^5.4.14"
     vue "^3.5.13"
 
+vitest-probe@0.0.6:
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/vitest-probe/-/vitest-probe-0.0.6.tgz#c06aa9266a6654d7c4ad70bd098e7df81eefd686"
+  integrity sha512-gwdzYHm0vTIEaFNgili0JW9I7LZ2qRWOUiVH450PqJYtDUQTAp/CKRD8JO/a1ZtWS5vtMeLHnUni2e8/E50yvA==
+
 vitest@^3.2.4:
   version "3.2.4"
   resolved "https://registry.yarnpkg.com/vitest/-/vitest-3.2.4.tgz#0637b903ad79d1539a25bc34c0ed54b5c67702ea"

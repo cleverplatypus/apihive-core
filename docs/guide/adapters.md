@@ -24,6 +24,8 @@ import { Adapter, RequestInterceptor, ResponseInterceptor, ErrorInterceptor } fr
 
 export class MyCustomAdapter implements Adapter {
   readonly name = 'my-custom-adapter';
+  readonly use = ['retry'];
+  
   readonly priority = {
     requestInterceptor: 100,   // Lower numbers run first
     responseInterceptor: 100,

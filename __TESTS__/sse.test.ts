@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import sseFeature from '../src/features/sse-request.ts';
-import { APIConfig, HTTPRequestFactory, SSERequestType, WrappedSSEResponse } from '../src/index.ts';
+import { SSERequestFeature } from '../src/features/sse-request.ts';
+import { APIConfig, HTTPRequestFactory, WrappedSSEResponse } from '../src/index.ts';
 
 let hasEventSource = typeof (globalThis as any).EventSource === 'function';
 async function ensureEventSource() {
@@ -21,7 +21,7 @@ describe('sse_feature', () => {
   it('connects_and_receives_multiple_events_then_closes', async () => {
     if (!hasEventSource) return;
 
-    const factory = new HTTPRequestFactory().use(sseFeature);
+    const factory = new HTTPRequestFactory().use(new SSERequestFeature());
 
     const received: any[] = [];
     let resolve;
@@ -54,7 +54,7 @@ describe('sse_feature', () => {
     if (!hasEventSource) return;
 
     const factory = new HTTPRequestFactory()
-      .use(sseFeature)
+      .use(new SSERequestFeature())
       .withWrappedResponseError();
     const result = await factory
       .createSSERequest(`https://dummy.com`)
@@ -68,7 +68,7 @@ describe('sse_feature', () => {
     if (!hasEventSource) return;
 
     const factory = new HTTPRequestFactory()
-      .use(sseFeature)
+      .use(new SSERequestFeature())
       .withWrappedResponseError();
     const { subscription, error } = await factory
       .createSSERequest(`https://stream.wikimedia.org/v2/stream/recentchange`)
@@ -105,7 +105,7 @@ describe('sse_feature', () => {
     };
 
     const factory = new HTTPRequestFactory()
-      .use(sseFeature)
+      .use(new SSERequestFeature())
       .withAPIConfig(api);
 
     const enough = new Promise<void>((r) => (resolve = r));
@@ -133,7 +133,7 @@ describe('sse_feature', () => {
   it('uses_request_interceptors_to_update_query_params_and_still_receives_events', async () => {
     if (!hasEventSource) return;
 
-    const factory = new HTTPRequestFactory().use(sseFeature);
+    const factory = new HTTPRequestFactory().use(new SSERequestFeature());
 
     let interceptorRan = false;
 

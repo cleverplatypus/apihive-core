@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { HTTPRequestFactory } from "../src/index.ts";
-import requestHashFeature from "../src/features/request-hash.ts";
+import { RequestHashFeature } from "../src/features/request-hash.ts";
+const requestHashFeature = new RequestHashFeature();
 
 describe("http_request_get_hash_tests", () => {
     let fetchSpy: any;

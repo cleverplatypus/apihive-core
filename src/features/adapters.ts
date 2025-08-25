@@ -40,7 +40,7 @@ type FactoryInstanceInfo = {
   addedFactoryDefaults: Map<string, RequestConfigBuilder[]>;
 };
 
-class AdaptersFeature implements Feature {
+export class AdaptersFeature implements Feature {
   readonly name = 'adapters' as const;
 
   private factoriesInstanceInfo: WeakMap<
@@ -211,16 +211,7 @@ class AdaptersFeature implements Feature {
       if (instanceInfo.adapters.has(adapter.name)) {
         throw new Error(`Adapter '${adapter.name}' is already attached`);
       }
-
-      if ((adapter as any).use && Array.isArray((adapter as any).use) && (adapter as any).use.length) {
-        for (const feature of (adapter as any).use) {
-          factory.use(feature);
-          factory.logger
-            .withMinimumLevel(factory.logLevel)
-            .info(`Feature '${(feature as any).name}' auto-enabled by adapter '${adapter.name}'`);
-        }
-      }
-
+      
       const defaultPriority: AdapterPriority = {
         requestInterceptor: 500,
         responseInterceptor: 500,
@@ -294,5 +285,3 @@ class AdaptersFeature implements Feature {
     return { factory: delegates };
   }
 }
-
-export default new AdaptersFeature();
