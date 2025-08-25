@@ -100,9 +100,15 @@ export default class RetryFeature implements Feature {
   }
 
   withDefaults(config: RetryConfig) {
-    this.defaultAttempts = config.attempts;
-    this.defaultRetryDelay = config.retryDelay;
-    this.defaultRetryCondition = config.retryCondition;
+    if (config.attempts !== undefined) {
+      this.defaultAttempts = config.attempts;
+    }
+    if (config.retryDelay !== undefined) {
+      this.defaultRetryDelay = config.retryDelay;
+    }
+    if (config.retryCondition !== undefined) {
+      this.defaultRetryCondition = config.retryCondition;
+    }
     return this;
   }
 
