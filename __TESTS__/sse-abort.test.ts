@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import sseFeature from '../src/features/sse-request.ts';
+import { SSERequestFeature } from '../src/features/sse-request.ts';
 import { HTTPRequestFactory } from '../src/index.ts';
 
 class FakeEventSource {
@@ -35,7 +35,7 @@ describe('sse_abort_behavior', () => {
   });
 
   it('aborts_via_timeout_and_triggers_error_interceptor_neg1', async () => {
-    const factory = new HTTPRequestFactory().use(sseFeature);
+    const factory = new HTTPRequestFactory().use(new SSERequestFeature());
 
     let intercepted = false;
 

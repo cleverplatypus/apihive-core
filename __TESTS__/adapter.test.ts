@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Adapter, AdapterPriority } from "../src/adapter-types.ts";
+import { AdaptersFeature } from "../src/features/adapters.ts";
+import { RequestHashFeature } from "../src/features/request-hash.ts";
 import { HTTPRequest } from "../src/HTTPRequest.ts";
 import { HTTPRequestFactory } from "../src/HTTPRequestFactory.ts";
-import { ErrorInterceptor, RequestConfig, RequestInterceptor, RequestInterceptorControls, ResponseInterceptor } from "../src/types.ts";
-import adaptersFeature from "../src/features/adapters.ts";
-import requestHashFeature from "../src/features/request-hash.ts";
+import { ErrorInterceptor, RequestConfig, RequestInterceptor, ResponseInterceptor } from "../src/types.ts";
 
 // Mock adapters for testing
 class TestRequestAdapter implements Adapter {
@@ -102,7 +102,7 @@ describe("adapter_system", () => {
 
   beforeEach(() => {
     factory = new HTTPRequestFactory()
-    .use(adaptersFeature)
+    .use(new AdaptersFeature())
     .withLogLevel("none"); // Suppress logs during tests
   });
 
@@ -237,7 +237,7 @@ describe("adapter_system", () => {
   describe("factory_defaults", () => {
     it("should_apply_factory_defaults_from_adapters", async () => {
       const adapter = new TestFactoryDefaultsAdapter();
-      await factory.use(requestHashFeature).withAdapter(adapter);
+      await factory.use(new RequestHashFeature()).withAdapter(adapter);
 
       // Add a config capturing interceptor
       let capturedConfig: RequestConfig | undefined;

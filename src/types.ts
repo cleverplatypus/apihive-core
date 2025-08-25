@@ -30,9 +30,11 @@ export type FeatureName =
   | 'request-hash'
   | 'upload-progress'
   | 'sse-request'
+  | 'retry'
 
 export interface Feature {
   name : FeatureName;
+  priority?: number; // Lower numbers = applied first (inner in chain)
   apply?(target: HTTPRequestFactory, commands: FeatureCommands): void;
   getDelegates?(factory: HTTPRequestFactory): {
     request? : FeatureRequestDelegates,
@@ -48,7 +50,7 @@ export type FeatureRequestDelegates = {
     abortController: AbortController,
     config: RequestConfig
   }) => Promise<Blob>;
-  getFetchImpl?: (config:RequestConfig) => FetchLike;
+  getFetchImpl?: (config: RequestConfig, baseFetch: FetchLike) => FetchLike;
 }
 
 export type FeatureFactoryDelegates = {
@@ -310,6 +312,7 @@ export type RequestConfig = {
   responseInterceptors: Array<ResponseInterceptor>;
   errorInterceptors: ErrorInterceptor[];
   progressHandlers?: ProgressHandlerConfig[];
+  retry?: RetryArg;
 };
 
 /**
@@ -504,4 +507,28 @@ export type APIConfig<TApiConfig extends BaseAPIInterface = DefaultAPIConfig> =
       : { [endpointName: string]: Endpoint };
     SSEListeners?: SSEListener | SSEListener[];
     progressHandlers?: ProgressHandlerConfig | ProgressHandlerConfig[];
+    retry?: RetryArg;
   };
+
+// Retry types
+export type RetryCondition = (param : {error?: HTTPError, attempt: number, requestConfig: RequestConfig, retryConfig : RetryConfig}) => boolean;
+export type BackoffStrategyEvaluator = (attempt: number, error: HTTPError, config: RequestConfig) => number;
+export type BackoffStrategyEvaluatorFactory = (...args: any[]) => BackoffStrategyEvaluator;
+export type RetryDelay = number | BackoffStrategyEvaluator;
+
+export type RetryConfig = {
+  attempts: number;
+  retryCondition?: RetryCondition;
+  retryDelay?: RetryDelay;
+  onRetry?: (attempt: number, error: HTTPError, delay: number) => void;
+  onMaxAttemptsExceeded?: (error: HTTPError, attempts: number) => void;
+  onRetrySuccess?: (attempt: number, response: Response) => void;
+};
+
+export type RetryArg = RetryConfig | ((config: RequestConfig) => RetryConfig);
+
+export type RetryMetaConfig = {
+  evaluator?: (meta: Record<string, any>) => boolean;
+  defaults?: RetryConfig;
+  normally?: 'on' | 'off';
+};

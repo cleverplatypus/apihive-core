@@ -7,8 +7,8 @@ import type {
   FeatureRequestDelegates,
   HeaderValue,
   HTTPMethod,
+  FetchLike,
   ProgressHandlerConfig,
-  QueryParameterValue,
   RequestConfig,
   RequestConfigBuilder,
   RequestHashOptions,
@@ -17,9 +17,12 @@ import type {
   ResponseBodyTransformer,
   ResponseInterceptor,
   ResponseInterceptorControls,
+  RetryArg,
   URLParams,
   URLParamValue,
-  WrappedResponse
+  QueryParameterValue,
+  WrappedResponse,
+  Feature,
 } from './types.js';
 import { maybeFunction } from './utils.js';
 
@@ -30,6 +33,7 @@ import { HTTPRequestFactory } from './HTTPRequestFactory.js';
 
 type SharedFactoryMethods = {
   requireFeature: (featureName: FeatureName) => void;
+  getEnabledFeatures(): Map<string, Feature>;
 };
 
 type RequestConstructorArgs = {
@@ -302,7 +306,7 @@ export class HTTPRequest {
         // Keep mutable config for hooks to support adapters/tests that set fetchImpl dynamically
         await hook(this.fetchBody, this.config as any);
       }
-      const fetchImpl = this.featureDelegates.getFetchImpl?.(this.getReadOnlyConfig()) || globalThis.fetch;
+      const fetchImpl = this.getFinalFetchImpl();
 
       this.registerAbortListeners();
       response = await fetchImpl(this.finalizedURL, this.fetchBody);
@@ -944,6 +948,38 @@ export class HTTPRequest {
     this.throwIfFinalized();
     this.config.timeout = timeout;
     return this;
+  }
+
+  /**
+   * Sets the retry configuration for this request.
+   *
+   * @param retryArg the retry configuration or a function that returns retry configuration
+   * @returns The updated request instance.
+   */
+  withRetry(retryArg: RetryArg): HTTPRequest {
+    this.config.retry = retryArg;
+    return this;
+  }
+
+  private getSortedFeaturesWithFetchImpl(): Feature[] {
+      return Array.from(this.factoryMethods.getEnabledFeatures().values())
+        .filter(f => f.getDelegates?.(this.factory)?.request?.getFetchImpl)
+        .sort((a, b) => (a.priority ?? 50) - (b.priority ?? 50));
+    }
+  /**
+   * Gets the final fetch implementation by chaining all feature delegates in priority order.
+   * @internal
+   */
+  private getFinalFetchImpl(): FetchLike {
+    // Get features with fetch implementations, sorted by priority
+    const featuresWithFetch = this.getSortedFeaturesWithFetchImpl();
+    
+    // Chain fetch implementations starting with globalThis.fetch
+    return featuresWithFetch.reduce((currentFetch, feature) => {
+      const delegates = feature.getDelegates?.(this.factory);
+      const getFetchImpl = delegates?.request?.getFetchImpl;
+      return getFetchImpl ? getFetchImpl(this.config, currentFetch) : currentFetch;
+    }, globalThis.fetch as FetchLike);
   }
 
   /**

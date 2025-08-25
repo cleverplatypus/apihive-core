@@ -19,6 +19,7 @@ import {
   RequestInterceptor,
   ResponseBodyTransformer,
   ResponseInterceptor,
+  RetryArg,
   SSEListener,
   SSERequestType,
   URLParamValue
@@ -93,35 +94,37 @@ export class HTTPRequestFactory {
    * @param feature a reference to a supported feature
    * @returns the factory instance
    */
-  use(feature: Feature) {
-    if (this.enabledFeatures.has(feature.name)) {
-      this._logger.info(`Feature "${feature.name}" already enabled`);
-      return this;
-    }
-    this.enabledFeatures.set(feature.name, feature);
-    feature.apply?.(this, {
-      addRequestDefaults: (...args: RequestConfigBuilder[]) => {
-        this.requestDefaults.push(...args);
-      },
-      removeRequestDefaults: (...args: RequestConfigBuilder[]) => {
-        this.requestDefaults = this.requestDefaults.filter((defaultFn) => !args.includes(defaultFn));
-      },
-      afterRequestCreated: (hook: (request: HTTPRequest) => void) => {
-        this.afterRequestCreatedHooks.push(hook);
-      },
-      beforeFetch: (hook: BeforeFetchHook) => {
-        this.requestDefaults.push((request: HTTPRequest) => request.withBeforeFetchHook(hook));
+  use(...features: Feature[]) {
+    features.forEach((feature) => {
+      if (this.enabledFeatures.has(feature.name)) {
+        this._logger.info(`Feature "${feature.name}" already enabled`);
+        return this;
+      }
+      this.enabledFeatures.set(feature.name, feature);
+      feature.apply?.(this, {
+        addRequestDefaults: (...args: RequestConfigBuilder[]) => {
+          this.requestDefaults.push(...args);
+        },
+        removeRequestDefaults: (...args: RequestConfigBuilder[]) => {
+          this.requestDefaults = this.requestDefaults.filter((defaultFn) => !args.includes(defaultFn));
+        },
+        afterRequestCreated: (hook: (request: HTTPRequest) => void) => {
+          this.afterRequestCreatedHooks.push(hook);
+        },
+        beforeFetch: (hook: BeforeFetchHook) => {
+          this.requestDefaults.push((request: HTTPRequest) => request.withBeforeFetchHook(hook));
+        }
+      });
+      if (feature.getDelegates) {
+        const delegates = feature.getDelegates(this);
+        if (delegates.request) {
+          Object.assign(this.requestDelegates, delegates.request);
+        }
+        if (delegates.factory) {
+          Object.assign(this.factoryDelegates, delegates.factory);
+        }
       }
     });
-    if (feature.getDelegates) {
-      const delegates = feature.getDelegates(this);
-      if (delegates.request) {
-        Object.assign(this.requestDelegates, delegates.request);
-      }
-      if (delegates.factory) {
-        Object.assign(this.factoryDelegates, delegates.factory);
-      }
-    }
     return this;
   }
 
@@ -137,34 +140,34 @@ export class HTTPRequestFactory {
 
   /**
    * Enables factory-wide wrapping of results into a `{ response? , error? }` object.
-   * 
+   *
    * This leverages a fail-fast programming style without try/catch blocks.
-   * 
+   *
    * @example
    * ```typescript
    * const factory = new HTTPRequestFactory()
    *   .withWrappedResponseError();
-   * 
+   *
    * const {response, error} = await factory
    *   .createGETRequest('https://httpbin.org/json')
    *   .execute();
-   * 
+   *
    * if (error) { //fail fast
    *   console.error('TODO: handle error', error);
    *   return;
    * }
-   * 
+   *
    * console.log('deal with response', response);
-   * 
+   *
    * ```
-   * 
+   *
    * @returns the factory instance
    */
   withWrappedResponseError() {
     this.wrapErrors = true;
     return this;
-  }  
-  
+  }
+
   /**
    * Sets the logger adapter for the factory.
    
@@ -214,7 +217,7 @@ export class HTTPRequestFactory {
    * to be added.
    * @returns The updated request instance.
    */
-  withQueryParams(params : Record<string, QueryParameterValue>) {
+  withQueryParams(params: Record<string, QueryParameterValue>) {
     this.requestDefaults.push((request: HTTPRequest) => request.withQueryParams(params));
     this.sseRequestDefaults.push((request: SSERequestType) => request.withQueryParams(params));
     return this;
@@ -238,7 +241,7 @@ export class HTTPRequestFactory {
 
   /**
    * Adds multiple URL parameters to the factory defaults.
-   * 
+   *
    * URL parameters are used to replace {{placeholders}} in the URL template.
    * Their value can be a literal value or a function that receives
    * the request config as an argument and returns a value.
@@ -254,7 +257,7 @@ export class HTTPRequestFactory {
 
   /**
    * Adds a URL parameter to the factory defaults.
-   * 
+   *
    * URL parameters are used to replace {{placeholders}} in the URL template.
    * Their value can be a literal value or a function that receives
    * the request config as an argument and returns a value.
@@ -268,7 +271,7 @@ export class HTTPRequestFactory {
     this.sseRequestDefaults.push((request: SSERequestType) => request.withURLParam(key, value));
     return this;
   }
-  
+
   /**
    * Sets the default [value] for the header [key] to the factory defaults.
    *
@@ -317,7 +320,17 @@ export class HTTPRequestFactory {
     this.baseURL = baseURL;
     return this;
   }
-  
+
+  /**
+   * Sets the default retry configuration for requests created by this factory.
+   *
+   * @param retryArg the retry configuration or a function that returns retry configuration
+   * @returns the factory instance
+   */
+  withRetry(retryArg: RetryArg) {
+    this.requestDefaults.push((request: HTTPRequest) => request.withRetry(retryArg));
+    return this;
+  }
 
   // ---------------------------------------------------------------------------
   // Interceptors and transformers
@@ -556,7 +569,8 @@ export class HTTPRequestFactory {
       featureDelegates,
       factory: this,
       factoryMethods: {
-        requireFeature: this.requireFeature.bind(this)
+        requireFeature: this.requireFeature.bind(this),
+        getEnabledFeatures: () => this.enabledFeatures
       },
       wrapErrors: this.wrapErrors
     });
@@ -694,10 +708,9 @@ export class HTTPRequestFactory {
 
   createSSEAPIRequest(...args: [string, string] | [string]): SSERequestType {
     this.requireFeature('sse-request');
-    const { url, meta, api } = this.computeAPIRequestCommons(... args);
-    const sseReq = this.createSSERequest(url)
-    .withMeta(meta);
-    
+    const { url, meta, api } = this.computeAPIRequestCommons(...args);
+    const sseReq = this.createSSERequest(url).withMeta(meta);
+
     this.applyAPIDefaultsToRequest(api, sseReq);
     return sseReq as SSERequestType;
   }
@@ -716,9 +729,7 @@ export class HTTPRequestFactory {
    * @param args Either [apiName, endpointName] or [endpointName] for default API.
    * @returns The created request.
    */
-  createAPIRequest(
-    ...args: [string, string] | [string]
-  ): HTTPRequest {
+  createAPIRequest(...args: [string, string] | [string]): HTTPRequest {
     const { url, meta, api, endpoint } = this.computeAPIRequestCommons(...args);
     const request = this.createRequest(url, (endpoint.method as HTTPMethod) || 'GET')
       .withMeta(meta)
@@ -745,6 +756,9 @@ export class HTTPRequestFactory {
    */
   withAdapter(adapter: Adapter, options?: AdapterOptions): HTTPRequestFactory {
     this.requireFeature('adapters');
+    for (const featureName of adapter.require || []) {
+      this.requireFeature(featureName);
+    }
     return this.factoryDelegates.withAdapter(adapter, options);
   }
 
@@ -757,7 +771,7 @@ export class HTTPRequestFactory {
    * @param listeners the listeners to add
    * @returns the factory instance
    */
-  withSSEListeners(...listeners:SSEListener[]) {
+  withSSEListeners(...listeners: SSEListener[]) {
     this.requireFeature('sse-request');
     this.sseRequestDefaults.push((request: SSERequestType) => request.withSSEListeners(...listeners));
     return this;
@@ -820,15 +834,16 @@ export class HTTPRequestFactory {
       'responseInterceptors',
       'errorInterceptors',
       'progressHandlers',
-      'SSEListeners'
+      'SSEListeners',
+      'retry'
     ] as const;
 
     for (const key of apiArrayProps) {
       const value = (api as any)[key];
       if (!value) continue;
       const arr = Array.isArray(value) ? value : [value];
-      const method = ('with' + key.charAt(0).toUpperCase() + key.slice(1));
-      if(!request[method]) continue; //some methods are not in common
+      const method = 'with' + key.charAt(0).toUpperCase() + key.slice(1);
+      if (!request[method]) continue; //some methods are not in common
       (request as any)[method](...arr);
     }
   }
@@ -889,7 +904,7 @@ export class HTTPRequestFactory {
     if (/^(https?:)?\/\//.test(endpoint.target)) {
       return endpoint.target;
     }
-    if(!api.baseURL) return endpoint.target;
+    if (!api.baseURL) return endpoint.target;
 
     const base = api.baseURL.replace(/\/+$/, '');
     const target = endpoint.target.replace(/^\/+/, '');

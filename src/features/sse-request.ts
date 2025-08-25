@@ -2,7 +2,7 @@ import { HTTPRequestFactory } from "../HTTPRequestFactory.js";
 import { SSERequest } from "../SSERequest.js";
 import type { Feature, FeatureFactoryDelegates, FeatureName } from "../types.js";
 
-class SSERequestFeature implements Feature {
+export class SSERequestFeature implements Feature {
   name: FeatureName = 'sse-request';
 
   getDelegates(_factory: HTTPRequestFactory): { factory?: FeatureFactoryDelegates } {
@@ -16,4 +16,3 @@ class SSERequestFeature implements Feature {
   }
 }
 
-export default new SSERequestFeature();
