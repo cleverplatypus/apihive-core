@@ -73,7 +73,7 @@
     "vitepress": "^1.6.3",
     "vitepress-plugin-mermaid": "^2.0.17",
     "vitest": "^3.2.4",
-    "vitest-probe": "^0.0.1"
+    "vitest-probe": "0.0.6"
   },
   "dependencies": {
     "@apihive/logger-facade": "^1.0.0"

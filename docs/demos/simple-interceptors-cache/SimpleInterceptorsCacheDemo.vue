@@ -13,14 +13,14 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { HTTPRequestFactory } from "../../../src";
-import requestHashFeature from "../../../src/features/request-hash";
+import { RequestHashFeature } from "../../../src/features/request-hash";
 
 const fetchedData = ref<any>();
 const cache = new Map<string, any>();
 const source = ref<'cache' | 'network' | ''>('');
 
 const factory = new HTTPRequestFactory()
-    .use(requestHashFeature)
+    .use(new RequestHashFeature())
     .withBaseURL('https://jsonplaceholder.typicode.com')
     .withRequestInterceptors(({ controls }) => {
         controls.finaliseURL();

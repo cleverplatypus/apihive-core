@@ -1,5 +1,5 @@
 import { type APIConfig, HTTPRequestFactory, SSESubscription, WrappedSSEResponse } from '../../../src';
-import sseFeature from '../../../src/features/sse-request';
+import { SSERequestFeature } from '../../../src/features/sse-request';
 import model from './sse-ticker-model';
 
 const api: APIConfig = {
@@ -19,7 +19,7 @@ class SSETickerController {
 
   constructor() {
     this.factory = new HTTPRequestFactory()
-        .use(sseFeature)
+        .use(new SSERequestFeature())
         .withWrappedResponseError()
         .withAPIConfig(api);
   }
