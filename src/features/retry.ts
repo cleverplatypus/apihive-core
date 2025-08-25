@@ -216,14 +216,14 @@ export default class RetryFeature implements Feature {
     requestConfig: RequestConfig
   ): number {
     if (!retryConfig.retryDelay) {
-      return maybeFunction<number>(this.defaultRetryDelay, attempt, error!, requestConfig);
+      return maybeFunction<number>(this.defaultRetryDelay, attempt, error, requestConfig);
     }
 
     if (typeof retryConfig.retryDelay === 'number') {
       return retryConfig.retryDelay;
     }
     // it's a function
-    return retryConfig.retryDelay(attempt, error!, requestConfig);
+    return retryConfig.retryDelay(attempt, error, requestConfig);
   }
 
   private sleep(ms: number): Promise<void> {
