@@ -1,4 +1,3 @@
-import { config } from 'process';
 import HTTPError from '../HTTPError.js';
 import { HTTPRequestFactory } from '../HTTPRequestFactory.js';
 import {
@@ -230,8 +229,25 @@ export class RetryFeature implements Feature {
     return retryConfig.retryDelay({attempt, retryConfig, requestConfig, error});
   }
 
-  private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  private sleep(ms: number, signal?: AbortSignal): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (signal?.aborted) {
+        return reject(new HTTPError(-1, 'Aborted'));
+      }
+      const timer = setTimeout(() => {
+        cleanup();
+        resolve();
+      }, ms);
+      const onAbort = () => {
+        clearTimeout(timer);
+        cleanup();
+        reject(new HTTPError(-1, 'Aborted'));
+      };
+      const cleanup = () => {
+        if (signal) signal.removeEventListener('abort', onAbort);
+      };
+      if (signal) signal.addEventListener('abort', onAbort, { once: true });
+    });
   }
 
   /*
@@ -283,6 +299,7 @@ export class RetryFeature implements Feature {
     }
 
     return async (url: string, init: RequestInit): Promise<Response> => {      
+      const signal = init.signal as AbortSignal | undefined;
       const safeFetch = async (u: string, i: RequestInit): Promise<{ response?: Response; error?: Error }> => {
         try {
           const response = await baseFetch(u, i);
@@ -293,14 +310,23 @@ export class RetryFeature implements Feature {
       };
 
       for (let attempt = 0; attempt <= attempts; attempt++) {
+        // If aborted before starting this attempt, stop immediately
+        if (signal?.aborted) {
+          throw new HTTPError(-1, 'Aborted');
+        }
         const shouldRetryFn = retryConfig.retryCondition || this.defaultRetryCondition;
         const { response, error } = await safeFetch(url, init);
+
+        // If fetch was aborted, fail immediately regardless of retry policy
+        if (signal?.aborted || (error && (error as any).name === 'AbortError')) {
+          throw new HTTPError(-1, 'Aborted');
+        }
+
         const fetchSatisfactory =
           !(await shouldRetryFn({
             response,
             error,
             attempt,
-            retryConfig,
             requestConfig
           }));
 
@@ -315,16 +341,16 @@ export class RetryFeature implements Feature {
             requestConfig,
             error
           });
-          retryConfig.onRetry?.({attempt: attempt + 1, delay, requestConfig});
-          await this.sleep(delay);
+          retryConfig.onRetry?.({attempt: attempt + 1, delay, requestConfig, error, response});
+          await this.sleep(delay, signal);
           continue;
         }
 
         if (fetchSatisfactory) {
-          if (attempt > 0) retryConfig.onRetrySuccess?.({attempt, response, requestConfig});
+          if (attempt > 0) retryConfig.onRetrySuccess?.({attempt, response, requestConfig, error});
           return response;
         }
-        retryConfig.onMaxAttemptsExceeded?.({attempts, requestConfig});
+        retryConfig.onMaxAttemptsExceeded?.({attempts, requestConfig, error, response});
         throw new HTTPError(-2, 'Max attempts exceeded');
       }
     };

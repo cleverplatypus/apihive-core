@@ -25,6 +25,7 @@ const factory = new HTTPRequestFactory()
   .use(new RetryFeature())
   .withRetry({
     attempts: 3
+  });
 ```
 
 Pretty straightforward. Every requests created by the factory that fails with a 500 status code will be retried up to 3 times with a delay of 1 second.
@@ -38,8 +39,8 @@ const factory = new HTTPRequestFactory()
   .withRetry({
     attempts: 3,
     retryDelay: 1000,
-    retryCondition: (error) => error instanceof HTTPError 
-      && error.status === 500
+    retryCondition: ({error}) => error instanceof HTTPError 
+      && error.code === 500
   });
 ```
 
@@ -51,8 +52,8 @@ It's also possible to set default retry settings on the feature instance.
 const retryFeature = new RetryFeature()
     .withDefaultAttempts(3)
     .withDefaultRetryDelay(1000)
-    .withDefaultRetryCondition((error) => error instanceof HTTPError 
-        && error.status === 500);
+    .withDefaultRetryCondition(({error}) => error instanceof HTTPError 
+        && error.code === 500);
 ```
 
 These defaults will be applied to all requests created by the factory in the absence of more granular configuration.
@@ -64,8 +65,29 @@ The retry condition is a function that takes an error as a parameter and returns
 ```typescript
 
 const retryFeature = new RetryFeature()
-    .withDefaultRetryCondition((error) => error instanceof HTTPError 
-        && error.status >= 500);
+    .withDefaultRetryCondition(({error}) => error instanceof HTTPError 
+        && error.code >= 500);
+```
+
+## Retry Events
+
+The retry feature provides several events that can be used to react to retry events. Check the [RetryConfig](/api/index/type-aliases/RetryConfig) interface for more information.
+
+```typescript
+factory
+  .createAPIRequest('getItems')
+  .withRetry({
+      attempts: 3,
+      onRetry: ({attempt, delay, requestConfig, error, response}) => {
+          console.log(`Retrying request ${requestConfig.finalURL} (attempt ${attempt}, delay ${delay}ms)`);
+      },
+      onMaxAttemptsExceeded: ({attempts, requestConfig, error, response}) => {
+          console.log(`Max attempts (${attempts}) exceeded for request ${requestConfig.finalURL}`);
+      },
+      onRetrySuccess: ({attempt, response, requestConfig, error}) => {
+          console.log(`Request ${requestConfig.finalURL} retried successfully (attempt ${attempt})`);
+      }
+  });
 ```
 
 ## Dynamic Configuration
@@ -85,7 +107,6 @@ const api : APIConfig = {
     //...
   }
 }
-
 ```
 
 ## Meta Config
@@ -97,8 +118,8 @@ const retryFeature = new RetryFeature()
         defaults: {
             attempts: 3,
             retryDelay: 1000,
-            retryCondition: (error) => error instanceof HTTPError 
-                && error.status === 500
+            retryCondition: ({error}) => error instanceof HTTPError 
+                && error.code === 500
         }
     });
 
@@ -147,8 +168,8 @@ const retryFeature = new RetryFeature()
         defaults: {
             attempts: 3,
             retryDelay: 1000,
-            retryCondition: (error) => error instanceof HTTPError 
-                && error.status === 500
+            retryCondition: ({error}) => error instanceof HTTPError 
+                && error.code === 500
         }
     })
     
@@ -226,4 +247,5 @@ const factory = new HTTPRequestFactory()
     });
 ```
     
+
 

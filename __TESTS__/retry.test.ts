@@ -39,8 +39,31 @@ describe('RetryFeature', () => {
         expect(evt.value.attempts).toBe(7);
         expect(evt.value.retryDelay).toBe(123);
       });
+
       probe.dispose();
       expect(warnSpy).toHaveBeenCalled();
+    });
+
+    it('should_cancel_retries_on_abort_signal', async () => {
+      const ac = new AbortController();
+      const config = {
+        retry: {
+          attempts: 3,
+          retryDelay: 100,
+          retryCondition: ({ response }) => !response?.ok,
+          onRetry: ({attempt}) => { if (attempt === 1) ac.abort(); },
+          
+        }
+      } as RequestConfig;
+
+      mockFetch.mockResolvedValue(new Response('', { status: 503 }));
+
+      const delegates = retryFeature.getDelegates(factory);
+      const fetchImpl = delegates.request!.getFetchImpl!(config, mockFetch);
+
+      const promise = fetchImpl('http://test.com', { signal: ac.signal } as any);
+
+      await expect(promise).rejects.toMatchObject({ code: -1 });
     });
 
     it('meta_true_enables_defaults_when_normally_off', async () => {

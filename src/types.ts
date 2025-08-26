@@ -515,8 +515,7 @@ export type RetryCondition = (param : {
   response?: Response,
   error?: Error,
   attempt: number,
-  requestConfig: RequestConfig,
-  retryConfig : RetryConfig
+  requestConfig: RequestConfig
 }) => Promise<boolean> | boolean;
 export type BackoffStrategyEvaluator = (param : {
   attempt: number,
@@ -530,9 +529,9 @@ export type RetryConfig = {
   attempts: number;
   retryCondition?: RetryCondition;
   retryDelay?: RetryDelay;
-  onRetry?: (param : {attempt: number, delay: number, requestConfig : RequestConfig}) => void;
-  onMaxAttemptsExceeded?: (param : {attempts: number, requestConfig : RequestConfig}) => void;
-  onRetrySuccess?: (param : {attempt: number, response: Response, requestConfig : RequestConfig}) => void;
+  onRetry?: (param : {attempt: number, delay: number, requestConfig : RequestConfig, error?: Error, response?: Response}) => void;
+  onMaxAttemptsExceeded?: (param : {attempts: number, requestConfig : RequestConfig, error?: Error, response?: Response}) => void;
+  onRetrySuccess?: (param : {attempt: number, response: Response, requestConfig : RequestConfig, error?: Error}) => void;
 };
 
 export type RetryArg = RetryConfig | ((config: RequestConfig) => RetryConfig);
