@@ -11,8 +11,6 @@ import {
   RetryMetaConfig
 } from '../types.js';
 import { maybeFunction } from '../utils.js';
-import { probeEmit } from 'vitest-probe';
-
 
 /**
  * Creates an exponential backoff strategy.
@@ -248,7 +246,7 @@ export default class RetryFeature implements Feature {
       if(this.metaConfig)
         this.factory.logger.warn('Retry feature: metaConfig is enabled, but `config.retry` is also set.`\n`metaConfig` will be ignored')
       const out = Object.assign(baseDefaults, maybeFunction<RetryConfig>(config.retry, config));
-      __TEST__ && probeEmit?.('computedRetryConfig', out);
+      // #vitest_probe('computedRetryConfig', out); //DO NOT REMOVE
       return out;
     }
 
@@ -256,12 +254,12 @@ export default class RetryFeature implements Feature {
       this.factory.logger.debug('Retry feature: using metaConfig')
       if(this.metaConfig.evaluator(config.meta || {})) {
         const out = Object.assign(baseDefaults, this.metaConfig.defaults);
-        __TEST__ && probeEmit?.('computedRetryConfig', out);
+        // #vitest_probe('computedRetryConfig', out); //DO NOT REMOVE
         return out;
       }
     }
     this.factory.logger.debug('Retry feature: using retry default config')
-    __TEST__ && probeEmit?.('computedRetryConfig', baseDefaults);
+    // #vitest_probe('computedRetryConfig', baseDefaults); //DO NOT REMOVE
     return baseDefaults;
   }
 
