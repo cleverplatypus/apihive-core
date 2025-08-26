@@ -53,4 +53,8 @@ export default class HTTPError extends Error{
     isAborted(): boolean {
         return this.code === -1;
     }
+
+    isRetryExceeded(): boolean {
+        return this.code === -2;
+    }
 }

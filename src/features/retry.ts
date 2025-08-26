@@ -1,3 +1,4 @@
+import { config } from 'process';
 import HTTPError from '../HTTPError.js';
 import { HTTPRequestFactory } from '../HTTPRequestFactory.js';
 import {
@@ -21,7 +22,7 @@ import { maybeFunction } from '../utils.js';
 export function exponentialBackoff(
   param : {initialDelay : number, multiplier : number, maxDelay : number, jitter : boolean} = 
     {initialDelay : 100, multiplier : 2, maxDelay : 30000, jitter : true}): BackoffStrategyEvaluator {
-  return (attempt: number) => {
+  return ({attempt}) => {
     const delay = Math.min(param.initialDelay * Math.pow(param.multiplier, attempt), param.maxDelay);
     return param.jitter ? delay + Math.random() * delay * 0.1 : delay;
   };
@@ -35,7 +36,7 @@ export function exponentialBackoff(
  */
 export function linearBackoff(
   delay = 1000): BackoffStrategyEvaluator {
-  return (attempt: number) =>
+  return ({attempt}) =>
     delay * attempt;
 }
 
@@ -53,7 +54,7 @@ export function linearBackoff(
  * @class
  * @implements {Feature}
  */
-export default class RetryFeature implements Feature {
+export class RetryFeature implements Feature {
   private factory: HTTPRequestFactory;
   readonly name = 'retry' as const;
   readonly priority = 80;
@@ -61,7 +62,7 @@ export default class RetryFeature implements Feature {
   private defaultRetryDelay: RetryDelay = 1000;
   private defaultAttempts = 0;
 
-  private defaultRetryCondition: RetryCondition = () => true;
+  private defaultRetryCondition: RetryCondition = async ({ response }) => !response.ok;
   private metaConfig?: RetryMetaConfig;
 
   /**
@@ -207,21 +208,26 @@ export default class RetryFeature implements Feature {
     };
   }
 
-  private calculateDelay(
+  private calculateDelay({
+    attempt,
+    retryConfig,
+    requestConfig,
+    error
+  } : {
     attempt: number,
-    error: HTTPError | undefined,
     retryConfig: RetryConfig,
-    requestConfig: RequestConfig
-  ): number {
+    requestConfig: RequestConfig,
+    error?: Error
+  }): number {
     if (!retryConfig.retryDelay) {
-      return maybeFunction<number>(this.defaultRetryDelay, attempt, error, requestConfig);
+      return maybeFunction<number>(this.defaultRetryDelay, {attempt, requestConfig, retryConfig, error});
     }
 
     if (typeof retryConfig.retryDelay === 'number') {
       return retryConfig.retryDelay;
     }
     // it's a function
-    return retryConfig.retryDelay(attempt, error, requestConfig);
+    return retryConfig.retryDelay({attempt, retryConfig, requestConfig, error});
   }
 
   private sleep(ms: number): Promise<void> {
@@ -264,74 +270,63 @@ export default class RetryFeature implements Feature {
   }
 
   private createRetryFetchWrapper(
-    config: RequestConfig,
+    requestConfig: RequestConfig,
     baseFetch: FetchLike,
     _factory: HTTPRequestFactory
   ): FetchLike {
 
-    const retryConfig = this.getRetryConfig(config);
+    const retryConfig = this.getRetryConfig(requestConfig);
 
     const attempts = retryConfig.attempts ?? this.defaultAttempts;
     if (attempts === 0) {
       return baseFetch;
     }
 
-    return async (url: string, init: RequestInit): Promise<Response> => {
-      let lastError: HTTPError | Error;
+    return async (url: string, init: RequestInit): Promise<Response> => {      
+      const safeFetch = async (u: string, i: RequestInit): Promise<{ response?: Response; error?: Error }> => {
+        try {
+          const response = await baseFetch(u, i);
+          return { response };
+        } catch (error: any) {
+          return { error };
+        }
+      };
 
       for (let attempt = 0; attempt <= attempts; attempt++) {
-        const shouldRetry = retryConfig.retryCondition || this.defaultRetryCondition;
-        try {
-          const response = await baseFetch(url, init);
+        const shouldRetryFn = retryConfig.retryCondition || this.defaultRetryCondition;
+        const { response, error } = await safeFetch(url, init);
+        const fetchSatisfactory =
+          !(await shouldRetryFn({
+            response,
+            error,
+            attempt,
+            retryConfig,
+            requestConfig
+          }));
 
-          // Check if we should retry based on response
-          if (
-            attempt < attempts &&
-            shouldRetry({
-              attempt,
-              retryConfig,
-              requestConfig: config
-            })
-          ) {
-            const delay = this.calculateDelay(attempt, undefined, retryConfig, config);
-            retryConfig.onRetry?.(attempt + 1, new HTTPError(response.status, `HTTP ${response.status}`), delay);
-            await this.sleep(delay);
-            continue;
-          }
-
-          // Success or no more retries
-          if (attempt > 0) {
-            retryConfig.onRetrySuccess?.(attempt, response);
-          }
-          return response;
-        } catch (error) {
-          const httpError = error instanceof HTTPError ? error : new HTTPError(0, error.message || 'Network Error');
-          lastError = httpError;
-
-          // Check if we should retry this error
-          if (
-            attempt < attempts &&
-            shouldRetry({
-              error: httpError,
-              attempt,
-              retryConfig,
-              requestConfig: config
-            })
-          ) {
-            const delay = this.calculateDelay(attempt, httpError, retryConfig, config);
-            retryConfig.onRetry?.(attempt + 1, httpError, delay);
-            await this.sleep(delay);
-            continue;
-          }
-
-          // No more retries or shouldn't retry this error
-          break;
+        if(attempt === attempts && error) {
+          throw error;
         }
-      }
 
-      // All retries exhausted
-      retryConfig.onMaxAttemptsExceeded?.(lastError as HTTPError, attempts);
-      throw lastError!;
+        if (attempt < attempts && !fetchSatisfactory) {
+          const delay = this.calculateDelay({
+            attempt,
+            retryConfig,
+            requestConfig,
+            error
+          });
+          retryConfig.onRetry?.({attempt: attempt + 1, delay, requestConfig});
+          await this.sleep(delay);
+          continue;
+        }
+
+        if (fetchSatisfactory) {
+          if (attempt > 0) retryConfig.onRetrySuccess?.({attempt, response, requestConfig});
+          return response;
+        }
+        retryConfig.onMaxAttemptsExceeded?.({attempts, requestConfig});
+        throw new HTTPError(-2, 'Max attempts exceeded');
+      }
     };
   }
 }

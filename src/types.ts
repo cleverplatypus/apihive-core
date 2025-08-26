@@ -511,8 +511,18 @@ export type APIConfig<TApiConfig extends BaseAPIInterface = DefaultAPIConfig> =
   };
 
 // Retry types
-export type RetryCondition = (param : {error?: HTTPError, attempt: number, requestConfig: RequestConfig, retryConfig : RetryConfig}) => boolean;
-export type BackoffStrategyEvaluator = (attempt: number, error: HTTPError, config: RequestConfig) => number;
+export type RetryCondition = (param : {
+  response?: Response,
+  error?: Error,
+  attempt: number,
+  requestConfig: RequestConfig,
+  retryConfig : RetryConfig
+}) => Promise<boolean> | boolean;
+export type BackoffStrategyEvaluator = (param : {
+  attempt: number,
+  requestConfig: RequestConfig,
+  retryConfig : RetryConfig,
+  error?: Error}) => number;
 export type BackoffStrategyEvaluatorFactory = (...args: any[]) => BackoffStrategyEvaluator;
 export type RetryDelay = number | BackoffStrategyEvaluator;
 
@@ -520,9 +530,9 @@ export type RetryConfig = {
   attempts: number;
   retryCondition?: RetryCondition;
   retryDelay?: RetryDelay;
-  onRetry?: (attempt: number, error: HTTPError, delay: number) => void;
-  onMaxAttemptsExceeded?: (error: HTTPError, attempts: number) => void;
-  onRetrySuccess?: (attempt: number, response: Response) => void;
+  onRetry?: (param : {attempt: number, delay: number, requestConfig : RequestConfig}) => void;
+  onMaxAttemptsExceeded?: (param : {attempts: number, requestConfig : RequestConfig}) => void;
+  onRetrySuccess?: (param : {attempt: number, response: Response, requestConfig : RequestConfig}) => void;
 };
 
 export type RetryArg = RetryConfig | ((config: RequestConfig) => RetryConfig);

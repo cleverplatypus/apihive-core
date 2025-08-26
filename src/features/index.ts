@@ -1,4 +1,4 @@
-import RetryFeature, { exponentialBackoff, linearBackoff } from './retry.js';
+import { RetryFeature, exponentialBackoff, linearBackoff } from './retry.js';
 import { UploadProgressFeature } from './upload-progress.js';
 import { DownloadProgressFeature } from './download-progress.js';
 import { RequestHashFeature } from './request-hash.js';

@@ -1,6 +1,6 @@
 {
   "name": "@apihive/core",
-  "version": "1.0.0-beta.10",
+  "version": "1.0.0-beta.11",
   "publishConfig": {
     "access": "public",
     "tag": "beta"
@@ -15,6 +15,10 @@
     ".": {
       "types": "./lib/index.d.ts",
       "default": "./lib/index.js"
+    },
+    "./features": {
+      "types": "./lib/features/index.d.ts",
+      "default": "./lib/features/index.js"
     },
     "./features/upload-progress": {
       "types": "./lib/features/upload-progress.d.ts",

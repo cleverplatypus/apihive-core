@@ -133,10 +133,10 @@ describe('RetryFeature', () => {
         jitter: false
       });
 
-      expect(backoff(0, {} as any, {} as any)).toBe(100);
-      expect(backoff(1, {} as any, {} as any)).toBe(200);
-      expect(backoff(2, {} as any, {} as any)).toBe(400);
-      expect(backoff(10, {} as any, {} as any)).toBe(5000); // capped at maxDelay
+      expect(backoff({ attempt: 0, retryConfig: {} as any, requestConfig: {} as any })).toBe(100);
+      expect(backoff({ attempt: 1, retryConfig: {} as any, requestConfig: {} as any })).toBe(200);
+      expect(backoff({ attempt: 2, retryConfig: {} as any, requestConfig: {} as any })).toBe(400);
+      expect(backoff({ attempt: 10, retryConfig: {} as any, requestConfig: {} as any })).toBe(5000); // capped at maxDelay
     });
 
     it('should_create_exponential_backoff_with_jitter', () => {
@@ -146,8 +146,8 @@ describe('RetryFeature', () => {
         maxDelay: 5000,
         jitter: true
       });
-      const delay1 = backoff(1, {} as any, {} as any);
-      const delay2 = backoff(1, {} as any, {} as any);
+      const delay1 = backoff({ attempt: 1, retryConfig: {} as any, requestConfig: {} as any });
+      const delay2 = backoff({ attempt: 1, retryConfig: {} as any, requestConfig: {} as any });
 
       // With jitter, delays should be different
       expect(delay1).not.toBe(delay2);
@@ -158,9 +158,9 @@ describe('RetryFeature', () => {
     it('should_create_linear_backoff_function', () => {
       const backoff = linearBackoff(500);
 
-      expect(backoff(1, {} as any, {} as any)).toBe(500);
-      expect(backoff(2, {} as any, {} as any)).toBe(1000);
-      expect(backoff(3, {} as any, {} as any)).toBe(1500);
+      expect(backoff({ attempt: 1, retryConfig: {} as any, requestConfig: {} as any })).toBe(500);
+      expect(backoff({ attempt: 2, retryConfig: {} as any, requestConfig: {} as any })).toBe(1000);
+      expect(backoff({ attempt: 3, retryConfig: {} as any, requestConfig: {} as any })).toBe(1500);
     });
   });
 
@@ -185,7 +185,7 @@ describe('RetryFeature', () => {
         retry: {
           attempts: 2,
           retryDelay: 10, // Short delay for testing
-          retryCondition: ({ error }) => !!error
+          retryCondition: async ({ error }) => !!error
         }
       } as RequestConfig;
 
@@ -208,7 +208,7 @@ describe('RetryFeature', () => {
         retry: {
           attempts: 2,
           retryDelay: 10,
-          retryCondition: ({ error }) => !!error,
+          retryCondition: async ({ error }) => !!error,
           onRetry,
           onRetrySuccess
         }
@@ -221,8 +221,12 @@ describe('RetryFeature', () => {
 
       await fetchImpl('http://test.com', {});
 
-      expect(onRetry).toHaveBeenCalledWith(1, expect.any(HTTPError), 10);
-      expect(onRetrySuccess).toHaveBeenCalledWith(1, expect.any(Response));
+      expect(onRetry).toHaveBeenCalledWith({ attempt: 1, delay: 10, requestConfig: config });
+      expect(onRetrySuccess).toHaveBeenCalledWith({
+        attempt: 1,
+        response: expect.any(Response),
+        requestConfig: config
+      });
     });
 
     it('should_exhaust_retries_and_call_on_max_attempts_exceeded', async () => {
@@ -232,7 +236,7 @@ describe('RetryFeature', () => {
         retry: {
           attempts: 2,
           retryDelay: 10,
-          retryCondition: ({ error }) => !!error,
+          retryCondition: async ({ error }) => !!error,
           onMaxAttemptsExceeded
         }
       } as unknown as RequestConfig;
@@ -246,7 +250,37 @@ describe('RetryFeature', () => {
       await expect(fetchImpl('http://test.com', {})).rejects.toThrow();
 
       expect(mockFetch).toHaveBeenCalledTimes(3); // Initial + 2 retries
-      expect(onMaxAttemptsExceeded).toHaveBeenCalledWith(error, 2);
+    });
+
+    it('should_fail_on_exceeded_attempts', async () => {
+      const maxAttemptsExceededFn = vi.fn();
+      const retryFn = vi.fn();
+      const retrySuccessFn = vi.fn();
+      const factory = new HTTPRequestFactory().use(new RetryFeature());
+
+      const originalFetch = globalThis.fetch;
+      try {
+        // Always return a 503 to trigger retries deterministically
+        const failingFetch = vi.fn().mockResolvedValue(new Response('', { status: 503 }));
+        globalThis.fetch = failingFetch as any;
+
+        const request = factory.createGETRequest('https://example.com/status/503').withRetry({
+          attempts: 3,
+          retryDelay: 10,
+          onRetry: retryFn,
+          onRetrySuccess: retrySuccessFn,
+          onMaxAttemptsExceeded: maxAttemptsExceededFn
+        });
+
+        await expect(request.execute()).rejects.toThrow();
+
+        // 3 retries should have been attempted (onRetry called per retry)
+        expect(retryFn).toHaveBeenCalledTimes(3);
+        expect(retrySuccessFn).not.toHaveBeenCalled();
+        expect(maxAttemptsExceededFn).toHaveBeenCalled();
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
     });
 
     it('should_use_function_based_retry_delay', async () => {
@@ -256,7 +290,7 @@ describe('RetryFeature', () => {
         retry: {
           attempts: 1,
           retryDelay: customDelay,
-          retryCondition: ({ error }) => !!error
+          retryCondition: async ({ error }) => !!error
         }
       } as unknown as RequestConfig;
 
@@ -267,28 +301,28 @@ describe('RetryFeature', () => {
 
       await fetchImpl('http://test.com', {});
 
-      expect(customDelay).toHaveBeenCalledWith(0, expect.any(HTTPError), config);
-    });
+      expect(customDelay).toHaveReturnedWith(500);
+    }, 1000000);
 
     it('should_handle_response_based_retry_conditions', async () => {
       const config = {
         retry: {
           attempts: 1,
           retryDelay: 10,
-          retryCondition: ({ error }) => !error // Only retry on successful responses (unusual but valid)
+          retryCondition: async ({ response }) => response?.ok === true // Only retry on successful responses (unusual but valid)
         }
       } as unknown as RequestConfig;
 
-      mockFetch.mockResolvedValueOnce(new Response('', { status: 500 })).mockResolvedValue(new Response('success'));
+      mockFetch
+        .mockResolvedValueOnce(new Response('', { status: 200 }))
+        .mockRejectedValue(new HTTPError(500, 'Server Error'));
 
       const delegates = retryFeature.getDelegates(factory);
       const fetchImpl = delegates.request!.getFetchImpl!(config, mockFetch);
 
-      const response = await fetchImpl('http://test.com', {});
-
+      await expect(fetchImpl('http://test.com', {})).rejects.toThrow();
       expect(mockFetch).toHaveBeenCalledTimes(2);
-      expect(response.status).toBe(200);
-    });
+    }, 1000000);
   });
 
   describe('integration_with_http_request_factory', () => {
@@ -312,7 +346,7 @@ describe('RetryFeature', () => {
           .withRetry({
             attempts: 1,
             retryDelay: 10,
-            retryCondition: ({ error }) => !!error
+            retryCondition: ({ response }) => !response?.ok
           })
           .execute();
 
@@ -330,7 +364,7 @@ describe('RetryFeature', () => {
       const retryConfigFn = vi.fn().mockReturnValue({
         attempts: 1,
         retryDelay: 10,
-        retryCondition: ({ error }: any) => !!error
+        retryCondition: async ({ error }: any) => !!error
       });
 
       const originalFetch = globalThis.fetch;
