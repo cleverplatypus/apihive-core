@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import HTTPError from "../src/HTTPError.ts";
-import { APIConfig, HTTPRequestFactory, RequestConfig, ResponseInterceptorControls } from "../src/index.ts";
+import { APIConfig, HTTPRequestFactory } from "../src/index.ts";
 
 const factory = new HTTPRequestFactory().withLogLevel("debug");
 

@@ -1,6 +1,6 @@
 {
   "name": "@apihive/core",
-  "version": "1.0.0-beta.9",
+  "version": "1.0.0-beta.10",
   "publishConfig": {
     "access": "public",
     "tag": "beta"
@@ -31,6 +31,10 @@
     "./features/adapters": {
       "types": "./lib/features/adapters.d.ts",
       "default": "./lib/features/adapters.js"
+    },
+    "./features/retry": {
+      "types": "./lib/features/retry.d.ts",
+      "default": "./lib/features/retry.js"
     }
   },
   "repository": {
