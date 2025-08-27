@@ -1,8 +1,8 @@
-import { HTTPRequest } from "./HTTPRequest.js";
-import HTTPError from "./HTTPError.js";
-import { LoggerFacade, LogLevel } from "@apihive/logger-facade";
-import { Adapter, AdapterOptions } from "./adapter-types.js";
-import { HTTPRequestFactory } from "./HTTPRequestFactory.js";
+import { HTTPRequest } from './HTTPRequest.js';
+import HTTPError from './HTTPError.js';
+import { LoggerFacade, LogLevel } from '@apihive/logger-facade';
+import { Adapter, AdapterOptions } from './adapter-types.js';
+import { HTTPRequestFactory } from './HTTPRequestFactory.js';
 
 export type ProgressPhase = 'upload' | 'download';
 export type FetchLike = (url: string, init: RequestInit) => Promise<Response>;
@@ -10,11 +10,11 @@ export type BeforeFetchHook = (init: RequestInit, config: RequestConfig) => void
 
 export type ProgressInfo = {
   phase: ProgressPhase;
-  percentProgress: number;       // 0..100
-  loadedBytes: number;           // bytes transferred so far
-  totalBytes?: number;           // if available
-  requestConfig: RequestConfig;  // use getReadOnlyConfig() when invoking
-  fallThrough: () => void;       // call this to pass the info to the next handler
+  percentProgress: number; // 0..100
+  loadedBytes: number; // bytes transferred so far
+  totalBytes?: number; // if available
+  requestConfig: RequestConfig; // use getReadOnlyConfig() when invoking
+  fallThrough: () => void; // call this to pass the info to the next handler
 };
 
 export type ProgressHandler = (info: ProgressInfo) => void;
@@ -24,34 +24,34 @@ export type ProgressHandlerConfig = {
   download?: ProgressHandler;
   throttleMs?: number;
 };
-export type FeatureName = 
+export type FeatureName =
   | 'adapters'
   | 'download-progress'
   | 'request-hash'
   | 'upload-progress'
   | 'sse-request'
-  | 'retry'
+  | 'retry';
 
 export interface Feature {
-  name : FeatureName;
+  name: FeatureName;
   priority?: number; // Lower numbers = applied first (inner in chain)
   apply?(target: HTTPRequestFactory, commands: FeatureCommands): void;
   getDelegates?(factory: HTTPRequestFactory): {
-    request? : FeatureRequestDelegates,
-    factory? : Partial<FeatureFactoryDelegates>
-  }
+    request?: FeatureRequestDelegates;
+    factory?: Partial<FeatureFactoryDelegates>;
+  };
 }
 
 export type FeatureRequestDelegates = {
-  getHash?: (request: HTTPRequest, options? : RequestHashOptions) => string;
+  getHash?: (request: HTTPRequest, options?: RequestHashOptions) => string;
   handleUploadProgress?: (info: ProgressInfo) => void;
-  handleDownloadProgress?: (info : {
-    response: Response, 
-    abortController: AbortController,
-    config: RequestConfig
+  handleDownloadProgress?: (info: {
+    response: Response;
+    abortController: AbortController;
+    config: RequestConfig;
   }) => Promise<Blob>;
   getFetchImpl?: (config: RequestConfig, baseFetch: FetchLike) => FetchLike;
-}
+};
 
 export type FeatureFactoryDelegates = {
   withAdapter?: (adapter: Adapter, options?: AdapterOptions) => HTTPRequestFactory;
@@ -62,11 +62,14 @@ export type FeatureFactoryDelegates = {
    * Factory-level delegate to construct an SSERequest instance.
    * Implementations should instantiate the request with factory defaults applied.
    */
-  createSSERequest?: (url: string, args: {
-    defaultConfigBuilders: Array<(request: any) => void>;
-    wrapErrors: boolean;
-  }) => any;
-}
+  createSSERequest?: (
+    url: string,
+    args: {
+      defaultConfigBuilders: Array<(request: any) => void>;
+      wrapErrors: boolean;
+    }
+  ) => any;
+};
 
 export interface SSERequestType {
   // Builders
@@ -107,9 +110,7 @@ export type FeatureCommands = {
   beforeFetch: (hook: BeforeFetchHook) => void;
 };
 
-export type MaybeGetterFunction<T, Args extends any[] = any[]> =
-| T
-| ((...args: Args extends infer U ? U : never) => T);
+export type MaybeGetterFunction<T, Args extends any[] = any[]> = T | ((...args: Args extends infer U ? U : never) => T);
 
 /**
  * Control APIs available to interceptors for manipulating the request during execution.
@@ -149,7 +150,7 @@ export interface RequestInterceptorControls {
 
   /**
    * Sets a last-minute body replacer
-   * 
+   *
    * @remarks When a request has a JSON body, the received body is always a string.<br>This means the body would generally need parsing.
    * @param replacer The function to be called with the current body as argument and returning the new body
    */
@@ -157,7 +158,7 @@ export interface RequestInterceptorControls {
 
   /**
    * Returns a hash string that can be used to uniquely identify the request.
-   * 
+   *
    * @remarks This is an optional feature (request-hash) that must be enabled on the factory.
    */
   getHash(options?: RequestHashOptions): string;
@@ -165,7 +166,7 @@ export interface RequestInterceptorControls {
   /**
    * Returns the logger used by the factory
    */
-  getLogger() : LoggerFacade
+  getLogger(): LoggerFacade;
 
   /**
    * Skip body transformers for the response
@@ -176,19 +177,16 @@ export interface RequestInterceptorControls {
 export type WrappedResponse = {
   response?: any;
   error?: HTTPError;
-}
+};
 
 export type WrappedSSEResponse = {
   subscription?: SSESubscription;
   error?: HTTPError;
-}
+};
 
 export type URLParamValue = LiteralValue | MaybeGetterFunction<LiteralValue, [config: RequestConfig]>;
 
-export type URLParams = Record<
-  string,
-  URLParamValue
->;
+export type URLParams = Record<string, URLParamValue>;
 
 /**
  * Control APIs available to response interceptors.
@@ -198,7 +196,7 @@ export interface ResponseInterceptorControls {
    * Returns the logger used by the factory
    */
   getLogger(): LoggerFacade;
-  
+
   /**
    * Skip body transformers for the response
    */
@@ -206,49 +204,33 @@ export interface ResponseInterceptorControls {
 
   /**
    * Returns a hash string that can be used to uniquely identify the request.
-   * 
+   *
    * @remarks This is an optional feature (request-hash) that must be enabled on the factory.
    */
   getHash(options?: RequestHashOptions): string;
 }
 
-
-export type HTTPMethod =
-  | "GET"
-  | "POST"
-  | "PUT"
-  | "DELETE"
-  | "PATCH"
-  | "HEAD"
-  | "TRACE";
+export type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'TRACE';
 
 export type SSEMethod = 'SSE';
 
 export type LiteralValue = string | number | boolean;
 
 export type RequestHashOptions = {
-    includeBody?: boolean;
+  includeBody?: boolean;
 };
 
-export type RequestInterceptor = ( params : {
+export type RequestInterceptor = (params: {
   config: RequestConfig;
   controls: RequestInterceptorControls;
-  factory : HTTPRequestFactory;
+  factory: HTTPRequestFactory;
 }) => Promise<any | undefined>;
 
-export type RequestConfigBuilder = (
-  request: HTTPRequest,
-  config: RequestConfig
-) => void;
+export type RequestConfigBuilder = (request: HTTPRequest, config: RequestConfig) => void;
 /**
  * @internal
  */
-export type ExpectedResponseFormat =
-  | "auto"
-  | "json"
-  | "text"
-  | "blob"
-  | "arrayBuffer";
+export type ExpectedResponseFormat = 'auto' | 'json' | 'text' | 'blob' | 'arrayBuffer';
 
 export type QueryParameterValue = MaybeGetterFunction<LiteralValue | Array<LiteralValue>, [config: RequestConfig]>;
 
@@ -258,19 +240,16 @@ export type ResponseBodyTransformer = (body: any, config: RequestConfig) => any;
 
 export type HeaderValue = string | DynamicHeaderValue;
 
-export type ResponseHandler = (
-  response: Response,
-  requestObj: HTTPRequest
-) => Promise<any>;
+export type ResponseHandler = (response: Response, requestObj: HTTPRequest) => Promise<any>;
 
-export type ResponseInterceptor = (params : {
+export type ResponseInterceptor = (params: {
   response: Response;
   config: RequestConfig;
   controls: ResponseInterceptorControls;
-  factory : HTTPRequestFactory;
+  factory: HTTPRequestFactory;
 }) => Promise<any | undefined>;
 
-export type SSEListener = (data : any) => void;
+export type SSEListener = (data: any) => void;
 
 /**
  * Handle returned by SSE requests upon execute().
@@ -290,8 +269,8 @@ export type RequestConfig = {
   // Internal history of template URLs (tip is the last element)
   templateURLHistory: string[];
   // Virtual/computed fields exposed via read-only proxy (not persisted on config)
-  readonly finalURL?: string;       // stable after finalisation
-  readonly templateURL?: string;    // alias to tip of templateURLHistory
+  readonly finalURL?: string; // stable after finalisation
+  readonly templateURL?: string; // alias to tip of templateURLHistory
   headers: Record<string, HeaderValue>;
   body: any;
   jsonMimeTypes: string[];
@@ -299,7 +278,7 @@ export type RequestConfig = {
   timeout: number;
   method: HTTPMethod;
   logLevel: LogLevel;
-  meta: Record<string, any>;
+  meta: Record<string | symbol, any>;
   queryParams: Record<string, QueryParameterValue>;
   responseBodyTransformers: ResponseBodyTransformer[];
   ignoreResponseBody: boolean;
@@ -330,7 +309,7 @@ export type Endpoint = {
   /**
    * Any metadata that should be attached to the endpoint's requests for later reference
    */
-  meta?: Record<string, any>;
+  meta?: Record<string | symbol, any>;
 };
 
 /**
@@ -391,14 +370,14 @@ export type EndpointParamsTemplate = {
  */
 export type BaseAPIInterface = {
   endpoints?: Record<string, (params: any) => Promise<any>>;
-  meta?: Record<string, any>;
+  meta?: Record<string | symbol, any>;
 };
 
 /**
  * Default API configuration type (no constraints)
  */
 export type DefaultAPIConfig = BaseAPIInterface & {
-  meta?: Record<string, any>;
+  meta?: Record<string | symbol, any>;
   endpoints?: Record<string, (params: EndpointParams) => Promise<any>>;
 };
 
@@ -445,83 +424,78 @@ export type DefaultAPIConfig = BaseAPIInterface & {
  *   }
  * };
  */
-export type APIConfig<TApiConfig extends BaseAPIInterface = DefaultAPIConfig> =
-  {
-    /**
-     * The base to be used as base URL for this API. If omitted, the value provided in each endpoint's `target` will be used.
-     */
-    baseURL?: string;
-    /**
-     * The name of the API to be referenced in {@link HTTPRequestFactory.createAPIRequest}
-     * If the name is 'default' it will be used as the default API when calling {@link HTTPRequestFactory.createAPIRequest}
-     * with one argument (the name of the endpoint).
-     */
-    name: string | "default";
-    /**
-     * Any metadata that should be attached to the API for later reference.
-     * The structure is constrained by the TApiConfig generic parameter.
-     */
-    meta?: TApiConfig extends { meta: infer TMeta } ? TMeta : any;
-    /**
-     * Any headers that should be applied to each request.
-     * Notice that if a header value is  {@link DynamicHeaderValue},
-     * the function will be called with the current request as argument,
-     * so conditional logic can be applied to generate the value.
-     */
-    headers?: Record<string, HeaderValue>;
-    /**
-     * An optional {@link ResponseBodyTransformer} function to be applied to all of
-     * the API's responses.
-     */
-    responseBodyTransformers?:
-      | ResponseBodyTransformer
-      | ResponseBodyTransformer[];
-    /**
-     * Optional response interceptors applied to all requests of this API.
-     * Interceptors can be functions or registrations that control transformer behavior.
-     */
-    responseInterceptors?:
-      | ResponseInterceptor
-      | Array<ResponseInterceptor>;
-    requestInterceptors?: RequestInterceptor | Array<RequestInterceptor>;
-    errorInterceptors?: ErrorInterceptor | Array<ErrorInterceptor>;
+export type APIConfig<TApiConfig extends BaseAPIInterface = DefaultAPIConfig> = {
+  /**
+   * The base to be used as base URL for this API. If omitted, the value provided in each endpoint's `target` will be used.
+   */
+  baseURL?: string;
+  /**
+   * The name of the API to be referenced in {@link HTTPRequestFactory.createAPIRequest}
+   * If the name is 'default' it will be used as the default API when calling {@link HTTPRequestFactory.createAPIRequest}
+   * with one argument (the name of the endpoint).
+   */
+  name: string | 'default';
+  /**
+   * Any metadata that should be attached to the API for later reference.
+   * The structure is constrained by the TApiConfig generic parameter.
+   */
+  meta?: TApiConfig extends { meta: infer TMeta } ? TMeta : any;
+  /**
+   * Any headers that should be applied to each request.
+   * Notice that if a header value is  {@link DynamicHeaderValue},
+   * the function will be called with the current request as argument,
+   * so conditional logic can be applied to generate the value.
+   */
+  headers?: Record<string, HeaderValue>;
+  /**
+   * An optional {@link ResponseBodyTransformer} function to be applied to all of
+   * the API's responses.
+   */
+  responseBodyTransformers?: ResponseBodyTransformer | ResponseBodyTransformer[];
+  /**
+   * Optional response interceptors applied to all requests of this API.
+   * Interceptors can be functions or registrations that control transformer behavior.
+   */
+  responseInterceptors?: ResponseInterceptor | Array<ResponseInterceptor>;
+  requestInterceptors?: RequestInterceptor | Array<RequestInterceptor>;
+  errorInterceptors?: ErrorInterceptor | Array<ErrorInterceptor>;
 
-    /**
-     * A map of {@link Endpoint} for the API.
-     * Can be constrained or forbidden by the TApiConfig generic parameter.
-     *
-     * @example
-     * // For adapter-driven APIs, endpoints can be forbidden:
-     * // endpoints?: never (prevents manual endpoint configuration)
-     *
-     * @example
-     * // For function-based APIs, only specific endpoint names are allowed:
-     * // endpoints: { getUser: Endpoint; getUserRepos: Endpoint } (constrains keys)
-     */
-    endpoints: TApiConfig extends { endpoints?: never }
-      ? never
-      : TApiConfig extends {
-          endpoints: Record<infer K, (...args: any[]) => any>;
-        }
-      ? { [P in Extract<K, string>]: Endpoint }
-      : { [endpointName: string]: Endpoint };
-    SSEListeners?: SSEListener | SSEListener[];
-    progressHandlers?: ProgressHandlerConfig | ProgressHandlerConfig[];
-    retry?: RetryArg;
-  };
+  /**
+   * A map of {@link Endpoint} for the API.
+   * Can be constrained or forbidden by the TApiConfig generic parameter.
+   *
+   * @example
+   * // For adapter-driven APIs, endpoints can be forbidden:
+   * // endpoints?: never (prevents manual endpoint configuration)
+   *
+   * @example
+   * // For function-based APIs, only specific endpoint names are allowed:
+   * // endpoints: { getUser: Endpoint; getUserRepos: Endpoint } (constrains keys)
+   */
+  endpoints: TApiConfig extends { endpoints?: never }
+    ? never
+    : TApiConfig extends {
+        endpoints: Record<infer K, (...args: any[]) => any>;
+      }
+    ? { [P in Extract<K, string>]: Endpoint }
+    : { [endpointName: string]: Endpoint };
+  SSEListeners?: SSEListener | SSEListener[];
+  progressHandlers?: ProgressHandlerConfig | ProgressHandlerConfig[];
+  retry?: RetryArg;
+};
 
 // Retry types
-export type RetryCondition = (param : {
-  response?: Response,
-  error?: Error,
-  attempt: number,
-  requestConfig: RequestConfig
-}) => Promise<boolean> | boolean;
-export type BackoffStrategyEvaluator = (param : {
-  attempt: number,
-  requestConfig: RequestConfig,
-  retryConfig : RetryConfig,
-  error?: Error}) => number;
+
+export type RetryContext = {
+  response?: Response;
+  error?: Error;
+  attempt: number;
+  attempts: number;
+  requestConfig: RequestConfig;
+};
+
+export type RetryCondition = (param: RetryContext) => Promise<boolean> | boolean;
+export type BackoffStrategyEvaluator = (param: RetryContext) => number;
 export type BackoffStrategyEvaluatorFactory = (...args: any[]) => BackoffStrategyEvaluator;
 export type RetryDelay = number | BackoffStrategyEvaluator;
 
@@ -529,9 +503,9 @@ export type RetryConfig = {
   attempts: number;
   retryCondition?: RetryCondition;
   retryDelay?: RetryDelay;
-  onRetry?: (param : {attempt: number, delay: number, requestConfig : RequestConfig, error?: Error, response?: Response}) => void;
-  onMaxAttemptsExceeded?: (param : {attempts: number, requestConfig : RequestConfig, error?: Error, response?: Response}) => void;
-  onRetrySuccess?: (param : {attempt: number, response: Response, requestConfig : RequestConfig, error?: Error}) => void;
+  onRetry?: (param: RetryContext) => void;
+  onMaxAttemptsExceeded?: (param: RetryContext) => void;
+  onRetrySuccess?: (param: RetryContext) => void;
 };
 
 export type RetryArg = RetryConfig | ((config: RequestConfig) => RetryConfig);

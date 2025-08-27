@@ -15,7 +15,7 @@ hero:
       link: https://github.com/cleverplatypus/apihive-core
     - theme: alt
       text: API Reference
-      link: /api/globals
+      link: /api/modules
 
 features:
   - title: 🏗️ Config-Based Architecture

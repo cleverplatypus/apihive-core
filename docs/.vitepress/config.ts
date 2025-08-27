@@ -33,7 +33,7 @@ export default withMermaid(
       sidebar: [
         { text: 'Getting Started', link: '/guide/getting-started' },
         { text: 'Core Concepts', link: '/guide/core-concepts' },
-        { text: 'API Docs', link: '/api/globals' },
+        { text: 'API Docs', link: '/api/modules' },
         { text: 'Optional Features', link: '/guide/optional-features' },
         {
           text: 'Guide',

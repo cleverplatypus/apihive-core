@@ -28,19 +28,20 @@ const factory = new HTTPRequestFactory()
   });
 ```
 
-Pretty straightforward. Every requests created by the factory that fails with a 500 status code will be retried up to 3 times with a delay of 1 second.
+Pretty straightforward. Every requests created by the factory that fails (defaults to when `response.ok === false`) will be retried up to 3 times with a default delay of 1 second.
 
 Optionally, you can also set more detailed configuration:
 
 ```typescript
+import { linearBackoff } from '@apihive/core/features/retry';
 
 const factory = new HTTPRequestFactory()
   .use(new RetryFeature())
   .withRetry({
-    attempts: 3,
-    retryDelay: 1000,
-    retryCondition: ({error}) => error instanceof HTTPError 
-      && error.code === 500
+    attempts: 10,
+    retryDelay: linearBackoff(100),
+    retryCondition: ({response}) => 
+      response?.ok === false && response?.status >= 500,
   });
 ```
 
@@ -52,40 +53,63 @@ It's also possible to set default retry settings on the feature instance.
 const retryFeature = new RetryFeature()
     .withDefaultAttempts(3)
     .withDefaultRetryDelay(1000)
-    .withDefaultRetryCondition(({error}) => error instanceof HTTPError 
-        && error.code === 500);
+    .withDefaultRetryCondition(({response}) => 
+      response?.ok === false && response?.status >= 500);
 ```
 
 These defaults will be applied to all requests created by the factory in the absence of more granular configuration.
 
 ## Retry Condition
 
-The retry condition is a function that takes an error as a parameter and returns a boolean indicating whether the request should be retried.
+The retry condition is a function that takes a [RetryContext](/api/index/type-aliases/RetryContext) as a parameter and returns a boolean indicating whether the request should be retried.
+
+Be aware that the context object will either have `response` or `error` but never both. The Fetch API will only throw error for network or other browser issues, not for HTTP errors, for which the `response` property will be contain `ok = false` and `status` containing the HTTP status code.
 
 ```typescript
 
 const retryFeature = new RetryFeature()
-    .withDefaultRetryCondition(({error}) => error instanceof HTTPError 
-        && error.code >= 500);
+    .withDefaultRetryCondition(({response}) =>
+      response?.ok === false && response?.status >= 500);
 ```
 
 ## Retry Events
 
-The retry feature provides several events that can be used to react to retry events. Check the [RetryConfig](/api/index/type-aliases/RetryConfig) interface for more information.
+The retry feature provides several events that can be used to react to retry events. Check the [RetryConfig](/api/index/type-aliases/RetryConfig) interface for more information. They all receive a [RetryContext](/api/index/type-aliases/RetryContext) object as a parameter.
 
 ```typescript
 factory
   .createAPIRequest('getItems')
   .withRetry({
       attempts: 3,
-      onRetry: ({attempt, delay, requestConfig, error, response}) => {
-          console.log(`Retrying request ${requestConfig.finalURL} (attempt ${attempt}, delay ${delay}ms)`);
+      onRetry: ({
+          attempt,
+          attempts,
+          response,
+          requestConfig,
+          error
+      }) => {
+          console.log(
+            `Retrying request ${requestConfig.finalURL} (attempt ${attempt})`);
       },
-      onMaxAttemptsExceeded: ({attempts, requestConfig, error, response}) => {
-          console.log(`Max attempts (${attempts}) exceeded for request ${requestConfig.finalURL}`);
+      onMaxAttemptsExceeded: ({
+          attempt,
+          attempts,
+          requestConfig,
+          error,
+          response
+      }) => {
+          console.log(
+            `Max attempts (${attempts}) exceeded for request ${requestConfig.finalURL}`);
       },
-      onRetrySuccess: ({attempt, response, requestConfig, error}) => {
-          console.log(`Request ${requestConfig.finalURL} retried successfully (attempt ${attempt})`);
+      onRetrySuccess: ({
+          attempt,
+          attempts,
+          response,
+          requestConfig,
+          error
+      }) => {
+          console.log(
+            `Request ${requestConfig.finalURL} retried successfully (attempt ${attempt})`);
       }
   });
 ```
@@ -118,8 +142,8 @@ const retryFeature = new RetryFeature()
         defaults: {
             attempts: 3,
             retryDelay: 1000,
-            retryCondition: ({error}) => error instanceof HTTPError 
-                && error.code === 500
+            retryCondition: ({response}) =>
+              response?.ok === false && response?.status >= 500
         }
     });
 
@@ -168,8 +192,8 @@ const retryFeature = new RetryFeature()
         defaults: {
             attempts: 3,
             retryDelay: 1000,
-            retryCondition: ({error}) => error instanceof HTTPError 
-                && error.code === 500
+            retryCondition: ({response}) =>
+              response?.ok === false && response?.status >= 500
         }
     })
     

@@ -156,10 +156,10 @@ describe('RetryFeature', () => {
         jitter: false
       });
 
-      expect(backoff({ attempt: 0, retryConfig: {} as any, requestConfig: {} as any })).toBe(100);
-      expect(backoff({ attempt: 1, retryConfig: {} as any, requestConfig: {} as any })).toBe(200);
-      expect(backoff({ attempt: 2, retryConfig: {} as any, requestConfig: {} as any })).toBe(400);
-      expect(backoff({ attempt: 10, retryConfig: {} as any, requestConfig: {} as any })).toBe(5000); // capped at maxDelay
+      expect(backoff({ attempt: 0, attempts: 2, requestConfig: {} as any })).toBe(100);
+      expect(backoff({ attempt: 1, attempts: 2, requestConfig: {} as any })).toBe(200);
+      expect(backoff({ attempt: 2, attempts: 2, requestConfig: {} as any })).toBe(400);
+      expect(backoff({ attempt: 10, attempts: 2, requestConfig: {} as any })).toBe(5000); // capped at maxDelay
     });
 
     it('should_create_exponential_backoff_with_jitter', () => {
@@ -169,8 +169,8 @@ describe('RetryFeature', () => {
         maxDelay: 5000,
         jitter: true
       });
-      const delay1 = backoff({ attempt: 1, retryConfig: {} as any, requestConfig: {} as any });
-      const delay2 = backoff({ attempt: 1, retryConfig: {} as any, requestConfig: {} as any });
+      const delay1 = backoff({ attempt: 1, attempts: 2, requestConfig: {} as any });
+      const delay2 = backoff({ attempt: 1, attempts: 2, requestConfig: {} as any });
 
       // With jitter, delays should be different
       expect(delay1).not.toBe(delay2);
@@ -181,9 +181,9 @@ describe('RetryFeature', () => {
     it('should_create_linear_backoff_function', () => {
       const backoff = linearBackoff(500);
 
-      expect(backoff({ attempt: 1, retryConfig: {} as any, requestConfig: {} as any })).toBe(500);
-      expect(backoff({ attempt: 2, retryConfig: {} as any, requestConfig: {} as any })).toBe(1000);
-      expect(backoff({ attempt: 3, retryConfig: {} as any, requestConfig: {} as any })).toBe(1500);
+      expect(backoff({ attempt: 1, attempts: 2, requestConfig: {} as any })).toBe(500);
+      expect(backoff({ attempt: 2, attempts: 2, requestConfig: {} as any })).toBe(1000);
+      expect(backoff({ attempt: 3, attempts: 2, requestConfig: {} as any })).toBe(1500);
     });
   });
 
@@ -244,11 +244,17 @@ describe('RetryFeature', () => {
 
       await fetchImpl('http://test.com', {});
 
-      expect(onRetry).toHaveBeenCalledWith({ attempt: 1, delay: 10, requestConfig: config });
+      expect(onRetry).toHaveBeenCalledWith({ 
+        attempt: 1, 
+        attempts: 2, 
+        requestConfig: expect.any(Object),
+        error: expect.any(HTTPError)
+      });
       expect(onRetrySuccess).toHaveBeenCalledWith({
+        attempts: 2,
         attempt: 1,
         response: expect.any(Response),
-        requestConfig: config
+        requestConfig: expect.any(Object)
       });
     });
 

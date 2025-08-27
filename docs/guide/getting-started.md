@@ -76,4 +76,4 @@ const post = await requestFactory.createAPIRequest('post-edit')
 ## Next Steps
 
 - [Core Concepts](/guide/core-concepts) - Learn the fundamentals of APIHive
-- [API Reference](/api/globals) - Complete API documentation
+- [API Reference](/api/modules) - Complete API documentation
