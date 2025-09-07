@@ -174,8 +174,8 @@ export interface RequestInterceptorControls {
   skipBodyTransformers(): void;
 }
 
-export type WrappedResponse = {
-  response?: any;
+export type WrappedResponse<RT = any> = {
+  response?: RT;
   error?: HTTPError;
 };
 

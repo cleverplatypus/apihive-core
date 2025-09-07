@@ -243,7 +243,7 @@ export class HTTPRequest<TWrap extends boolean = false> {
    *
    * @returns A Promise that resolves with the result of the request.
    */
-  async execute(): Promise<TWrap extends true ? WrappedResponse : any> {
+  async execute<RT = any>(): Promise<TWrap extends true ? WrappedResponse<RT> : RT> {
     if (this.wasUsed) {
       throw new Error('HttpRequests cannot be reused. Please call a request factory method for every new call');
     }
