@@ -12,6 +12,7 @@ import {
   FeatureRequestDelegates,
   HeaderValue,
   HTTPMethod,
+  HTTPRequestFactoryWrapped,
   ProgressHandlerConfig,
   QueryParameterValue,
   RequestConfig,
@@ -163,9 +164,10 @@ export class HTTPRequestFactory {
    *
    * @returns the factory instance
    */
-  withWrappedResponseError() {
+  withWrappedResponseError(): HTTPRequestFactoryWrapped {
     this.wrapErrors = true;
-    return this;
+    // Preserve fluent API while narrowing the type for callers
+    return this as unknown as HTTPRequestFactoryWrapped;
   }
 
   /**
@@ -559,6 +561,9 @@ export class HTTPRequestFactory {
    * @param method the HTTP method to use
    * @returns the created HTTPRequest object
    */
+  // Overloads: return type depends on receiver (this)
+  createRequest(this: HTTPRequestFactoryWrapped, url: string, method?: HTTPMethod): HTTPRequest<true>;
+  createRequest(this: HTTPRequestFactory, url: string, method?: HTTPMethod): HTTPRequest<false>;
   createRequest(url: string, method: HTTPMethod = 'GET') {
     url = this.computeURL(url);
     const featureDelegates = this.requestDelegates;
@@ -576,7 +581,7 @@ export class HTTPRequestFactory {
     });
 
     this.afterRequestCreatedHooks.forEach((hook) => hook(request));
-    return request;
+    return request as any;
   }
 
   // Verb helpers
@@ -588,8 +593,11 @@ export class HTTPRequestFactory {
    * @param url the URL to create the request for
    * @returns the created HTTPRequest object
    */
+  // Overloads for verb helpers
+  createGETRequest(this: HTTPRequestFactoryWrapped, url: string): HTTPRequest<true>;
+  createGETRequest(this: HTTPRequestFactory, url: string): HTTPRequest<false>;
   createGETRequest(url: string) {
-    return this.createRequest(url, 'GET');
+    return this.createRequest(url, 'GET') as any;
   }
   /**
    * Creates a POST request with the factory defaults applied.
@@ -599,8 +607,10 @@ export class HTTPRequestFactory {
    * @param url the URL to create the request for
    * @returns the created HTTPRequest object
    */
+  createPOSTRequest(this: HTTPRequestFactoryWrapped, url: string): HTTPRequest<true>;
+  createPOSTRequest(this: HTTPRequestFactory, url: string): HTTPRequest<false>;
   createPOSTRequest(url: string) {
-    return this.createRequest(url, 'POST');
+    return this.createRequest(url, 'POST') as any;
   }
   /**
    * Creates a PUT request with the factory defaults applied.
@@ -610,8 +620,10 @@ export class HTTPRequestFactory {
    * @param url the URL to create the request for
    * @returns the created HTTPRequest object
    */
+  createPUTRequest(this: HTTPRequestFactoryWrapped, url: string): HTTPRequest<true>;
+  createPUTRequest(this: HTTPRequestFactory, url: string): HTTPRequest<false>;
   createPUTRequest(url: string) {
-    return this.createRequest(url, 'PUT');
+    return this.createRequest(url, 'PUT') as any;
   }
   /**
    * Creates a DELETE request with the factory defaults applied.
@@ -621,8 +633,10 @@ export class HTTPRequestFactory {
    * @param url the URL to create the request for
    * @returns the created HTTPRequest object
    */
+  createDELETERequest(this: HTTPRequestFactoryWrapped, url: string): HTTPRequest<true>;
+  createDELETERequest(this: HTTPRequestFactory, url: string): HTTPRequest<false>;
   createDELETERequest(url: string) {
-    return this.createRequest(url, 'DELETE');
+    return this.createRequest(url, 'DELETE') as any;
   }
   /**
    * Creates a PATCH request with the factory defaults applied.
@@ -632,8 +646,10 @@ export class HTTPRequestFactory {
    * @param url the URL to create the request for
    * @returns the created HTTPRequest object
    */
+  createPATCHRequest(this: HTTPRequestFactoryWrapped, url: string): HTTPRequest<true>;
+  createPATCHRequest(this: HTTPRequestFactory, url: string): HTTPRequest<false>;
   createPATCHRequest(url: string) {
-    return this.createRequest(url, 'PATCH');
+    return this.createRequest(url, 'PATCH') as any;
   }
   /**
    * Creates a HEAD request with the factory defaults applied.
@@ -643,8 +659,10 @@ export class HTTPRequestFactory {
    * @param url the URL to create the request for
    * @returns the created HTTPRequest object
    */
+  createHEADRequest(this: HTTPRequestFactoryWrapped, url: string): HTTPRequest<true>;
+  createHEADRequest(this: HTTPRequestFactory, url: string): HTTPRequest<false>;
   createHEADRequest(url: string) {
-    return this.createRequest(url, 'HEAD');
+    return this.createRequest(url, 'HEAD') as any;
   }
   /**
    * Creates a TRACE request with the factory defaults applied.
@@ -654,8 +672,10 @@ export class HTTPRequestFactory {
    * @param url the URL to create the request for
    * @returns the created HTTPRequest object
    */
+  createTRACERequest(this: HTTPRequestFactoryWrapped, url: string): HTTPRequest<true>;
+  createTRACERequest(this: HTTPRequestFactory, url: string): HTTPRequest<false>;
   createTRACERequest(url: string) {
-    return this.createRequest(url, 'TRACE');
+    return this.createRequest(url, 'TRACE') as any;
   }
 
   createSSERequest(url: string): SSERequestType {
@@ -729,6 +749,9 @@ export class HTTPRequestFactory {
    * @param args Either [apiName, endpointName] or [endpointName] for default API.
    * @returns The created request.
    */
+  // Overloads for API helper
+  createAPIRequest(this: HTTPRequestFactoryWrapped, ...args: [string, string] | [string]): HTTPRequest<true>;
+  createAPIRequest(this: HTTPRequestFactory, ...args: [string, string] | [string]): HTTPRequest<false>;
   createAPIRequest(...args: [string, string] | [string]): HTTPRequest {
     const { url, meta, api, endpoint } = this.computeAPIRequestCommons(...args);
     const request = this.createRequest(url, (endpoint.method as HTTPMethod) || 'GET')
@@ -737,7 +760,7 @@ export class HTTPRequestFactory {
 
     this.applyAPIDefaultsToRequest(api, request);
 
-    return request as HTTPRequest;
+    return request as any;
   }
 
   // ---------------------------------------------------------------------------

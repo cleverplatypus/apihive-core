@@ -43,12 +43,12 @@ type RequestConstructorArgs = {
   featureDelegates: FeatureRequestDelegates;
   factoryMethods: SharedFactoryMethods;
   wrapErrors: boolean;
-  factory : HTTPRequestFactory;
+  factory: HTTPRequestFactory;
 };
 /**
  * @remarks This class shouldn't be instanciated directly.<br>Use {@link HTTPRequestFactory} createXXXRequest() instead
  */
-export class HTTPRequest {
+export class HTTPRequest<TWrap extends boolean = false> {
   // ---------------------------------------------------------------------------
   // Private fields
   // ---------------------------------------------------------------------------
@@ -66,7 +66,7 @@ export class HTTPRequest {
   private factoryMethods: SharedFactoryMethods;
   private abortListeners: ((event: Event) => void)[] = [];
   private wrapErrors: boolean = false;
-  private factory : HTTPRequestFactory;
+  private factory: HTTPRequestFactory;
 
   // ---------------------------------------------------------------------------
   // Public getters
@@ -121,7 +121,7 @@ export class HTTPRequest {
     this.featureDelegates = featureDelegates;
     this.factory = factory;
     this.factoryMethods = factoryMethods;
-      this.wrapErrors = wrapErrors;
+    this.wrapErrors = wrapErrors;
   }
 
   // ---------------------------------------------------------------------------
@@ -243,7 +243,7 @@ export class HTTPRequest {
    *
    * @returns A Promise that resolves with the result of the request.
    */
-  async execute(): Promise<any | WrappedResponse> {
+  async execute(): Promise<TWrap extends true ? WrappedResponse : any> {
     if (this.wasUsed) {
       throw new Error('HttpRequests cannot be reused. Please call a request factory method for every new call');
     }
@@ -293,7 +293,7 @@ export class HTTPRequest {
         if(!skipBodyTransformers)
           interceptorResponse = await applyResponseBodyTransformers(interceptorResponse, this.getReadOnlyConfig());
 
-        return this.wrapErrors ? { response: interceptorResponse } : interceptorResponse;
+        return (this.wrapErrors ? { response: interceptorResponse } : (interceptorResponse as any)) as any;
       }
       this.setupBody();
       this.finalizedURL = this.composeURL();
@@ -333,17 +333,17 @@ export class HTTPRequest {
             if (!skipBodyTransformers) {
               interceptorResponse = await applyResponseBodyTransformers(interceptorResponse, this.getReadOnlyConfig());
             }
-            return this.wrapErrors ? { response: interceptorResponse } : interceptorResponse;
+            return (this.wrapErrors ? { response: interceptorResponse } : (interceptorResponse as any)) as any;
           }
         }
       }
       if (response.ok) {
         if (this.config.ignoreResponseBody || response.status === 204) {
-          return this.wrapErrors ? { response: undefined } : undefined;
+          return (this.wrapErrors ? { response: undefined } : (undefined as any)) as any;
         }
         let body = await this.readResponse(response);
         body = await applyResponseBodyTransformers(body, this.getReadOnlyConfig());
-        return this.wrapErrors ? { response: body } : body;
+        return (this.wrapErrors ? { response: body } : (body as any)) as any;
       } else {
         const error = new HTTPError(response.status, response.statusText, await this.readResponse(response));
         for (const interceptor of this.config.errorInterceptors || []) {
@@ -351,7 +351,7 @@ export class HTTPRequest {
             break;
           }
         }
-        return this.wrapErrors ? { error } : Promise.reject(error);
+        return (this.wrapErrors ? { error } : Promise.reject(error)) as any;
       }
     } catch (error) {
       if (error.name === 'AbortError') {
@@ -362,7 +362,7 @@ export class HTTPRequest {
             break;
           }
         }
-        return this.wrapErrors ? { error: abortError } : Promise.reject(abortError);
+        return (this.wrapErrors ? { error: abortError } : Promise.reject(abortError)) as any;
       }
 
       logger.error('HttpRequestFactory : Fetch error', {
@@ -379,7 +379,7 @@ export class HTTPRequest {
         }
       }
 
-      return this.wrapErrors ? { error: httpError } : Promise.reject(httpError);
+      return (this.wrapErrors ? { error: httpError } : Promise.reject(httpError)) as any;
     } finally {
       clearTimeout(this.timeoutID);
     }

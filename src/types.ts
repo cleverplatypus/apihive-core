@@ -515,3 +515,17 @@ export type RetryMetaConfig = {
   defaults?: RetryConfig;
   normally?: 'on' | 'off';
 };
+
+
+export type HTTPRequestFactoryWrapped = HTTPRequestFactory & {
+  withWrappedResponseError(): HTTPRequestFactoryWrapped;
+  createRequest(url: string, method?: HTTPMethod): HTTPRequest<true>;
+  createGETRequest(url: string): HTTPRequest<true>;
+  createPOSTRequest(url: string): HTTPRequest<true>;
+  createPUTRequest(url: string): HTTPRequest<true>;
+  createDELETERequest(url: string): HTTPRequest<true>;
+  createPATCHRequest(url: string): HTTPRequest<true>;
+  createHEADRequest(url: string): HTTPRequest<true>;
+  createTRACERequest(url: string): HTTPRequest<true>;
+  createAPIRequest(...args: [string, string] | [string]): HTTPRequest<true>;
+};
