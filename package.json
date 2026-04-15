@@ -1,9 +1,9 @@
 {
   "name": "@apihive/core",
-  "version": "1.0.0-beta.13",
+  "version": "1.0.2",
   "publishConfig": {
     "access": "public",
-    "tag": "beta"
+    "tag": "latest"
   },
   "main": "./lib/index.js",
   "module": "./lib/index.js",

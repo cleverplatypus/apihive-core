@@ -39,8 +39,6 @@ APIHive is a modern, standards‑based HTTP client for TypeScript and JavaScript
 
 📙 Documentation: https://cleverplatypus.github.io/apihive-core/
 
-> Status: currently in beta. Expect some API adjustments before 1.0. Do not use in production until 1.0.
-
 ### Some notes on simplicity 
 
 We're all about an uncomplicated life and we (not so) secretly despise merchants of complexity. If your app only needs to make a handful of HTTP calls, **just use the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) directly** — really.
@@ -73,24 +71,24 @@ The API is thought so that it's always clear what's going on, and it's easy to r
   - Framework‑agnostic and ESM‑first
 
 
-## Installation (beta)
+## Installation
 
 Using npm
 
 ```bash
-npm install @apihive/core@beta
+npm install @apihive/core
 ```
 
 Using yarn
 
 ```bash
-yarn add @apihive/core@beta
+yarn add @apihive/core
 ```
 
 Using pnpm
 
 ```bash
-pnpm add @apihive/core@beta
+pnpm add @apihive/core
 ```
 
 
