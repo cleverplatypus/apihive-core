@@ -1,8 +1,30 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vitest';
 import HTTPError from '../src/HTTPError.ts';
 import { HTTPRequestFactory } from '../src/index.ts';
+import type { WrappedResponse } from '../src/types.ts';
 
 describe('wrap_errors_behavior', () => {
+  it('infers API response wrapping from the factory mode', () => {
+    type APIResponse = { Result: unknown };
+    const api = {
+      name: 'default',
+      endpoints: { summary: { target: '/summary' } }
+    };
+
+    const response = new HTTPRequestFactory()
+      .withAPIConfig(api)
+      .createAPIRequest('summary')
+      .execute<APIResponse>();
+    const wrappedResponse = new HTTPRequestFactory()
+      .withAPIConfig(api)
+      .withWrappedResponseError()
+      .createAPIRequest('summary')
+      .execute<APIResponse>();
+
+    expectTypeOf(response).toEqualTypeOf<Promise<APIResponse>>();
+    expectTypeOf(wrappedResponse).toEqualTypeOf<Promise<WrappedResponse<APIResponse>>>();
+  });
+
   it('wrap_successful_request_returns_response_property', async () => {
     const factory = new HTTPRequestFactory()
         .withWrappedResponseError();

@@ -516,8 +516,10 @@ export type RetryMetaConfig = {
   normally?: 'on' | 'off';
 };
 
+declare const wrappedResponseFactory: unique symbol;
 
 export type HTTPRequestFactoryWrapped = HTTPRequestFactory & {
+  readonly [wrappedResponseFactory]: true;
   withWrappedResponseError(): HTTPRequestFactoryWrapped;
   createRequest(url: string, method?: HTTPMethod): HTTPRequest<true>;
   createGETRequest(url: string): HTTPRequest<true>;
